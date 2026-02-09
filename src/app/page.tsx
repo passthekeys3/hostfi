@@ -664,8 +664,8 @@ export default function LandingPage() {
             <div>
               <p className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-4">Legal</p>
               <div className="space-y-2.5">
-                <a href="#" className="block text-sm text-gray-400 hover:text-gray-700 transition-colors">Privacy</a>
-                <a href="#" className="block text-sm text-gray-400 hover:text-gray-700 transition-colors">Terms</a>
+                <Link href="/privacy" className="block text-sm text-gray-400 hover:text-gray-700 transition-colors">Privacy</Link>
+                <Link href="/terms" className="block text-sm text-gray-400 hover:text-gray-700 transition-colors">Terms</Link>
               </div>
             </div>
           </div>
