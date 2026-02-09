@@ -20,9 +20,9 @@ const inputClass =
 const selectClass =
   "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/40 text-sm transition-all duration-200 appearance-none";
 const btnPrimary =
-  "flex items-center justify-center gap-2 px-6 py-3 bg-teal-600 text-white font-medium rounded-xl hover:bg-teal-700 transition-all duration-200 text-sm shadow-sm w-full sm:w-auto";
+  "flex items-center justify-center gap-2 px-6 py-3.5 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 transition-all duration-200 text-sm w-full sm:w-auto";
 const btnSecondary =
-  "flex items-center justify-center gap-2 px-6 py-3 bg-white text-foreground font-medium rounded-xl hover:bg-gray-100 transition-all duration-200 border border-gray-200 text-sm shadow-sm";
+  "flex items-center justify-center gap-2 px-6 py-3.5 bg-white text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-all duration-200 border border-gray-200 text-sm";
 
 interface AddedProperty {
   name: string;
@@ -202,17 +202,17 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
                   <Sparkles className="w-8 h-8 text-teal-600" />
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-2xl font-bold tracking-tight">Welcome to HostFi!</h2>
-                  <p className="text-muted-foreground leading-relaxed">
+                  <h2 className="text-2xl font-bold tracking-tight text-gray-900">Welcome to HostFi</h2>
+                  <p className="text-gray-500 leading-relaxed">
                     Let&apos;s get your properties set up in under 2 minutes.
                   </p>
                 </div>
 
                 <div className="flex items-center justify-center gap-3 sm:gap-6 py-4">
                   {[
-                    { icon: Building2, label: "Add property" },
-                    { icon: Mail, label: "Set up billing" },
-                    { icon: CreditCard, label: "Choose plan" },
+                    { icon: Building2, label: "Add Property" },
+                    { icon: Mail, label: "Set Up Billing" },
+                    { icon: CreditCard, label: "Choose Plan" },
                   ].map((item, i) => (
                     <div key={item.label} className="flex items-center gap-3 sm:gap-6">
                       <div className="flex flex-col items-center gap-2">
@@ -245,8 +245,8 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
                     <Home className="w-6 h-6 text-teal-600" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold tracking-tight">Add your first property</h2>
-                    <p className="text-sm text-muted-foreground mt-1">Start tracking expenses for your rental.</p>
+                    <h2 className="text-xl font-bold tracking-tight text-gray-900">Add Your First Property</h2>
+                    <p className="text-sm text-gray-500 mt-1">Start tracking expenses for your rental.</p>
                   </div>
                 </div>
 
@@ -329,8 +329,8 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
                     <MailCheck className="w-6 h-6 text-teal-600" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold tracking-tight">Set up billing email</h2>
-                    <p className="text-sm text-muted-foreground mt-1">Forward bills to automatically track expenses.</p>
+                    <h2 className="text-xl font-bold tracking-tight text-gray-900">Set Up Billing Email</h2>
+                    <p className="text-sm text-gray-500 mt-1">Forward bills to automatically track expenses.</p>
                   </div>
                 </div>
 
@@ -338,7 +338,7 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
                 <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 space-y-4">
                   <div className="flex items-center gap-2">
                     <Mail className="w-4 h-4 text-teal-600" />
-                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Your Unique Billing Email</label>
+                    <label className="text-xs font-medium text-gray-400 uppercase tracking-widest">Your Unique Billing Email</label>
                   </div>
                   <div className="flex items-center gap-2">
                     <code className="flex-1 text-sm font-mono text-teal-700 bg-white border border-gray-200 rounded-lg px-3 py-2.5 break-all">
@@ -352,15 +352,15 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
 
                 {/* How it works */}
                 <div className="space-y-3">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">How it works</p>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">How It Works</p>
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
                       <div className="w-7 h-7 bg-teal-500/10 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
                         <Forward className="w-3.5 h-3.5 text-teal-600" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium">Forward your bills</p>
-                        <p className="text-xs text-muted-foreground">Set up auto-forwarding from utilities, insurance, etc.</p>
+                        <p className="text-sm font-medium text-gray-900">Forward Your Bills</p>
+                        <p className="text-xs text-gray-500">Set up auto-forwarding from utilities, insurance, etc.</p>
                       </div>
                     </div>
                     <div className="flex justify-center">
@@ -371,8 +371,8 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
                         <Sparkles className="w-3.5 h-3.5 text-teal-600" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium">AI parses everything</p>
-                        <p className="text-xs text-muted-foreground">We extract amounts, dates, and categories automatically.</p>
+                        <p className="text-sm font-medium text-gray-900">AI Parses Everything</p>
+                        <p className="text-xs text-gray-500">We extract amounts, dates, and categories automatically.</p>
                       </div>
                     </div>
                     <div className="flex justify-center">
@@ -383,8 +383,8 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
                         <Check className="w-3.5 h-3.5 text-teal-600" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium">Expenses logged</p>
-                        <p className="text-xs text-muted-foreground">Review and approve, or let it run hands-free.</p>
+                        <p className="text-sm font-medium text-gray-900">Expenses Logged</p>
+                        <p className="text-xs text-gray-500">Review and approve, or let it run hands-free.</p>
                       </div>
                     </div>
                   </div>
@@ -409,8 +409,8 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
                     <CreditCard className="w-6 h-6 text-teal-600" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold tracking-tight">Choose your plan</h2>
-                    <p className="text-sm text-muted-foreground mt-1">Start free, upgrade anytime.</p>
+                    <h2 className="text-xl font-bold tracking-tight text-gray-900">Choose Your Plan</h2>
+                    <p className="text-sm text-gray-500 mt-1">Start free, upgrade anytime.</p>
                   </div>
                 </div>
 
@@ -486,8 +486,8 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
                   <Check className="w-8 h-8 text-teal-600" />
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-2xl font-bold tracking-tight">You&apos;re all set!</h2>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                  <h2 className="text-2xl font-bold tracking-tight text-gray-900">You&apos;re All Set</h2>
+                  <p className="text-sm text-gray-500 leading-relaxed">
                     {properties.length > 0 ? `${properties.length} ${properties.length === 1 ? "property" : "properties"} added` : "No properties yet"}
                     {" · "}
                     {selectedPlan === "free" ? "Free plan" : `${PLANS.find(p => p.id === selectedPlan)?.name} plan`}
@@ -496,9 +496,9 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
                   {[
-                    { title: "View dashboard", desc: "See your overview", icon: Home },
-                    { title: "Add properties", desc: "Expand your portfolio", icon: Building2 },
-                    { title: "Forward a bill", desc: "Test email parsing", icon: Mail },
+                    { title: "View Dashboard", desc: "See your overview", icon: Home },
+                    { title: "Add Properties", desc: "Expand your portfolio", icon: Building2 },
+                    { title: "Forward a Bill", desc: "Test email parsing", icon: Mail },
                   ].map((card) => (
                     <button
                       key={card.title}
@@ -517,7 +517,7 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
                 </div>
 
                 <button onClick={handleFinish} className={btnPrimary + " mx-auto"}>
-                  Go to Dashboard <ArrowRight className="w-4 h-4" />
+                  Go to Dashboard <ArrowRight className="w-4 h-4 text-white" />
                 </button>
               </div>
             </StepWrapper>

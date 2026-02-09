@@ -183,7 +183,7 @@ export default function RevenuePage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">Revenue</h1>
-            <p className="text-sm text-gray-500">Track income across all properties and platforms</p>
+            <p className="text-sm text-gray-500">Track Income Across All Properties and Platforms</p>
           </div>
         </div>
         <div className="flex gap-2">

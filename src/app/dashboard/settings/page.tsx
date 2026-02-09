@@ -21,7 +21,7 @@ export default function SettingsPage() {
     <div className="space-y-10">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground mt-2 leading-relaxed">Manage your account and preferences</p>
+        <p className="text-gray-500 mt-2 leading-relaxed">Manage Your Account and Preferences</p>
       </div>
 
       {/* Profile */}

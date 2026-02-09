@@ -32,25 +32,18 @@ export default function DashboardPage() {
       <div className="flex items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground mt-1.5 sm:mt-2 text-sm leading-relaxed">Overview of your property expenses</p>
+          <p className="text-gray-500 mt-1.5 sm:mt-2 text-sm leading-relaxed">Overview of Your Property Expenses</p>
         </div>
         <div className="hidden sm:flex gap-3">
           <Link 
             href="/dashboard/properties/new" 
-            className="flex items-center gap-2 px-5 py-2.5 text-white font-medium rounded-xl text-sm min-h-[40px] transition-all duration-200 hover:translate-y-[-1px]"
-            style={{
-              background: 'linear-gradient(180deg, #14B8A6 0%, #0d9488 100%)',
-              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(20, 184, 166, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-            }}
+            className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white font-medium rounded-xl text-sm min-h-[40px] transition-colors hover:bg-gray-800"
           >
             <Plus className="w-4 h-4" /> Add Property
           </Link>
           <Link 
             href="/dashboard/expenses/new" 
-            className="flex items-center gap-2 px-5 py-2.5 bg-white text-foreground font-medium rounded-xl text-sm min-h-[40px] border border-gray-200 transition-all duration-200 hover:bg-gray-100 hover:border-gray-200"
-            style={{
-              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.03)',
-            }}
+            className="flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl text-sm min-h-[40px] transition-colors hover:bg-gray-200"
           >
             <Receipt className="w-4 h-4" /> Add Expense
           </Link>
@@ -58,11 +51,7 @@ export default function DashboardPage() {
         {/* Mobile: compact add button */}
         <Link 
           href="/dashboard/expenses/new" 
-          className="sm:hidden flex items-center justify-center w-11 h-11 text-white rounded-xl transition-all duration-200 active:scale-95"
-          style={{
-            background: 'linear-gradient(180deg, #14B8A6 0%, #0d9488 100%)',
-            boxShadow: '0 2px 8px rgba(20, 184, 166, 0.3)',
-          }}
+          className="sm:hidden flex items-center justify-center w-11 h-11 bg-gray-900 text-white rounded-xl transition-colors hover:bg-gray-800 active:scale-95"
         >
           <Plus className="w-5 h-5" />
         </Link>
@@ -110,17 +99,14 @@ export default function DashboardPage() {
       {/* Recent Expenses Section */}
       <section aria-labelledby="recent-expenses-heading" className="space-y-5">
         <div className="flex items-center justify-between">
-          <h2 id="recent-expenses-heading" className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Recent Expenses</h2>
+          <h2 id="recent-expenses-heading" className="text-sm font-semibold uppercase tracking-widest text-gray-400">Recent Expenses</h2>
           <Link href="/dashboard/expenses" className="text-sm font-medium text-accent hover:text-teal-700 transition-colors duration-200">
             View all →
           </Link>
         </div>
 
         {/* Desktop table */}
-        <div className="hidden lg:block bg-white rounded-2xl overflow-hidden border border-gray-200"
-          style={{
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-          }}
+        <div className="hidden lg:block bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm"
         >
           <table className="w-full">
             <thead>
@@ -197,10 +183,7 @@ export default function DashboardPage() {
             return (
               <div 
                 key={expense.id} 
-                className="bg-white rounded-xl p-4 border border-gray-200 transition-all duration-200 active:scale-[0.99]"
-                style={{
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-                }}
+                className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm transition-all duration-200 active:scale-[0.99]"
               >
                 <div className="flex items-center gap-3">
                   <span className={cn(

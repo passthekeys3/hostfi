@@ -104,7 +104,7 @@ export default function IntegrationsPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">Integrations</h1>
-            <p className="text-sm text-gray-500">Connect your tools to automate your workflow</p>
+            <p className="text-sm text-gray-500">Connect Your Tools to Automate Your Workflow</p>
           </div>
         </div>
       </div>

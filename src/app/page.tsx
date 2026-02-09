@@ -140,21 +140,21 @@ export default function LandingPage() {
           <FadeIn className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-teal-50 text-teal-700 rounded-full text-xs font-medium mb-8">
               <Sparkles className="w-3 h-3" />
-              AI-powered expense management for rental properties
+              AI-Powered Expense Management for Rental Properties
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6">
-              Know exactly where your money goes.{" "}
-              <span className="text-teal-500">Every property. Every bill.</span>
+              Know Exactly Where Your Money Goes.{" "}
+              <span className="text-teal-500">Every Property. Every Bill.</span>
             </h1>
             <p className="text-lg sm:text-xl text-gray-500 leading-relaxed max-w-2xl mb-10">
               Forward your bills. Snap your receipts. HostFi uses AI to automatically track, categorize, and map every expense to the right property — down to the IRS Schedule E line item.
             </p>
             <div className="flex flex-col sm:flex-row gap-3">
               <Link href="/login" className="inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold text-white bg-gray-900 rounded-xl hover:bg-gray-800 transition-colors">
-                Start for free <ArrowRight className="w-4 h-4" />
+                Start For Free <ArrowRight className="w-4 h-4" />
               </Link>
               <button onClick={() => scrollTo("how-it-works")} className="inline-flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors cursor-pointer">
-                See how it works
+                See How It Works
               </button>
             </div>
           </FadeIn>
@@ -272,9 +272,9 @@ export default function LandingPage() {
       <section className="py-24 sm:py-28 px-5">
         <div className="max-w-6xl mx-auto">
           <FadeIn className="max-w-2xl mb-16">
-            <p className="text-xs font-semibold text-teal-600 uppercase tracking-widest mb-3">The problem</p>
+            <p className="text-xs font-semibold text-teal-600 uppercase tracking-widest mb-3">The Problem</p>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-              STR operators spend 8+ hours a month on expense tracking
+              STR Operators Spend 8+ Hours a Month on Expense Tracking
             </h2>
             <p className="text-gray-500 leading-relaxed">
               Bills scattered across inboxes. Spreadsheets that don&apos;t scale. No per-property visibility. And when tax season hits, you&apos;re scrambling to figure out which IRS line each expense belongs on.
@@ -286,16 +286,16 @@ export default function LandingPage() {
             <FadeIn>
               <div className="bg-gray-50 rounded-2xl p-8 h-full border border-gray-100">
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-gray-200/60 text-gray-600 rounded-full text-xs font-medium mb-6">
-                  Without HostFi
+                  Before HostFi
                 </div>
                 <div className="space-y-4">
                   {[
-                    "Manually entering bills into spreadsheets",
-                    "No idea which property costs the most",
-                    "Missing bills until you get a late fee",
-                    "Hours categorizing expenses for taxes",
-                    "Water leak runs for months unnoticed",
-                    "Guessing at Schedule E line items",
+                    "Manually Entering Bills Into Spreadsheets",
+                    "No Idea Which Property Costs the Most",
+                    "Missing Bills Until You Get a Late Fee",
+                    "Hours Categorizing Expenses for Taxes",
+                    "Water Leak Runs for Months Unnoticed",
+                    "Guessing at Schedule E Line Items",
                   ].map((item, i) => (
                     <div key={i} className="flex items-start gap-3">
                       <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -312,16 +312,16 @@ export default function LandingPage() {
             <FadeIn delay={100}>
               <div className="bg-teal-50/50 rounded-2xl p-8 h-full border border-teal-100">
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-teal-100 text-teal-700 rounded-full text-xs font-medium mb-6">
-                  With HostFi
+                  After HostFi
                 </div>
                 <div className="space-y-4">
                   {[
-                    "Forward a bill → AI parses and categorizes it",
-                    "Per-property P&L updated in real time",
-                    "Alerts before a bill is due or overdue",
-                    "Schedule E auto-mapped at year end",
-                    "Anomaly detection catches spikes instantly",
-                    "One click to export tax-ready reports",
+                    "Forward a Bill → AI Parses and Categorizes It",
+                    "Per-Property P&L Updated in Real Time",
+                    "Alerts Before a Bill Is Due or Overdue",
+                    "Schedule E Auto-Mapped at Year End",
+                    "Anomaly Detection Catches Spikes Instantly",
+                    "One Click to Export Tax-Ready Reports",
                   ].map((item, i) => (
                     <div key={i} className="flex items-start gap-3">
                       <CheckCircle2 className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" />
@@ -341,7 +341,7 @@ export default function LandingPage() {
           <FadeIn className="max-w-2xl mb-16">
             <p className="text-xs font-semibold text-teal-600 uppercase tracking-widest mb-3">Features</p>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-              Everything you need to manage property expenses
+              Everything You Need to Manage Property Expenses
             </h2>
             <p className="text-gray-500 leading-relaxed">
               From AI-powered bill parsing to Schedule E tax prep — built specifically for STR operators, landlords, and property managers.
@@ -351,9 +351,9 @@ export default function LandingPage() {
           {/* Feature grid */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { icon: Bot, title: "AI Bill Parsing", desc: "Forward bills to your HostFi email. AI extracts amount, due date, vendor, and matches to the right property." },
+              { icon: Bot, title: "AI Bill Parsing", desc: "Forward bills to your HostFi email. AI extracts the amount, due date, vendor, and matches it to the right property." },
               { icon: Camera, title: "Receipt Scanning", desc: "Snap a photo of any receipt. We read it, categorize it, and file it — works from your phone." },
-              { icon: AlertTriangle, title: "Anomaly Detection", desc: "Automatic alerts when a bill spikes. Catch water leaks, rate increases, and errors early." },
+              { icon: AlertTriangle, title: "Anomaly Detection", desc: "Automatic alerts when a bill spikes. Catch water leaks, rate increases, and billing errors early." },
               { icon: TrendingUp, title: "Cross-Property Benchmarking", desc: "Compare costs across your portfolio. See which units are efficient and where you're overspending." },
               { icon: Calculator, title: "Schedule E Tax Prep", desc: "Every expense auto-mapped to the correct IRS line item. Owner and arbitrage mappings built in." },
               { icon: BarChart3, title: "Revenue + P&L Tracking", desc: "Import revenue from Airbnb, VRBO, or direct bookings. See true profit per property." },
@@ -381,7 +381,7 @@ export default function LandingPage() {
           <FadeIn className="max-w-2xl mb-16">
             <p className="text-xs font-semibold text-teal-600 uppercase tracking-widest mb-3">How it works</p>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-              Up and running in under 5 minutes
+              Up and Running in Under 5 Minutes
             </h2>
           </FadeIn>
 
@@ -389,19 +389,19 @@ export default function LandingPage() {
             {[
               {
                 step: "01",
-                title: "Add your properties",
+                title: "Add Your Properties",
                 desc: "Enter your properties — name, address, type. Takes 60 seconds per property.",
                 icon: Building2,
               },
               {
                 step: "02",
-                title: "Forward your bills",
+                title: "Forward Your Bills",
                 desc: "Set your HostFi email as the billing address, or just forward bills from your inbox. AI handles the rest.",
                 icon: Mail,
               },
               {
                 step: "03",
-                title: "Get insights instantly",
+                title: "Get Insights Instantly",
                 desc: "Per-property spend, anomaly alerts, tax-ready reports, and AI-powered recommendations — all automatic.",
                 icon: Zap,
               },
@@ -430,17 +430,17 @@ export default function LandingPage() {
             <FadeIn>
               <p className="text-xs font-semibold text-teal-400 uppercase tracking-widest mb-3">Tax season, solved</p>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-5 text-white">
-                Schedule E on autopilot
+                Schedule E on Autopilot
               </h2>
               <p className="text-gray-400 leading-relaxed mb-8">
                 HostFi automatically maps every expense to the correct IRS Schedule E line item — whether you&apos;re an owner or an arbitrage operator. Different business models get different mappings.
               </p>
               <div className="space-y-3">
                 {[
-                  "Auto-categorizes into 15 IRS line items",
-                  "Owner vs. arbitrage-specific mappings",
-                  "Export tax-ready reports in one click",
-                  "No more guessing which line \"cleaning\" goes on",
+                  "Auto-Categorizes Into 15 IRS Line Items",
+                  "Owner vs. Arbitrage-Specific Mappings",
+                  "Export Tax-Ready Reports in One Click",
+                  "No More Guessing Which Line \"Cleaning\" Goes On",
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <CheckCircle2 className="w-4 h-4 text-teal-400 flex-shrink-0" />
@@ -491,7 +491,7 @@ export default function LandingPage() {
           <FadeIn className="max-w-2xl mb-16">
             <p className="text-xs font-semibold text-teal-600 uppercase tracking-widest mb-3">Built for</p>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              Every type of rental operator
+              Every Type of Rental Operator
             </h2>
           </FadeIn>
 
@@ -531,7 +531,7 @@ export default function LandingPage() {
           <FadeIn className="text-center max-w-2xl mx-auto mb-16">
             <p className="text-xs font-semibold text-teal-600 uppercase tracking-widest mb-3">Pricing</p>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-              Start free. Upgrade when you need to.
+              Start Free. Upgrade When You Need To.
             </h2>
             <p className="text-gray-500">No credit card required. No time limits on free.</p>
           </FadeIn>
@@ -602,7 +602,7 @@ export default function LandingPage() {
         <div className="max-w-2xl mx-auto">
           <FadeIn className="mb-12">
             <p className="text-xs font-semibold text-teal-600 uppercase tracking-widest mb-3">FAQ</p>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Common questions</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Common Questions</h2>
           </FadeIn>
           <FadeIn>
             <div>
@@ -622,13 +622,13 @@ export default function LandingPage() {
       <section className="py-24 sm:py-28 px-5 bg-gray-50 border-t border-gray-100">
         <FadeIn className="max-w-2xl mx-auto text-center">
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
-            Stop guessing. Start knowing.
+            Stop Guessing. Start Knowing.
           </h2>
           <p className="text-gray-500 mb-10">
             Free for up to 5 properties. No credit card required.
           </p>
           <Link href="/login" className="inline-flex items-center gap-2 px-8 py-4 text-sm font-semibold text-white bg-gray-900 rounded-xl hover:bg-gray-800 transition-colors">
-            Get started for free <ArrowRight className="w-4 h-4" />
+            Get Started For Free <ArrowRight className="w-4 h-4" />
           </Link>
         </FadeIn>
       </section>

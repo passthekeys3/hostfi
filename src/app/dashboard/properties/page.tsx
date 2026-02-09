@@ -20,17 +20,13 @@ export default function PropertiesPage() {
       <div className="flex items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Properties</h1>
-          <p className="text-muted-foreground mt-1.5 sm:mt-2 text-sm leading-relaxed">
+          <p className="text-gray-500 mt-1.5 sm:mt-2 text-sm leading-relaxed">
             <span className="tabular-nums">{properties.length}</span> properties managed
           </p>
         </div>
         <Link 
           href="/dashboard/properties/new" 
-          className="flex items-center gap-2 px-4 sm:px-5 py-2.5 text-white font-medium rounded-xl text-sm min-h-[44px] transition-all duration-200 hover:translate-y-[-1px] shrink-0"
-          style={{
-            background: 'linear-gradient(180deg, #14B8A6 0%, #0d9488 100%)',
-            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(20, 184, 166, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-          }}
+          className="flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-gray-900 text-white font-medium rounded-xl text-sm min-h-[44px] transition-colors hover:bg-gray-800 shrink-0"
         >
           <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Add Property</span><span className="sm:hidden">Add</span>
         </Link>

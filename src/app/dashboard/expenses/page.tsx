@@ -35,27 +35,20 @@ export default function ExpensesPage() {
       <div className="flex items-start sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Expenses</h1>
-          <p className="text-muted-foreground mt-1.5 sm:mt-2 text-sm leading-relaxed">
+          <p className="text-gray-500 mt-1.5 sm:mt-2 text-sm leading-relaxed">
             <span className="tabular-nums">{filteredExpenses.length}</span> expenses · <span className="font-medium text-foreground tabular-nums">{formatCurrency(totalFiltered)}</span> total
           </p>
         </div>
         <div className="flex gap-2 sm:gap-3">
           <Link 
             href="/dashboard/expenses/recurring" 
-            className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-white text-foreground font-medium rounded-xl text-sm border border-gray-200 min-h-[40px] transition-all duration-200 hover:bg-gray-100 hover:border-gray-200/80"
-            style={{
-              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.03)',
-            }}
+            className="hidden sm:flex items-center gap-2 px-5 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl text-sm min-h-[40px] transition-colors hover:bg-gray-200"
           >
             <RotateCcw className="w-4 h-4" /> Recurring
           </Link>
           <Link 
             href="/dashboard/expenses/new" 
-            className="flex items-center gap-2 px-4 sm:px-5 py-2.5 text-white font-medium rounded-xl text-sm min-h-[40px] transition-all duration-200 hover:translate-y-[-1px]"
-            style={{
-              background: 'linear-gradient(180deg, #14B8A6 0%, #0d9488 100%)',
-              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(20, 184, 166, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-            }}
+            className="flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-gray-900 text-white font-medium rounded-xl text-sm min-h-[40px] transition-colors hover:bg-gray-800"
           >
             <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Add Expense</span><span className="sm:hidden">Add</span>
           </Link>
@@ -127,11 +120,7 @@ export default function ExpensesPage() {
           <p className="text-sm text-muted-foreground mt-1.5">Try adjusting your filters or add a new expense.</p>
           <Link 
             href="/dashboard/expenses/new" 
-            className="inline-flex items-center gap-2 mt-5 px-5 py-2.5 text-white font-medium rounded-xl text-sm transition-all duration-200 hover:translate-y-[-1px]"
-            style={{
-              background: 'linear-gradient(180deg, #14B8A6 0%, #0d9488 100%)',
-              boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(20, 184, 166, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-            }}
+            className="inline-flex items-center gap-2 mt-5 px-5 py-2.5 bg-gray-900 text-white font-medium rounded-xl text-sm transition-colors hover:bg-gray-800"
           >
             <Plus className="w-4 h-4" /> Add Expense
           </Link>

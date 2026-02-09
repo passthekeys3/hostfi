@@ -225,8 +225,8 @@ export default function InboxPage() {
       <div className="flex items-start sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Inbox</h1>
-          <p className="text-muted-foreground mt-2 leading-relaxed">
-            Review and confirm parsed bills from your email
+          <p className="text-gray-500 mt-2 leading-relaxed">
+            Review and Confirm Parsed Bills From Your Email
           </p>
         </div>
         {pendingItems.length > 0 && (

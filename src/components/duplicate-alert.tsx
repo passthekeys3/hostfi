@@ -152,10 +152,7 @@ export function DuplicateAlert({ className }: DuplicateAlertProps) {
                 </button>
                 <button
                   onClick={() => handleRemoveDuplicate(group.id)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white rounded-lg transition-colors"
-                  style={{
-                    background: 'linear-gradient(180deg, #14B8A6 0%, #0d9488 100%)',
-                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-900 text-white rounded-lg transition-colors hover:bg-gray-800"
                 >
                   <X className="w-3.5 h-3.5" />
                   Remove Duplicate

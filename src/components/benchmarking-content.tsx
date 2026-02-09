@@ -64,7 +64,7 @@ export default function BenchmarkingContent() {
     <div className="space-y-10">
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Benchmarking</h1>
-        <p className="text-muted-foreground mt-1 sm:mt-2 text-sm leading-relaxed">Compare utility costs across your portfolio</p>
+        <p className="text-gray-500 mt-1 sm:mt-2 text-sm leading-relaxed">Compare Utility Costs Across Your Portfolio</p>
       </div>
 
       {/* Portfolio Overview Cards */}

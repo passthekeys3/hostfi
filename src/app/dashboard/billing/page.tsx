@@ -199,7 +199,7 @@ export default function BillingPage() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">Billing & Plans</h1>
-            <p className="text-sm text-gray-500">Manage your subscription and payment methods</p>
+            <p className="text-sm text-gray-500">Manage Your Subscription and Payment Methods</p>
           </div>
         </div>
       </div>

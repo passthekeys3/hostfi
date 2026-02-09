@@ -108,7 +108,7 @@ export default function AskPage() {
               <Sparkles className="w-8 h-8 text-teal-500" />
             </div>
             <h2 className="text-lg font-semibold text-gray-900 mb-2">
-              Ask about your finances
+              Ask About Your Finances
             </h2>
             <p className="text-sm text-gray-500 text-center max-w-md mb-8">
               Get instant answers about your property expenses, spending trends,

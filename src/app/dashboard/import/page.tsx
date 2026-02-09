@@ -189,8 +189,8 @@ export default function ImportPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Import Expenses</h1>
-        <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-          Upload a CSV file to bulk import expenses into HostFi
+        <p className="text-gray-500 mt-2 text-sm leading-relaxed">
+          Upload a CSV File to Bulk Import Expenses Into HostFi
         </p>
       </div>
 
@@ -371,11 +371,7 @@ export default function ImportPage() {
             <button
               onClick={handleProceedToReview}
               disabled={!canProceedToReview}
-              className="px-6 py-3 text-white font-medium rounded-xl text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                background: canProceedToReview ? 'linear-gradient(180deg, #14B8A6 0%, #0d9488 100%)' : undefined,
-                boxShadow: canProceedToReview ? '0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(20, 184, 166, 0.2)' : undefined,
-              }}
+              className="px-6 py-3 bg-gray-900 text-white font-medium rounded-xl text-sm transition-colors hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-300"
             >
               Continue to Review
             </button>
@@ -474,11 +470,7 @@ export default function ImportPage() {
             <button
               onClick={handleImport}
               disabled={validExpenseCount === 0}
-              className="min-h-[40px] px-5 py-2.5 text-white font-medium rounded-xl text-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              style={{
-                background: 'linear-gradient(180deg, #14B8A6 0%, #0d9488 100%)',
-                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(20, 184, 166, 0.2)',
-              }}
+              className="min-h-[40px] px-5 py-2.5 bg-gray-900 text-white font-medium rounded-xl text-sm transition-colors hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-300 flex items-center gap-2"
             >
               <Check className="w-4 h-4" />
               Confirm Import ({validExpenseCount} Expenses)
@@ -520,11 +512,7 @@ export default function ImportPage() {
           <div className="flex justify-center gap-3 mt-6">
             <Link
               href="/dashboard/expenses"
-              className="px-6 py-3 text-white font-medium rounded-xl text-sm transition-all duration-200"
-              style={{
-                background: 'linear-gradient(180deg, #14B8A6 0%, #0d9488 100%)',
-                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(20, 184, 166, 0.2)',
-              }}
+              className="px-6 py-3 bg-gray-900 text-white font-medium rounded-xl text-sm transition-colors hover:bg-gray-800"
             >
               View Expenses
             </Link>

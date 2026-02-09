@@ -281,8 +281,8 @@ export default function TaxPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Tax Preparation</h1>
-          <p className="text-muted-foreground mt-1.5 sm:mt-2 text-sm leading-relaxed">
-            Schedule E expense mapping for your rental properties
+          <p className="text-gray-500 mt-1.5 sm:mt-2 text-sm leading-relaxed">
+            Schedule E Expense Mapping for Your Rental Properties
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -333,11 +333,7 @@ export default function TaxPage() {
         </button>
         <button
           onClick={handleShareCPA}
-          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 text-white font-medium rounded-xl text-xs sm:text-sm min-h-[44px] transition-all duration-200 hover:translate-y-[-1px]"
-          style={{
-            background: 'linear-gradient(180deg, #14B8A6 0%, #0d9488 100%)',
-            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(20, 184, 166, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-          }}
+          className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 bg-gray-900 text-white font-medium rounded-xl text-xs sm:text-sm min-h-[44px] transition-colors hover:bg-gray-800"
         >
           <Share2 className="w-4 h-4 shrink-0" />
           <span className="hidden sm:inline">Share with CPA</span>

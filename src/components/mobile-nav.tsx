@@ -60,12 +60,7 @@ export function MobileNav({ onMorePress }: { onMorePress: () => void }) {
                   
                   {/* Badge */}
                   {tab.badge && tab.badge > 0 && (
-                    <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center text-[9px] font-bold rounded-full leading-none"
-                      style={{
-                        background: 'linear-gradient(135deg, #14B8A6 0%, #0d9488 100%)',
-                        color: 'white',
-                        boxShadow: '0 1px 3px rgba(20, 184, 166, 0.3)',
-                      }}
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] flex items-center justify-center text-[9px] font-bold rounded-full leading-none bg-teal-500 text-white"
                       aria-hidden="true"
                     >
                       {tab.badge}
