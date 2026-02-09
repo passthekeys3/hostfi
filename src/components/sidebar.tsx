@@ -15,21 +15,21 @@ const mainNav = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, badge: 0 },
   { href: "/dashboard/inbox", label: "Inbox", icon: Inbox, badge: inboxCount },
   { href: "/dashboard/properties", label: "Properties", icon: Building2, badge: 0 },
-  { href: "/dashboard/revenue", label: "Revenue", icon: DollarSign, badge: 0 },
   { href: "/dashboard/expenses", label: "Expenses", icon: Receipt, badge: 0 },
+  { href: "/dashboard/revenue", label: "Revenue", icon: DollarSign, badge: 0 },
   { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3, badge: 0 },
-  { href: "/dashboard/reports", label: "Reports", icon: FileText, badge: 0 },
   { href: "/dashboard/tax", label: "Tax Prep", icon: Calculator, badge: 0 },
-  { href: "/dashboard/benchmarking", label: "Benchmarking", icon: GitCompareArrows, badge: 0 },
   { href: "/dashboard/ask", label: "Ask AI", icon: MessageSquare, badge: 0 },
   { href: "/dashboard/alerts", label: "Alerts", icon: Bell, badge: unreadAlertCount, badgeColor: 'red' as const },
 ];
 
 const bottomNav = [
+  { href: "/dashboard/reports", label: "Reports", icon: FileText, badge: 0 },
+  { href: "/dashboard/benchmarking", label: "Benchmarking", icon: GitCompareArrows, badge: 0 },
   { href: "/dashboard/integrations", label: "Integrations", icon: Link2, badge: 0 },
+  { href: "/dashboard/import", label: "Import", icon: Upload, badge: 0 },
   { href: "/dashboard/billing", label: "Billing", icon: CreditCard, badge: 0 },
   { href: "/dashboard/settings", label: "Settings", icon: Settings, badge: 0 },
-  { href: "/dashboard/import", label: "Import", icon: Upload, badge: 0 },
 ];
 
 interface SidebarProps {
@@ -62,7 +62,7 @@ export function Sidebar({ externalOpen, onClose }: SidebarProps) {
         aria-label={item.badge > 0 ? `${item.label}, ${item.badge} notifications` : item.label}
         aria-current={isActive ? "page" : undefined}
         className={cn(
-          "flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-150 relative min-h-[40px] focus:outline-none focus:ring-2 focus:ring-teal-500/40",
+          "flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-150 relative min-h-[36px] focus:outline-none focus:ring-2 focus:ring-teal-500/40",
           isActive
             ? "bg-teal-50 text-teal-700 font-semibold"
             : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
@@ -127,9 +127,9 @@ export function Sidebar({ externalOpen, onClose }: SidebarProps) {
           </Link>
         </div>
 
-        {/* Main nav */}
-        <nav aria-label="Main navigation" className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-widest text-gray-400" aria-hidden="true">Menu</p>
+        {/* Nav — single scrollable area */}
+        <nav aria-label="Main navigation" className="flex-1 px-3 py-3 overflow-y-auto scrollbar-hide">
+          <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-gray-400" aria-hidden="true">Menu</p>
           <ul className="space-y-0.5" role="list">
             {mainNav.map((item) => (
               <li key={item.href}>
@@ -137,10 +137,8 @@ export function Sidebar({ externalOpen, onClose }: SidebarProps) {
               </li>
             ))}
           </ul>
-        </nav>
-
-        {/* Bottom section */}
-        <nav aria-label="Settings navigation" className="px-3 py-3 border-t border-gray-100">
+          <div className="my-3 mx-3 border-t border-gray-100" />
+          <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-gray-400" aria-hidden="true">More</p>
           <ul className="space-y-0.5" role="list">
             {bottomNav.map((item) => (
               <li key={item.href}>
