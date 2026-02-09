@@ -1,0 +1,295 @@
+"use client";
+
+import { useState } from "react";
+import { DEMO_INBOX_ITEMS, getPropertyName, type InboxItem } from "@/lib/demo-inbox";
+import { DEMO_PROPERTIES } from "@/lib/data";
+import { formatCurrency } from "@/lib/utils";
+import {
+  Flame, Droplets, Zap, Wifi, Trash2, Home, Shield, HelpCircle,
+  Check, X, Pencil, ChevronDown, ChevronUp, Mail, Clock, MapPin,
+  AlertTriangle, Building2,
+} from "lucide-react";
+
+const utilityIcons: Record<string, React.ElementType> = {
+  gas: Flame, water: Droplets, electric: Zap, internet: Wifi,
+  trash: Trash2, rent: Home, insurance: Shield, other: HelpCircle,
+};
+
+const utilityColors: Record<string, string> = {
+  gas: "text-orange-600", water: "text-blue-600", electric: "text-yellow-600",
+  internet: "text-purple-600", trash: "text-stone-600", rent: "text-teal-600",
+  insurance: "text-cyan-600", other: "text-muted-foreground",
+};
+
+const statusLeftBorder: Record<string, string> = {
+  exact_mapping: "border-l-teal-500",
+  address: "border-l-blue-500",
+  account_number: "border-l-purple-500",
+  none: "border-l-red-400",
+};
+
+function ConfidenceBadge({ score }: { score: number }) {
+  const pct = Math.round(score * 100);
+  const color = score > 0.8
+    ? "bg-teal-500/10 text-teal-600 border-teal-500/20"
+    : score > 0.5
+      ? "bg-yellow-500/10 text-yellow-600 border-yellow-500/20"
+      : "bg-red-500/10 text-red-600 border-red-500/20";
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${color}`}>
+        {pct}%
+      </span>
+      <div className="w-16 h-1.5 bg-[#f0eeeb] rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full ${score > 0.8 ? 'bg-teal-500' : score > 0.5 ? 'bg-yellow-500' : 'bg-red-500'}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function MatchBadge({ type }: { type: string }) {
+  const labels: Record<string, { label: string; color: string }> = {
+    exact_mapping: { label: "Exact Match", color: "bg-teal-500/10 text-teal-600 border-teal-500/20" },
+    address: { label: "Address Match", color: "bg-blue-500/10 text-blue-600 border-blue-500/20" },
+    account_number: { label: "Account Match", color: "bg-purple-500/10 text-purple-600 border-purple-500/20" },
+    none: { label: "No Match", color: "bg-red-500/10 text-red-600 border-red-500/20" },
+  };
+  const m = labels[type] ?? labels.none;
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${m.color}`}>
+      {m.label}
+    </span>
+  );
+}
+
+function InboxCard({ item, onConfirm, onReject }: { item: InboxItem; onConfirm: () => void; onReject: () => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const [assignedProperty, setAssignedProperty] = useState(item.match.property_id);
+  const Icon = utilityIcons[item.parsed.utility_type] ?? HelpCircle;
+  const iconColor = utilityColors[item.parsed.utility_type] ?? "text-muted-foreground";
+  const leftBorder = statusLeftBorder[item.match.match_type] ?? "border-l-gray-300";
+
+  const relativeTime = (() => {
+    const diff = Date.now() - new Date(item.received_at).getTime();
+    const hours = Math.floor(diff / 3600000);
+    if (hours < 1) return "Just now";
+    if (hours < 24) return `${hours}h ago`;
+    return `${Math.floor(hours / 24)}d ago`;
+  })();
+
+  return (
+    <div className={`bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 border-l-[3px] ${leftBorder} overflow-hidden transition-all duration-200 hover:shadow-md`}>
+      <div className="p-6">
+        <div className="flex items-start gap-4">
+          <div className={`mt-0.5 w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center ${iconColor}`}>
+            <Icon className="w-[18px] h-[18px]" />
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-semibold text-sm truncate">{item.parsed.provider_name}</h3>
+                  <span className="text-xs text-muted-foreground capitalize px-2 py-0.5 bg-gray-100 rounded-full">
+                    {item.parsed.utility_type}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">{item.subject}</p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-lg font-bold tabular-nums">{formatCurrency(item.parsed.amount)}</p>
+                {item.parsed.due_date && (
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 justify-end mt-0.5">
+                    <Clock className="w-3 h-3" />
+                    Due {new Date(item.parsed.due_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 mt-3 flex-wrap">
+              {item.match.match_type !== "none" ? (
+                <div className="flex items-center gap-1.5 text-xs">
+                  <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-foreground font-medium">{getPropertyName(assignedProperty)}</span>
+                  <MatchBadge type={item.match.match_type} />
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-3.5 h-3.5 text-yellow-600" />
+                  <select
+                    value={assignedProperty ?? ""}
+                    onChange={(e) => setAssignedProperty(e.target.value || null)}
+                    className="text-xs bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  >
+                    <option value="">Assign property...</option>
+                    {DEMO_PROPERTIES.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <ConfidenceBadge score={item.parsed.confidence} />
+              <span className="text-xs text-muted-foreground ml-auto">{relativeTime}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 mt-4 sm:mt-5 ml-0 sm:ml-14 flex-wrap">
+          <button
+            onClick={onConfirm}
+            className="flex items-center gap-1.5 px-4 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-all duration-200 text-xs font-medium shadow-sm"
+          >
+            <Check className="w-3.5 h-3.5" /> Confirm
+          </button>
+          <button className="flex items-center gap-1.5 px-4 py-2 bg-white text-foreground rounded-xl hover:bg-gray-100 transition-all duration-200 text-xs font-medium border border-gray-200 shadow-sm">
+            <Pencil className="w-3.5 h-3.5" /> Edit
+          </button>
+          <button
+            onClick={onReject}
+            className="flex items-center gap-1.5 px-4 py-2 bg-red-500/10 text-red-600 rounded-xl hover:bg-red-500/20 transition-all duration-200 text-xs font-medium border border-red-500/15"
+          >
+            <X className="w-3.5 h-3.5" /> Reject
+          </button>
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150"
+          >
+            {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            {expanded ? "Hide" : "Details"}
+          </button>
+        </div>
+      </div>
+
+      {/* Expanded details */}
+      {expanded && (
+        <div className="border-t border-gray-200 bg-gray-50 p-4 sm:p-6 sm:ml-14 space-y-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-xs">
+            <div>
+              <span className="text-muted-foreground">Account</span>
+              <p className="font-mono mt-0.5">{item.parsed.account_number ?? "—"}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Billing Period</span>
+              <p className="mt-0.5">
+                {item.parsed.billing_period_start && item.parsed.billing_period_end
+                  ? `${new Date(item.parsed.billing_period_start).toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${new Date(item.parsed.billing_period_end).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                  : "—"}
+              </p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Service Address</span>
+              <p className="mt-0.5 flex items-start gap-1">
+                <MapPin className="w-3 h-3 mt-0.5 shrink-0" />
+                {item.parsed.service_address ?? "—"}
+              </p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Sender</span>
+              <p className="mt-0.5 truncate">{item.sender_email}</p>
+            </div>
+          </div>
+
+          <div>
+            <span className="text-xs text-muted-foreground">Email Preview</span>
+            <pre className="mt-1 text-xs text-muted-foreground bg-white rounded-xl p-4 whitespace-pre-wrap font-mono leading-relaxed max-h-40 overflow-y-auto border border-gray-200/60">
+              {item.body_preview}
+            </pre>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function InboxPage() {
+  const [items, setItems] = useState(DEMO_INBOX_ITEMS);
+  const pendingItems = items.filter((i) => i.status === "pending_review");
+  const processedItems = items.filter((i) => i.status !== "pending_review");
+
+  const handleConfirm = (id: string) => {
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, status: "confirmed" as const } : i)));
+  };
+
+  const handleReject = (id: string) => {
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, status: "rejected" as const } : i)));
+  };
+
+  return (
+    <div className="space-y-10">
+      <div className="flex items-start sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Inbox</h1>
+          <p className="text-muted-foreground mt-2 leading-relaxed">
+            Review and confirm parsed bills from your email
+          </p>
+        </div>
+        {pendingItems.length > 0 && (
+          <span className="px-3 py-1.5 bg-teal-500/10 text-teal-600 rounded-full text-sm font-medium border border-teal-500/20">
+            {pendingItems.length} pending
+          </span>
+        )}
+      </div>
+
+      {pendingItems.length === 0 ? (
+        <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-12 text-center">
+          <Mail className="w-12 h-12 mx-auto text-muted-foreground/30" />
+          <h3 className="mt-4 font-semibold text-lg">All caught up!</h3>
+          <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+            No bills waiting for review. Forward bills to your HostFi email to get started.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {pendingItems.map((item) => (
+            <InboxCard
+              key={item.id}
+              item={item}
+              onConfirm={() => handleConfirm(item.id)}
+              onReject={() => handleReject(item.id)}
+            />
+          ))}
+        </div>
+      )}
+
+      {processedItems.length > 0 && (
+        <div>
+          <h2 className="text-base font-semibold uppercase tracking-wide text-muted-foreground mb-4">
+            Processed ({processedItems.length})
+          </h2>
+          <div className="space-y-2">
+            {processedItems.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-200/60 opacity-60 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
+              >
+                <div className={`p-1.5 rounded-full bg-gray-100 ${utilityColors[item.parsed.utility_type]}`}>
+                  {(() => {
+                    const I = utilityIcons[item.parsed.utility_type] ?? HelpCircle;
+                    return <I className="w-4 h-4" />;
+                  })()}
+                </div>
+                <span className="text-sm font-medium flex-1">{item.parsed.provider_name}</span>
+                <span className="text-sm tabular-nums">{formatCurrency(item.parsed.amount)}</span>
+                <span
+                  className={`text-xs px-2.5 py-0.5 rounded-full ${
+                    item.status === "confirmed"
+                      ? "bg-teal-500/10 text-teal-600"
+                      : "bg-red-500/10 text-red-600"
+                  }`}
+                >
+                  {item.status === "confirmed" ? "Confirmed" : "Rejected"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
