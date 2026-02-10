@@ -63,9 +63,19 @@ export default function IntegrationsPage() {
     });
   };
 
-  const handleModalClose = (id: string) => () => {
+  const handleModalClose = (id: string, didConnect?: boolean) => () => {
     setOpenModal(null);
-    setConnectedIds(prev => new Set(prev).add(id));
+    if (didConnect) {
+      setConnectedIds(prev => new Set(prev).add(id));
+    }
+  };
+
+  const handleDisconnect = (id: string) => {
+    setConnectedIds(prev => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
   };
 
   const getStatus = (integration: Integration): ConnectionStatus => {
@@ -92,6 +102,7 @@ export default function IntegrationsPage() {
                 integration={integration}
                 status={getStatus(integration)}
                 onConnect={handleConnect}
+                onDisconnect={handleDisconnect}
               />
             ))}
           </div>
@@ -120,6 +131,9 @@ export default function IntegrationsPage() {
       {openModal === "make" && <MakeModal onClose={handleModalClose("make")} />}
       {openModal === "sms_alerts" && <SMSAlertsModal onClose={handleModalClose("sms_alerts")} />}
       {openModal === "email_smtp" && <EmailAlertsModal onClose={handleModalClose("email_smtp")} />}
+      {/* Note: modals call onClose() without didConnect=true, so closing a modal
+          does NOT mark the integration as connected. In production, the OAuth
+          callback or API verification will call onClose with didConnect=true. */}
     </div>
   );
 }

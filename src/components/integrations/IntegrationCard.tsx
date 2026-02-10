@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Clock, Zap } from "lucide-react";
+import { Check, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Integration, ConnectionStatus } from "./types";
 
@@ -8,9 +8,10 @@ interface IntegrationCardProps {
   integration: Integration;
   status: ConnectionStatus;
   onConnect: (id: string) => void;
+  onDisconnect?: (id: string) => void;
 }
 
-export function IntegrationCard({ integration, status, onConnect }: IntegrationCardProps) {
+export function IntegrationCard({ integration, status, onConnect, onDisconnect }: IntegrationCardProps) {
   const isConnected = status === "connected";
   const isComingSoon = status === "coming_soon";
 
@@ -43,9 +44,13 @@ export function IntegrationCard({ integration, status, onConnect }: IntegrationC
             Soon
           </span>
         ) : isConnected ? (
-          <span className="text-[11px] font-medium text-teal-600 bg-teal-50 px-3 py-1.5 rounded-lg border border-teal-100">
-            Connected
-          </span>
+          <button
+            onClick={() => onDisconnect?.(integration.id)}
+            aria-label={`Disconnect ${integration.name}`}
+            className="text-[11px] font-medium text-rose-600 bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-100 hover:bg-rose-100 transition-colors cursor-pointer"
+          >
+            Disconnect
+          </button>
         ) : (
           <button
             onClick={() => onConnect(integration.id)}
