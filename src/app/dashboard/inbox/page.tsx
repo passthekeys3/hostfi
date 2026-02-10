@@ -66,9 +66,14 @@ function MatchBadge({ type }: { type: string }) {
   );
 }
 
-function InboxCard({ item, onConfirm, onReject }: { item: InboxItem; onConfirm: () => void; onReject: () => void }) {
+function InboxCard({ item, onConfirm, onReject, onUpdate }: { item: InboxItem; onConfirm: () => void; onReject: () => void; onUpdate: (updates: Partial<InboxItem['parsed']> & { property_id?: string | null }) => void }) {
   const [expanded, setExpanded] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [assignedProperty, setAssignedProperty] = useState(item.match.property_id);
+  const [editAmount, setEditAmount] = useState(item.parsed.amount.toString());
+  const [editProvider, setEditProvider] = useState(item.parsed.provider_name);
+  const [editType, setEditType] = useState(item.parsed.utility_type);
+  const [editDueDate, setEditDueDate] = useState(item.parsed.due_date ?? '');
   const Icon = utilityIcons[item.parsed.utility_type] ?? HelpCircle;
   const iconColor = utilityColors[item.parsed.utility_type] ?? "text-muted-foreground";
   const leftBorder = statusLeftBorder[item.match.match_type] ?? "border-l-gray-300";
@@ -140,30 +145,129 @@ function InboxCard({ item, onConfirm, onReject }: { item: InboxItem; onConfirm: 
           </div>
         </div>
 
-        <div className="flex items-center gap-2 mt-4 sm:mt-5 ml-0 sm:ml-14 flex-wrap">
-          <button
-            onClick={onConfirm}
-            className="flex items-center gap-1.5 px-4 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-all duration-200 text-xs font-medium shadow-sm"
-          >
-            <Check className="w-3.5 h-3.5" /> Confirm
-          </button>
-          <button className="flex items-center gap-1.5 px-4 py-2 bg-white text-foreground rounded-xl hover:bg-gray-100 transition-all duration-200 text-xs font-medium border border-gray-200 shadow-sm">
-            <Pencil className="w-3.5 h-3.5" /> Edit
-          </button>
-          <button
-            onClick={onReject}
-            className="flex items-center gap-1.5 px-4 py-2 bg-red-500/10 text-red-600 rounded-xl hover:bg-red-500/20 transition-all duration-200 text-xs font-medium border border-red-500/15"
-          >
-            <X className="w-3.5 h-3.5" /> Reject
-          </button>
-          <button
-            onClick={() => setExpanded(!expanded)}
-            className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150"
-          >
-            {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            {expanded ? "Hide" : "Details"}
-          </button>
-        </div>
+        {/* Edit form */}
+        {editing && (
+          <div className="mt-4 ml-0 sm:ml-14 bg-gray-50 rounded-xl border border-gray-200 p-4 space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Provider</label>
+                <input
+                  type="text"
+                  value={editProvider}
+                  onChange={(e) => setEditProvider(e.target.value)}
+                  className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Amount</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={editAmount}
+                    onChange={(e) => setEditAmount(e.target.value)}
+                    className="w-full pl-7 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Category</label>
+                <select
+                  value={editType}
+                  onChange={(e) => setEditType(e.target.value)}
+                  className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                >
+                  {['gas', 'water', 'electric', 'internet', 'trash', 'rent', 'insurance', 'other'].map(t => (
+                    <option key={t} value={t} className="capitalize">{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Due Date</label>
+                <input
+                  type="date"
+                  value={editDueDate}
+                  onChange={(e) => setEditDueDate(e.target.value)}
+                  className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-medium text-gray-700 mb-1">Property</label>
+                <select
+                  value={assignedProperty ?? ""}
+                  onChange={(e) => setAssignedProperty(e.target.value || null)}
+                  className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
+                >
+                  <option value="">Unassigned</option>
+                  {DEMO_PROPERTIES.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                onClick={() => {
+                  onUpdate({
+                    provider_name: editProvider,
+                    amount: parseFloat(editAmount) || item.parsed.amount,
+                    utility_type: editType,
+                    due_date: editDueDate || null,
+                    property_id: assignedProperty,
+                  });
+                  setEditing(false);
+                }}
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                <Check className="w-3.5 h-3.5" /> Save Changes
+              </button>
+              <button
+                onClick={() => {
+                  setEditProvider(item.parsed.provider_name);
+                  setEditAmount(item.parsed.amount.toString());
+                  setEditType(item.parsed.utility_type);
+                  setEditDueDate(item.parsed.due_date ?? '');
+                  setEditing(false);
+                }}
+                className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Action buttons */}
+        {!editing && (
+          <div className="flex items-center gap-2 mt-4 sm:mt-5 ml-0 sm:ml-14 flex-wrap">
+            <button
+              onClick={onConfirm}
+              className="flex items-center gap-1.5 px-4 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-all duration-200 text-xs font-medium shadow-sm"
+            >
+              <Check className="w-3.5 h-3.5" /> Confirm
+            </button>
+            <button
+              onClick={() => setEditing(true)}
+              className="flex items-center gap-1.5 px-4 py-2 bg-white text-foreground rounded-xl hover:bg-gray-100 transition-all duration-200 text-xs font-medium border border-gray-200 shadow-sm"
+            >
+              <Pencil className="w-3.5 h-3.5" /> Edit
+            </button>
+            <button
+              onClick={onReject}
+              className="flex items-center gap-1.5 px-4 py-2 bg-red-500/10 text-red-600 rounded-xl hover:bg-red-500/20 transition-all duration-200 text-xs font-medium border border-red-500/15"
+            >
+              <X className="w-3.5 h-3.5" /> Reject
+            </button>
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors duration-150"
+            >
+              {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              {expanded ? "Hide" : "Details"}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Expanded details */}
@@ -220,6 +324,20 @@ export default function InboxPage() {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, status: "rejected" as const } : i)));
   };
 
+  const handleUpdate = (id: string, updates: Partial<InboxItem['parsed']> & { property_id?: string | null }) => {
+    setItems((prev) => prev.map((i) => {
+      if (i.id !== id) return i;
+      const { property_id, ...parsedUpdates } = updates;
+      return {
+        ...i,
+        parsed: { ...i.parsed, ...parsedUpdates },
+        match: property_id !== undefined
+          ? { ...i.match, property_id, match_type: property_id ? 'exact_mapping' as const : 'none' as const, confidence: property_id ? 1 : 0 }
+          : i.match,
+      };
+    }));
+  };
+
   return (
     <div className="space-y-10">
       <div className="flex items-start sm:items-center justify-between gap-3">
@@ -252,6 +370,7 @@ export default function InboxPage() {
               item={item}
               onConfirm={() => handleConfirm(item.id)}
               onReject={() => handleReject(item.id)}
+              onUpdate={(updates) => handleUpdate(item.id, updates)}
             />
           ))}
         </div>
