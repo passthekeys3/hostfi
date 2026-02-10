@@ -9,5 +9,7 @@ export { SMSAlertsModal } from "./SMSAlertsModal";
 export { DropboxModal } from "./DropboxModal";
 export { MakeModal } from "./MakeModal";
 export { EmailAlertsModal } from "./EmailAlertsModal";
+export { PlaidModal } from "./PlaidModal";
+export { PlaidLinkButton } from "./PlaidLinkButton";
 export { IntegrationCard } from "./IntegrationCard";
 export type { Integration, ConnectionStatus, ModalProps } from "./types";

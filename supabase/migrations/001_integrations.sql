@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS integration_connections (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  provider TEXT NOT NULL CHECK (provider IN ('google_sheets', 'google_drive', 'slack', 'zapier', 'quickbooks', 'xero')),
+  provider TEXT NOT NULL CHECK (provider IN ('google_sheets', 'google_drive', 'slack', 'zapier', 'quickbooks', 'xero', 'plaid')),
   access_token TEXT NOT NULL,
   refresh_token TEXT,
   token_expires_at TIMESTAMPTZ,

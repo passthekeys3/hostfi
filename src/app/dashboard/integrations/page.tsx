@@ -14,6 +14,7 @@ import {
   ZapierModal,
   EmailAlertsModal,
   SMSAlertsModal,
+  PlaidModal,
   IntegrationCard,
   type Integration,
   type ConnectionStatus,
@@ -22,7 +23,7 @@ import {
 const INTEGRATIONS: Integration[] = [
   { id: "quickbooks", name: "QuickBooks Online", description: "Sync expenses and revenue to your ledger", category: "Accounting", status: "disconnected", logo: "QB", logoColor: "bg-[#2CA01C]", tier: "business" },
   { id: "xero", name: "Xero", description: "Two-way sync with expenses and revenue", category: "Accounting", status: "disconnected", logo: "XO", logoColor: "bg-[#13B5EA]", tier: "business" },
-  { id: "plaid", name: "Bank Accounts (Plaid)", description: "Auto-import and categorize transactions", category: "Banking", status: "coming_soon", logo: "PL", logoColor: "bg-[#111111]", tier: "pro" },
+  { id: "plaid", name: "Bank Accounts (Plaid)", description: "Auto-import and categorize transactions", category: "Banking", status: "disconnected", logo: "PL", logoColor: "bg-[#111111]", tier: "pro" },
   { id: "melio", name: "Melio", description: "Pay bills directly — ACH free on paid plans", category: "Payments", status: "disconnected", logo: "ML", logoColor: "bg-[#00C2FF]", tier: "free" },
   { id: "hostaway", name: "Hostaway", description: "Import reservations and revenue", category: "Property Management", status: "coming_soon", logo: "HA", logoColor: "bg-[#FF6B35]", tier: "pro" },
   { id: "guesty", name: "Guesty", description: "Sync bookings, payouts, and property data", category: "Property Management", status: "coming_soon", logo: "GY", logoColor: "bg-[#00BFA5]", tier: "business" },
@@ -53,7 +54,7 @@ export default function IntegrationsPage() {
   const [openModal, setOpenModal] = useState<string | null>(null);
 
   const handleConnect = (id: string) => {
-    const hasModal = ["quickbooks", "xero", "slack", "google_sheets", "zapier", "teams", "google_drive", "dropbox", "make", "sms_alerts", "email_smtp"].includes(id);
+    const hasModal = ["quickbooks", "xero", "slack", "google_sheets", "zapier", "teams", "google_drive", "dropbox", "make", "sms_alerts", "email_smtp", "plaid"].includes(id);
     if (hasModal) { setOpenModal(id); return; }
     // Toggle for Melio
     setConnectedIds(prev => {
@@ -131,6 +132,7 @@ export default function IntegrationsPage() {
       {openModal === "make" && <MakeModal onClose={handleModalClose("make")} />}
       {openModal === "sms_alerts" && <SMSAlertsModal onClose={handleModalClose("sms_alerts")} />}
       {openModal === "email_smtp" && <EmailAlertsModal onClose={handleModalClose("email_smtp")} />}
+      {openModal === "plaid" && <PlaidModal onClose={handleModalClose("plaid")} />}
       {/* Note: modals call onClose() without didConnect=true, so closing a modal
           does NOT mark the integration as connected. In production, the OAuth
           callback or API verification will call onClose with didConnect=true. */}
