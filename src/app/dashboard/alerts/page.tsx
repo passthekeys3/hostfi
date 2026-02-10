@@ -57,6 +57,7 @@ function AlertsPageContent() {
   );
   const [showSettings, setShowSettings] = useState(false);
   const [expandedAnomaly, setExpandedAnomaly] = useState<string | null>(null);
+  const [expandedAlert, setExpandedAlert] = useState<string | null>(null);
 
   const [settings, setSettings] = useState({
     due_soon: true, overdue: true, unusual_amount: true,
@@ -331,63 +332,126 @@ function AlertsPageContent() {
           const config = ALERT_TYPE_CONFIG[alert.type];
           const Icon = ALERT_ICONS[alert.type];
           const leftBorder = ALERT_LEFT_BORDERS[alert.type] || "border-l-gray-300";
+          const isExpanded = expandedAlert === alert.id;
+
+          const toggleExpand = () => {
+            const opening = expandedAlert !== alert.id;
+            setExpandedAlert(opening ? alert.id : null);
+            if (opening && !alert.read) markRead(alert.id);
+          };
 
           return (
             <div
               key={alert.id}
-              onClick={() => { if (!alert.read) markRead(alert.id); }}
+              onClick={toggleExpand}
               className={cn(
-                "bg-white rounded-2xl border border-gray-200 border-l-[3px] p-6 flex gap-4 transition-all duration-300",
+                "bg-white rounded-2xl border border-gray-200 border-l-[3px] p-6 transition-all duration-300 cursor-pointer",
                 leftBorder,
-                alert.read ? "opacity-60" : "cursor-pointer hover:bg-gray-50/50",
+                alert.read && !isExpanded && "opacity-60",
+                !alert.read && "hover:bg-gray-50/50",
+                isExpanded && "ring-1 ring-gray-200",
               )}
               style={{
                 boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 6px rgba(0, 0, 0, 0.02)',
               }}
             >
-              <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center shrink-0", config.bgColor)}>
-                <Icon className={cn("w-5 h-5", config.color)} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className={cn("text-sm font-semibold", !alert.read && "text-foreground")}>{alert.title}</h3>
-                      {!alert.read && (
-                        <span className="w-2 h-2 rounded-full bg-accent shadow-[0_0_6px_rgba(20,184,166,0.5)]" />
+              <div className="flex gap-4">
+                <div className={cn("w-11 h-11 rounded-xl flex items-center justify-center shrink-0", config.bgColor)}>
+                  <Icon className={cn("w-5 h-5", config.color)} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className={cn("text-sm font-semibold", !alert.read && "text-foreground")}>{alert.title}</h3>
+                        {!alert.read && (
+                          <span className="w-2 h-2 rounded-full bg-accent shadow-[0_0_6px_rgba(20,184,166,0.5)]" />
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{alert.description}</p>
+                      <div className="flex items-center gap-3 mt-2.5">
+                        <span className={cn("text-[10px] font-medium px-2.5 py-0.5 rounded-full", config.bgColor, config.color)}>{config.label}</span>
+                        <span className="text-xs text-muted-foreground">{timeAgo(alert.created_at)}</span>
+                        {!isExpanded && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <ChevronDown className="w-3 h-3" /> Details
+                          </span>
+                        )}
+                      </div>
+
+                      {isExpanded && (
+                        <div className="mt-4 space-y-3">
+                          {alert.property_id && (
+                            <div className="bg-gray-50 rounded-xl p-4 text-xs space-y-2 border border-gray-200/60">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Property</span>
+                                <span className="font-medium text-gray-700">
+                                  {alert.property_id === '1' ? 'Venice Beach Unit' : alert.property_id === '2' ? 'Silver Lake Duplex' : 'Joshua Tree Cabin'}
+                                </span>
+                              </div>
+                              {alert.type === 'due_soon' && (
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Action Needed</span>
+                                  <span className="font-medium text-amber-600">Pay before due date</span>
+                                </div>
+                              )}
+                              {alert.type === 'overdue' && (
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Action Needed</span>
+                                  <span className="font-medium text-rose-600">Pay immediately to avoid late fees</span>
+                                </div>
+                              )}
+                              {alert.type === 'unusual_amount' && (
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Recommendation</span>
+                                  <span className="font-medium text-orange-600">Review for potential issues</span>
+                                </div>
+                              )}
+                              {alert.type === 'missing_bill' && (
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Recommendation</span>
+                                  <span className="font-medium text-blue-600">Check with provider</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {alert.type === 'new_parsed' && (
+                            <div className="bg-teal-50/50 border border-teal-100 rounded-xl p-4 text-xs text-teal-700">
+                              <p className="font-medium mb-1">Parsed Bills Ready</p>
+                              <p>Head to your Inbox to review and approve the parsed bills before they&apos;re added to your expenses.</p>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 pt-1">
+                            {alert.bill_id && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); viewBill(alert.bill_id!); }}
+                                className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" /> View Expense
+                              </button>
+                            )}
+                            {alert.type === 'new_parsed' && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); router.push('/dashboard/inbox'); }}
+                                className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-gray-900 hover:bg-gray-800 rounded-lg transition-colors"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" /> Go to Inbox
+                              </button>
+                            )}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); dismiss(alert.id); }}
+                              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                            >
+                              Dismiss
+                            </button>
+                          </div>
+                        </div>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{alert.description}</p>
-                    <div className="flex items-center gap-3 mt-2.5">
-                      <span className={cn("text-[10px] font-medium px-2.5 py-0.5 rounded-full", config.bgColor, config.color)}>{config.label}</span>
-                      <span className="text-xs text-muted-foreground">{timeAgo(alert.created_at)}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    {alert.bill_id && (
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); viewBill(alert.bill_id!); }}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 active:scale-95" 
-                        title="View Expense" 
-                        aria-label="View expense"
-                      >
-                        <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                      </button>
-                    )}
-                    {!alert.read && (
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); markRead(alert.id); }} 
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 active:scale-95" 
-                        title="Mark as Read" 
-                        aria-label="Mark as read"
-                      >
-                        <Eye className="w-4 h-4 text-muted-foreground" />
-                      </button>
-                    )}
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); dismiss(alert.id); }} 
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 active:scale-95" 
-                      title="Dismiss" 
+                    <button
+                      onClick={(e) => { e.stopPropagation(); dismiss(alert.id); }}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 active:scale-95 shrink-0"
+                      title="Dismiss"
                       aria-label="Dismiss alert"
                     >
                       <X className="w-4 h-4 text-muted-foreground" />
