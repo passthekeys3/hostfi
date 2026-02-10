@@ -9,8 +9,9 @@ import { cn } from "@/lib/utils";
 import {
   Clock, AlertTriangle, TrendingUp, FileQuestion, Sparkles,
   Eye, X, ExternalLink, Bell, Settings2, Search, ChevronDown, ChevronUp,
-  Lightbulb, Calendar,
+  Lightbulb, Calendar, Check, CheckCheck,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const ALERT_ICONS: Record<string, typeof Clock> = {
   due_soon: Clock,
@@ -86,7 +87,18 @@ function AlertsPageContent() {
     return `${Math.floor(hours / 24)}d ago`;
   }
 
-  const selectClass = "bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20/20 focus:border-teal-500 transition-all duration-200";
+  const router = useRouter();
+
+  function markAllRead() {
+    setAlerts(prev => prev.map(a => ({ ...a, read: true })));
+    setAnomalies(prev => prev.map(a => ({ ...a, status: 'acknowledged' as const })));
+  }
+
+  function viewBill(billId: string) {
+    router.push(`/dashboard/expenses`);
+  }
+
+  const selectClass = "bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all duration-200";
 
   return (
     <div className="space-y-10">
@@ -108,21 +120,32 @@ function AlertsPageContent() {
           </div>
           <p className="text-muted-foreground mt-2 leading-relaxed">Stay on top of your bills and expenses</p>
         </div>
-        <button
-          onClick={() => setShowSettings(!showSettings)}
-          className={cn(
-            "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 min-h-[40px]",
-            showSettings
-              ? "bg-teal-50 text-teal-700 ring-1 ring-teal-200/60"
-              : "bg-white text-foreground border border-gray-200 hover:bg-gray-100"
+        <div className="flex items-center gap-2">
+          {unreadCount > 0 && (
+            <button
+              onClick={markAllRead}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all duration-200 min-h-[40px]"
+            >
+              <CheckCheck className="w-4 h-4" />
+              <span className="hidden sm:inline">Mark All Read</span>
+            </button>
           )}
-          style={{
-            boxShadow: showSettings ? 'none' : '0 1px 2px rgba(0, 0, 0, 0.03)',
-          }}
-        >
-          <Settings2 className="w-4 h-4" />
-          Settings
-        </button>
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className={cn(
+              "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 min-h-[40px]",
+              showSettings
+                ? "bg-teal-50 text-teal-700 ring-1 ring-teal-200/60"
+                : "bg-white text-foreground border border-gray-200 hover:bg-gray-100"
+            )}
+            style={{
+              boxShadow: showSettings ? 'none' : '0 1px 2px rgba(0, 0, 0, 0.03)',
+            }}
+          >
+            <Settings2 className="w-4 h-4" />
+            <span className="hidden sm:inline">Settings</span>
+          </button>
+        </div>
       </div>
 
       {/* Settings Panel */}
@@ -213,9 +236,10 @@ function AlertsPageContent() {
           return (
             <div
               key={anomaly.id}
+              onClick={() => { if (anomaly.status === 'new') updateAnomalyStatus(anomaly.id, 'acknowledged'); }}
               className={cn(
                 "bg-white rounded-2xl border border-gray-200 border-l-[3px] border-l-violet-500 p-6 transition-all duration-300",
-                anomaly.status === 'acknowledged' && "opacity-70",
+                anomaly.status === 'acknowledged' ? "opacity-70" : "cursor-pointer hover:bg-gray-50/50",
               )}
               style={{
                 boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 6px rgba(0, 0, 0, 0.02)',
@@ -249,7 +273,7 @@ function AlertsPageContent() {
                       </div>
 
                       <button
-                        onClick={() => setExpandedAnomaly(isExpanded ? null : anomaly.id)}
+                        onClick={(e) => { e.stopPropagation(); setExpandedAnomaly(isExpanded ? null : anomaly.id); }}
                         className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mt-3 transition-colors duration-200 font-medium"
                       >
                         {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -278,7 +302,7 @@ function AlertsPageContent() {
                     <div className="flex items-center gap-1 shrink-0">
                       {anomaly.status === 'new' && (
                         <button 
-                          onClick={() => updateAnomalyStatus(anomaly.id, 'acknowledged')} 
+                          onClick={(e) => { e.stopPropagation(); updateAnomalyStatus(anomaly.id, 'acknowledged'); }} 
                           className="p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 active:scale-95" 
                           title="Acknowledge" 
                           aria-label="Acknowledge anomaly"
@@ -287,7 +311,7 @@ function AlertsPageContent() {
                         </button>
                       )}
                       <button 
-                        onClick={() => dismissAnomaly(anomaly.id)} 
+                        onClick={(e) => { e.stopPropagation(); dismissAnomaly(anomaly.id); }} 
                         className="p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 active:scale-95" 
                         title="Dismiss" 
                         aria-label="Dismiss anomaly"
@@ -311,10 +335,11 @@ function AlertsPageContent() {
           return (
             <div
               key={alert.id}
+              onClick={() => { if (!alert.read) markRead(alert.id); }}
               className={cn(
                 "bg-white rounded-2xl border border-gray-200 border-l-[3px] p-6 flex gap-4 transition-all duration-300",
                 leftBorder,
-                alert.read && "opacity-60",
+                alert.read ? "opacity-60" : "cursor-pointer hover:bg-gray-50/50",
               )}
               style={{
                 boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 6px rgba(0, 0, 0, 0.02)',
@@ -341,16 +366,17 @@ function AlertsPageContent() {
                   <div className="flex items-center gap-1 shrink-0">
                     {alert.bill_id && (
                       <button 
+                        onClick={(e) => { e.stopPropagation(); viewBill(alert.bill_id!); }}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 active:scale-95" 
-                        title="View Bill" 
-                        aria-label="View bill"
+                        title="View Expense" 
+                        aria-label="View expense"
                       >
                         <ExternalLink className="w-4 h-4 text-muted-foreground" />
                       </button>
                     )}
                     {!alert.read && (
                       <button 
-                        onClick={() => markRead(alert.id)} 
+                        onClick={(e) => { e.stopPropagation(); markRead(alert.id); }} 
                         className="p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 active:scale-95" 
                         title="Mark as Read" 
                         aria-label="Mark as read"
@@ -359,7 +385,7 @@ function AlertsPageContent() {
                       </button>
                     )}
                     <button 
-                      onClick={() => dismiss(alert.id)} 
+                      onClick={(e) => { e.stopPropagation(); dismiss(alert.id); }} 
                       className="p-2 hover:bg-gray-100 rounded-lg transition-all duration-200 active:scale-95" 
                       title="Dismiss" 
                       aria-label="Dismiss alert"
