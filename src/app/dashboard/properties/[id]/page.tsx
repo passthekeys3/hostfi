@@ -114,20 +114,77 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
       )}
 
       {/* Monthly spend chart */}
-      <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-7">
-        <h2 className="text-base font-semibold uppercase tracking-wide text-muted-foreground mb-6">Monthly Spend</h2>
-        <div className="flex items-end gap-3 h-40">
-          {months.map((month, i) => (
-            <div key={month} className="flex-1 flex flex-col items-center gap-2">
-              <div className="w-full flex justify-center">
-                <span className="text-xs text-muted-foreground">{formatCurrency(spendData[i])}</span>
-              </div>
-              <div
-                className={cn("w-full max-w-12 rounded-t-lg transition-all", i === months.length - 1 ? "bg-accent" : "bg-accent/20")}
-                style={{ height: `${(spendData[i] / maxSpend) * 100}%` }}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400">Monthly Spend</h2>
+          <span className="text-[11px] text-gray-400">Last 5 Months</span>
+        </div>
+        
+        {/* Area chart */}
+        <div className="mb-4">
+          <svg className="w-full h-40" viewBox="0 0 500 160" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#14B8A6" stopOpacity="0.15" />
+                <stop offset="100%" stopColor="#14B8A6" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            {/* Grid lines */}
+            {[0, 1, 2, 3].map(i => (
+              <line key={i} x1="0" y1={i * 40 + 10} x2="500" y2={i * 40 + 10} stroke="#f3f4f6" strokeWidth="1" />
+            ))}
+            {/* Area fill */}
+            <polyline
+              fill="url(#spendGrad)"
+              stroke="none"
+              points={`${spendData.map((v, i) => `${i * 125},${150 - (v / maxSpend) * 130}`).join(' ')} 500,150 0,150`}
+            />
+            {/* Line */}
+            <polyline
+              fill="none"
+              stroke="#14B8A6"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              points={spendData.map((v, i) => `${i * 125},${150 - (v / maxSpend) * 130}`).join(' ')}
+            />
+            {/* Data points */}
+            {spendData.map((v, i) => (
+              <circle
+                key={i}
+                cx={i * 125}
+                cy={150 - (v / maxSpend) * 130}
+                r={i === spendData.length - 1 ? 5 : 3.5}
+                fill={i === spendData.length - 1 ? '#14B8A6' : 'white'}
+                stroke="#14B8A6"
+                strokeWidth="2"
               />
-              <span className="text-xs text-muted-foreground">{month}</span>
-            </div>
+            ))}
+            {/* Amount labels */}
+            {spendData.map((v, i) => (
+              <text
+                key={`label-${i}`}
+                x={i * 125}
+                y={150 - (v / maxSpend) * 130 - 12}
+                textAnchor="middle"
+                className="text-[11px] fill-gray-500"
+                style={{ fontFamily: 'Inter, sans-serif', fontVariantNumeric: 'tabular-nums' }}
+              >
+                ${v.toLocaleString()}
+              </text>
+            ))}
+          </svg>
+        </div>
+        
+        {/* Month labels */}
+        <div className="flex justify-between px-0">
+          {months.map((month, i) => (
+            <span key={month} className={cn(
+              "text-xs font-medium",
+              i === months.length - 1 ? "text-teal-600" : "text-gray-400"
+            )} style={{ width: '20%', textAlign: i === 0 ? 'left' : i === months.length - 1 ? 'right' : 'center' }}>
+              {month}
+            </span>
           ))}
         </div>
       </div>
