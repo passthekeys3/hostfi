@@ -38,7 +38,7 @@ export default function LoginPage() {
   };
 
   const handleDemoMode = () => {
-    router.push("/dashboard");
+    router.push("/dashboard?demo=true");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
