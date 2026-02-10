@@ -120,29 +120,28 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
           <span className="text-[11px] text-gray-400">Last 5 Months</span>
         </div>
         
-        <div className="flex items-end gap-4 h-48">
+        <div className="flex items-end gap-4" style={{ height: 200 }}>
           {months.map((month, i) => {
-            const heightPct = Math.max((spendData[i] / maxSpend) * 100, 4);
             const isCurrent = i === months.length - 1;
+            // Use a minimum bar height so small values are still visible
+            const barHeight = Math.max(Math.round((spendData[i] / maxSpend) * 140), 24);
             return (
-              <div key={month} className="flex-1 flex flex-col items-center gap-2">
+              <div key={month} className="flex-1 flex flex-col items-center justify-end h-full">
                 <span className={cn(
-                  "text-xs font-semibold tabular-nums",
-                  isCurrent ? "text-gray-900" : "text-gray-400"
+                  "text-xs font-semibold tabular-nums mb-2",
+                  isCurrent ? "text-gray-900" : "text-gray-500"
                 )}>
                   {formatCurrency(spendData[i])}
                 </span>
-                <div className="w-full flex justify-center flex-1 items-end">
-                  <div
-                    className={cn(
-                      "w-full max-w-[48px] rounded-lg transition-all",
-                      isCurrent ? "bg-teal-500" : "bg-gray-200"
-                    )}
-                    style={{ height: `${heightPct}%` }}
-                  />
-                </div>
+                <div
+                  className={cn(
+                    "w-full max-w-[52px] rounded-t-lg",
+                    isCurrent ? "bg-teal-500" : "bg-teal-200"
+                  )}
+                  style={{ height: barHeight }}
+                />
                 <span className={cn(
-                  "text-xs font-medium",
+                  "text-xs font-medium mt-3",
                   isCurrent ? "text-teal-600" : "text-gray-400"
                 )}>
                   {month}
