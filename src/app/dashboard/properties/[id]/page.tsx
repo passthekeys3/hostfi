@@ -120,72 +120,36 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
           <span className="text-[11px] text-gray-400">Last 5 Months</span>
         </div>
         
-        {/* Area chart */}
-        <div className="mb-4">
-          <svg className="w-full h-40" viewBox="0 0 500 160" preserveAspectRatio="none">
-            <defs>
-              <linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#14B8A6" stopOpacity="0.15" />
-                <stop offset="100%" stopColor="#14B8A6" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            {/* Grid lines */}
-            {[0, 1, 2, 3].map(i => (
-              <line key={i} x1="0" y1={i * 40 + 10} x2="500" y2={i * 40 + 10} stroke="#f3f4f6" strokeWidth="1" />
-            ))}
-            {/* Area fill */}
-            <polyline
-              fill="url(#spendGrad)"
-              stroke="none"
-              points={`${spendData.map((v, i) => `${i * 125},${150 - (v / maxSpend) * 130}`).join(' ')} 500,150 0,150`}
-            />
-            {/* Line */}
-            <polyline
-              fill="none"
-              stroke="#14B8A6"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              points={spendData.map((v, i) => `${i * 125},${150 - (v / maxSpend) * 130}`).join(' ')}
-            />
-            {/* Data points */}
-            {spendData.map((v, i) => (
-              <circle
-                key={i}
-                cx={i * 125}
-                cy={150 - (v / maxSpend) * 130}
-                r={i === spendData.length - 1 ? 5 : 3.5}
-                fill={i === spendData.length - 1 ? '#14B8A6' : 'white'}
-                stroke="#14B8A6"
-                strokeWidth="2"
-              />
-            ))}
-            {/* Amount labels */}
-            {spendData.map((v, i) => (
-              <text
-                key={`label-${i}`}
-                x={i * 125}
-                y={150 - (v / maxSpend) * 130 - 12}
-                textAnchor="middle"
-                className="text-[11px] fill-gray-500"
-                style={{ fontFamily: 'Inter, sans-serif', fontVariantNumeric: 'tabular-nums' }}
-              >
-                ${v.toLocaleString()}
-              </text>
-            ))}
-          </svg>
-        </div>
-        
-        {/* Month labels */}
-        <div className="flex justify-between px-0">
-          {months.map((month, i) => (
-            <span key={month} className={cn(
-              "text-xs font-medium",
-              i === months.length - 1 ? "text-teal-600" : "text-gray-400"
-            )} style={{ width: '20%', textAlign: i === 0 ? 'left' : i === months.length - 1 ? 'right' : 'center' }}>
-              {month}
-            </span>
-          ))}
+        <div className="flex items-end gap-4 h-48">
+          {months.map((month, i) => {
+            const heightPct = Math.max((spendData[i] / maxSpend) * 100, 4);
+            const isCurrent = i === months.length - 1;
+            return (
+              <div key={month} className="flex-1 flex flex-col items-center gap-2">
+                <span className={cn(
+                  "text-xs font-semibold tabular-nums",
+                  isCurrent ? "text-gray-900" : "text-gray-400"
+                )}>
+                  {formatCurrency(spendData[i])}
+                </span>
+                <div className="w-full flex justify-center flex-1 items-end">
+                  <div
+                    className={cn(
+                      "w-full max-w-[48px] rounded-lg transition-all",
+                      isCurrent ? "bg-teal-500" : "bg-gray-200"
+                    )}
+                    style={{ height: `${heightPct}%` }}
+                  />
+                </div>
+                <span className={cn(
+                  "text-xs font-medium",
+                  isCurrent ? "text-teal-600" : "text-gray-400"
+                )}>
+                  {month}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
