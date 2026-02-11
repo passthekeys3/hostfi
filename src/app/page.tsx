@@ -543,7 +543,7 @@ export default function LandingPage() {
                 price: "$0",
                 period: "forever",
                 desc: "For getting started",
-                features: ["Up to 5 properties", "AI categorization (50/mo)", "Ask AI (10 queries/mo)", "Revenue tracking (CSV)", "Basic analytics"],
+                features: ["Up to 3 properties", "AI categorization (50/mo)", "Ask AI (10 queries/mo)", "Revenue tracking (CSV)", "Basic analytics"],
                 cta: "Get started",
                 highlighted: false,
               },
@@ -552,7 +552,7 @@ export default function LandingPage() {
                 price: "$15",
                 period: "/mo",
                 desc: "For growing portfolios",
-                features: ["Up to 25 properties", "Unlimited AI features", "Anomaly detection", "Schedule E tax export", "Free ACH bill pay", "AI monthly summaries", "Receipt scanning"],
+                features: ["Up to 10 properties", "+$2.50/property beyond 10", "Unlimited AI features", "Anomaly detection", "Schedule E tax export", "Free ACH bill pay", "Receipt scanning"],
                 cta: "Start free trial",
                 highlighted: true,
               },
@@ -561,7 +561,7 @@ export default function LandingPage() {
                 price: "$49",
                 period: "/mo",
                 desc: "For teams and PMs",
-                features: ["Unlimited properties", "Everything in Pro", "Cross-property benchmarking", "Team access (up to 5)", "QuickBooks / Xero sync", "API access", "Priority support"],
+                features: ["Up to 25 properties", "+$2/property beyond 25", "Everything in Pro", "Cross-property benchmarking", "Team access (up to 5)", "QuickBooks / Xero sync", "Accountant portal", "Priority support"],
                 cta: "Start free trial",
                 highlighted: false,
               },
@@ -625,7 +625,7 @@ export default function LandingPage() {
             Stop Guessing. Start Knowing.
           </h2>
           <p className="text-gray-500 mb-10">
-            Free for up to 5 properties. No credit card required.
+            Free for up to 3 properties. No credit card required.
           </p>
           <Link href="/login" className="inline-flex items-center gap-2 px-8 py-4 text-sm font-semibold text-white bg-gray-900 rounded-xl hover:bg-gray-800 transition-colors">
             Get Started For Free <ArrowRight className="w-4 h-4" />
