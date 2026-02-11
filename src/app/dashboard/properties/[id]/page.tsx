@@ -6,7 +6,8 @@ import { DEMO_UTILITY_ACCOUNTS, DEMO_BILLS } from "@/lib/types";
 import { getExpensesForProperty, getExpensesByCategory } from "@/lib/demo-expenses";
 import { EXPENSE_CATEGORY_CONFIG } from "@/lib/expense-categories";
 import { cn, getStatusColor, getPropertyTypeLabel, getUtilityIcon, formatCurrency } from "@/lib/utils";
-import { ArrowLeft, MapPin, Plus, Bed, Bath, Ruler } from "lucide-react";
+import { ArrowLeft, MapPin, Plus, Bed, Bath, Ruler, Download, FileText, Share2 } from "lucide-react";
+import { PropertyExportBar } from "@/components/property-export-bar";
 
 export default async function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -76,6 +77,14 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
           </div>
         </div>
       </div>
+
+      {/* Export & Share */}
+      <PropertyExportBar
+        property={property}
+        expenses={propertyExpenses}
+        expensesByCategory={expensesByCategory}
+        totalExpenses={totalExpenses}
+      />
 
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-5">
