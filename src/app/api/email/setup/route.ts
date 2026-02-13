@@ -29,9 +29,9 @@ export async function GET() {
     const supabase = createClient(supabaseUrl, serviceKey);
 
     const { data } = await supabase
-      .from('user_profiles')
+      .from('profiles')
       .select('inbound_email_prefix')
-      .eq('user_id', auth.userId)
+      .eq('id', auth.userId)
       .single();
 
     if (data?.inbound_email_prefix) {
@@ -66,9 +66,9 @@ export async function POST(req: Request) {
 
     // Check if user already has one
     const { data: existing } = await supabase
-      .from('user_profiles')
+      .from('profiles')
       .select('inbound_email_prefix')
-      .eq('user_id', auth.userId)
+      .eq('id', auth.userId)
       .single();
 
     if (existing?.inbound_email_prefix) {
@@ -80,8 +80,8 @@ export async function POST(req: Request) {
     let attempts = 0;
     while (attempts < 5) {
       const { data: conflict } = await supabase
-        .from('user_profiles')
-        .select('user_id')
+        .from('profiles')
+        .select('id')
         .eq('inbound_email_prefix', prefix)
         .single();
 
@@ -90,13 +90,11 @@ export async function POST(req: Request) {
       attempts++;
     }
 
-    // Upsert the prefix
+    // Update the profile with the prefix
     const { error } = await supabase
-      .from('user_profiles')
-      .upsert({
-        user_id: auth.userId,
-        inbound_email_prefix: prefix,
-      }, { onConflict: 'user_id' });
+      .from('profiles')
+      .update({ inbound_email_prefix: prefix })
+      .eq('id', auth.userId);
 
     if (error) {
       console.error('Failed to save inbound prefix:', error);

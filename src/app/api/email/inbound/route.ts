@@ -40,13 +40,13 @@ async function lookupUserByInboundAddress(addressPrefix: string): Promise<{ user
   const supabase = createClient(supabaseUrl, serviceKey);
 
   const { data, error } = await supabase
-    .from('user_profiles')
-    .select('user_id, email')
+    .from('profiles')
+    .select('id, email')
     .eq('inbound_email_prefix', addressPrefix)
     .single();
 
   if (error || !data) return null;
-  return { userId: data.user_id, email: data.email };
+  return { userId: data.id, email: data.email };
 }
 
 async function saveToInbox(
