@@ -93,10 +93,10 @@ export function GoogleSheetsModal({ onClose }: ModalProps) {
                 <Shield className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
                 <p className="text-xs text-green-700">HostFi uses Google OAuth. We only access the spreadsheet you choose.</p>
               </div>
-              <button onClick={() => setStep("spreadsheet")} className="w-full py-3 text-sm font-semibold text-white bg-[#0F9D58] hover:bg-[#0D8C4D] rounded-xl transition-colors flex items-center justify-center gap-2">
+              <a href="/api/integrations/google/auth" className="w-full py-3 text-sm font-semibold text-white bg-[#0F9D58] hover:bg-[#0D8C4D] rounded-xl transition-colors flex items-center justify-center gap-2">
                 Connect Google Account <ExternalLink className="w-4 h-4" />
-              </button>
-              <p className="text-center text-[10px] text-gray-400">Demo mode — no actual Google redirect.</p>
+              </a>
+              <p className="text-center text-[10px] text-gray-400">You&apos;ll be redirected to Google to authorize access.</p>
             </div>
           )}
 
