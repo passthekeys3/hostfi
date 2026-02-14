@@ -1,13 +1,39 @@
 "use client";
 
 import { Copy, Check, RotateCcw } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { resetOnboarding } from "@/lib/onboarding";
 
 export default function SettingsPage() {
   const [copied, setCopied] = useState(false);
   const [testSent, setTestSent] = useState(false);
-  const billingEmail = "bills+demo_abc123@hostfi.ai";
+  const [billingEmail, setBillingEmail] = useState("loading...");
+  const [generating, setGenerating] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/email/setup")
+      .then(r => r.json())
+      .then(data => {
+        if (data.email) {
+          setBillingEmail(data.email);
+        } else {
+          setBillingEmail("");
+        }
+      })
+      .catch(() => setBillingEmail("demo_user@in.hostfi.ai"));
+  }, []);
+
+  const generateEmail = async () => {
+    setGenerating(true);
+    try {
+      const res = await fetch("/api/email/setup", { method: "POST" });
+      const data = await res.json();
+      if (data.email) setBillingEmail(data.email);
+    } catch {
+      // ignore
+    }
+    setGenerating(false);
+  };
 
   const copyEmail = () => {
     navigator.clipboard.writeText(billingEmail);
@@ -50,16 +76,30 @@ export default function SettingsPage() {
             Use this email address to receive bills directly. Add it to your utility accounts so bills are automatically parsed and tracked.
           </p>
           <div className="flex items-center gap-2 sm:gap-3 max-w-lg">
-            <div className="flex-1 px-2.5 sm:px-4 py-3 sm:py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-[11px] sm:text-sm font-mono text-center break-all min-w-0">
-              {billingEmail}
-            </div>
-            <button
-              onClick={copyEmail}
-              aria-label={copied ? "Email copied" : "Copy billing email"}
-              className="p-3 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40"
-            >
-              {copied ? <Check className="w-4 h-4 text-accent" aria-hidden="true" /> : <Copy className="w-4 h-4" aria-hidden="true" />}
-            </button>
+            {billingEmail && billingEmail !== "loading..." ? (
+              <>
+                <div className="flex-1 px-2.5 sm:px-4 py-3 sm:py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-[11px] sm:text-sm font-mono text-center break-all min-w-0">
+                  {billingEmail}
+                </div>
+                <button
+                  onClick={copyEmail}
+                  aria-label={copied ? "Email copied" : "Copy billing email"}
+                  className="p-3 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500/40"
+                >
+                  {copied ? <Check className="w-4 h-4 text-accent" aria-hidden="true" /> : <Copy className="w-4 h-4" aria-hidden="true" />}
+                </button>
+              </>
+            ) : billingEmail === "loading..." ? (
+              <div className="flex-1 px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-400 text-center">Loading...</div>
+            ) : (
+              <button
+                onClick={generateEmail}
+                disabled={generating}
+                className="px-5 py-3 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition-all text-sm disabled:opacity-60"
+              >
+                {generating ? "Generating..." : "Generate Your Billing Email"}
+              </button>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 px-3 py-1.5 bg-teal-500/10 border border-teal-500/20 rounded-full">
