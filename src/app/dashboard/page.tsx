@@ -153,11 +153,11 @@ export default function DashboardPage() {
                         <div>
                           <p className="font-medium text-sm text-foreground flex items-center gap-1.5">
                             {expense.description}
-                            {expense.demo_notes && (
+                            {("demo_notes" in expense && expense.demo_notes) && (
                               <StickyNote className="w-3 h-3 text-amber-500" />
                             )}
                           </p>
-                          <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">{catConfig.label} · {(() => { const SourceIcon = getSourceIcon(expense.source); return <SourceIcon className="w-3 h-3 inline" />; })()}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">{catConfig.label}{expense.source ? <> · {(() => { const SourceIcon = getSourceIcon(expense.source); return <SourceIcon className="w-3 h-3 inline" />; })()}</> : null}</p>
                         </div>
                       </div>
                     </td>
@@ -206,7 +206,7 @@ export default function DashboardPage() {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate flex items-center gap-1.5">
                       {expense.description}
-                      {expense.demo_notes && (
+                      {("demo_notes" in expense && expense.demo_notes) && (
                         <StickyNote className="w-3 h-3 text-amber-500 shrink-0" />
                       )}
                     </p>

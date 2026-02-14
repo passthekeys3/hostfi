@@ -69,27 +69,31 @@ export function useDashboardData(): DashboardData {
           return;
         }
 
-        const [
-          { data: properties },
-          { data: expenses },
-          { data: revenue },
-        ] = await Promise.all([
+        // Check if user is authenticated
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setData(prev => ({ ...prev, loading: false }));
+          return;
+        }
+
+        const [propertiesRes, expensesRes, revenueRes] = await Promise.all([
           supabase.from("properties").select("*").order("created_at", { ascending: false }),
           supabase.from("expenses").select("*").order("date", { ascending: false }),
           supabase.from("revenue").select("*").order("date", { ascending: false }),
         ]);
 
         setData({
-          properties: (properties as Property[]) || [],
-          expenses: (expenses as DemoExpense[]) || [],
+          properties: (propertiesRes.data as Property[]) || [],
+          expenses: (expensesRes.data as DemoExpense[]) || [],
           anomalies: [],
           alerts: [],
-          revenue: (revenue as RevenueEntry[]) || [],
+          revenue: (revenueRes.data as RevenueEntry[]) || [],
           recurringExpenses: [],
           isDemo: false,
           loading: false,
         });
-      } catch {
+      } catch (err) {
+        console.error("Dashboard data fetch error:", err);
         setData(prev => ({ ...prev, loading: false }));
       }
     }
