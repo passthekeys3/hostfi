@@ -21,6 +21,8 @@ export default function LoginPage() {
       router.push("/dashboard");
       return;
     }
+    localStorage.removeItem('hostfi_demo_mode');
+    localStorage.removeItem('hostfi_onboarding_complete');
     setGoogleLoading(true);
     setError(null);
 
@@ -38,7 +40,8 @@ export default function LoginPage() {
   };
 
   const handleDemoMode = () => {
-    router.push("/dashboard?demo=true");
+    localStorage.setItem('hostfi_demo_mode', 'true');
+    router.push("/dashboard");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,6 +61,8 @@ export default function LoginPage() {
       setError(error.message);
       setLoading(false);
     } else {
+      localStorage.removeItem('hostfi_demo_mode');
+      localStorage.removeItem('hostfi_onboarding_complete');
       router.push("/dashboard");
     }
   };

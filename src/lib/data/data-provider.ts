@@ -57,10 +57,35 @@ export function isSupabaseConfigured(): boolean {
 }
 
 /**
- * Returns true if the app is running in demo mode (no Supabase).
+ * Returns true if the app is running in demo mode.
+ * Demo mode is either:
+ * 1. Supabase is not configured at all
+ * 2. User explicitly entered demo mode via login page (localStorage flag)
  */
 export function isDemoMode(): boolean {
-  return !isSupabaseConfigured();
+  if (isDemoMode()) return true;
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('hostfi_demo_mode') === 'true';
+  }
+  return false;
+}
+
+/**
+ * Enter demo mode explicitly
+ */
+export function enterDemoMode(): void {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('hostfi_demo_mode', 'true');
+  }
+}
+
+/**
+ * Exit demo mode (e.g. on real signup/login)
+ */
+export function exitDemoMode(): void {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('hostfi_demo_mode');
+  }
 }
 
 // ============================================================================
@@ -68,27 +93,36 @@ export function isDemoMode(): boolean {
 // ============================================================================
 
 export async function getProperties(userId?: string): Promise<Property[]> {
-  if (!isSupabaseConfigured()) {
+  if (isDemoMode()) {
     return DEMO_PROPERTIES;
   }
   
-  // TODO: Real Supabase query
-  // const { data, error } = await supabase
-  //   .from('properties')
-  //   .select('*')
-  //   .eq('user_id', userId);
-  // return data || [];
-  
-  return DEMO_PROPERTIES;
+  // Real Supabase query
+  try {
+    const { createClient } = await import('@/lib/supabase/client');
+    const supabase = createClient();
+    if (!supabase) return [];
+    const { data } = await supabase.from('properties').select('*').order('created_at', { ascending: false });
+    return (data as Property[]) || [];
+  } catch {
+    return [];
+  }
 }
 
 export async function getPropertyById(propertyId: string): Promise<Property | null> {
-  if (!isSupabaseConfigured()) {
+  if (isDemoMode()) {
     return DEMO_PROPERTIES.find(p => p.id === propertyId) || null;
   }
   
-  // TODO: Real Supabase query
-  return DEMO_PROPERTIES.find(p => p.id === propertyId) || null;
+  try {
+    const { createClient } = await import('@/lib/supabase/client');
+    const supabase = createClient();
+    if (!supabase) return null;
+    const { data } = await supabase.from('properties').select('*').eq('id', propertyId).single();
+    return (data as Property) || null;
+  } catch {
+    return null;
+  }
 }
 
 // ============================================================================
@@ -96,30 +130,51 @@ export async function getPropertyById(propertyId: string): Promise<Property | nu
 // ============================================================================
 
 export async function getExpenses(userId?: string): Promise<DemoExpense[]> {
-  if (!isSupabaseConfigured()) {
+  if (isDemoMode()) {
     return DEMO_EXPENSES;
   }
   
-  // TODO: Real Supabase query
-  return DEMO_EXPENSES;
+  try {
+    const { createClient } = await import('@/lib/supabase/client');
+    const supabase = createClient();
+    if (!supabase) return [];
+    const { data } = await supabase.from('expenses').select('*').order('date', { ascending: false });
+    return (data as DemoExpense[]) || [];
+  } catch {
+    return [];
+  }
 }
 
 export async function getExpensesByPropertyId(propertyId: string): Promise<DemoExpense[]> {
-  if (!isSupabaseConfigured()) {
+  if (isDemoMode()) {
     return DEMO_EXPENSES.filter(e => e.property_id === propertyId);
   }
   
-  // TODO: Real Supabase query
-  return DEMO_EXPENSES.filter(e => e.property_id === propertyId);
+  try {
+    const { createClient } = await import('@/lib/supabase/client');
+    const supabase = createClient();
+    if (!supabase) return [];
+    const { data } = await supabase.from('expenses').select('*').eq('property_id', propertyId).order('date', { ascending: false });
+    return (data as DemoExpense[]) || [];
+  } catch {
+    return [];
+  }
 }
 
 export async function getRecurringExpenses(userId?: string): Promise<RecurringExpense[]> {
-  if (!isSupabaseConfigured()) {
+  if (isDemoMode()) {
     return DEMO_RECURRING_EXPENSES;
   }
   
-  // TODO: Real Supabase query
-  return DEMO_RECURRING_EXPENSES;
+  try {
+    const { createClient } = await import('@/lib/supabase/client');
+    const supabase = createClient();
+    if (!supabase) return [];
+    const { data } = await supabase.from('recurring_expenses').select('*').order('created_at', { ascending: false });
+    return (data as RecurringExpense[]) || [];
+  } catch {
+    return [];
+  }
 }
 
 // ============================================================================
@@ -127,21 +182,35 @@ export async function getRecurringExpenses(userId?: string): Promise<RecurringEx
 // ============================================================================
 
 export async function getRevenue(userId?: string): Promise<RevenueEntry[]> {
-  if (!isSupabaseConfigured()) {
+  if (isDemoMode()) {
     return DEMO_REVENUE;
   }
   
-  // TODO: Real Supabase query
-  return DEMO_REVENUE;
+  try {
+    const { createClient } = await import('@/lib/supabase/client');
+    const supabase = createClient();
+    if (!supabase) return [];
+    const { data } = await supabase.from('revenue').select('*').order('date', { ascending: false });
+    return (data as RevenueEntry[]) || [];
+  } catch {
+    return [];
+  }
 }
 
 export async function getRevenueByPropertyId(propertyId: string): Promise<RevenueEntry[]> {
-  if (!isSupabaseConfigured()) {
+  if (isDemoMode()) {
     return DEMO_REVENUE.filter(r => r.property_id === propertyId);
   }
   
-  // TODO: Real Supabase query
-  return DEMO_REVENUE.filter(r => r.property_id === propertyId);
+  try {
+    const { createClient } = await import('@/lib/supabase/client');
+    const supabase = createClient();
+    if (!supabase) return [];
+    const { data } = await supabase.from('revenue').select('*').eq('property_id', propertyId).order('date', { ascending: false });
+    return (data as RevenueEntry[]) || [];
+  } catch {
+    return [];
+  }
 }
 
 // ============================================================================
@@ -149,21 +218,17 @@ export async function getRevenueByPropertyId(propertyId: string): Promise<Revenu
 // ============================================================================
 
 export async function getAlerts(userId?: string): Promise<Alert[]> {
-  if (!isSupabaseConfigured()) {
+  if (isDemoMode()) {
     return DEMO_ALERTS;
   }
-  
-  // TODO: Real Supabase query
-  return DEMO_ALERTS;
+  return [];
 }
 
 export async function getAnomalies(userId?: string): Promise<AnomalyResult[]> {
-  if (!isSupabaseConfigured()) {
+  if (isDemoMode()) {
     return DEMO_ANOMALIES;
   }
-  
-  // TODO: Real Supabase query
-  return DEMO_ANOMALIES;
+  return [];
 }
 
 // ============================================================================
@@ -171,12 +236,10 @@ export async function getAnomalies(userId?: string): Promise<AnomalyResult[]> {
 // ============================================================================
 
 export async function getAnalyticsData(userId?: string): Promise<MonthlyBill[]> {
-  if (!isSupabaseConfigured()) {
+  if (isDemoMode()) {
     return DEMO_ANALYTICS_DATA;
   }
-  
-  // TODO: Real Supabase query with aggregation
-  return DEMO_ANALYTICS_DATA;
+  return [];
 }
 
 // ============================================================================
@@ -200,13 +263,11 @@ export function getBenchmarkingData() {
 // Reports
 // ============================================================================
 
-export async function getMonthlyReportData(monthKey: string): Promise<MonthlyReportData> {
-  if (!isSupabaseConfigured()) {
+export async function getMonthlyReportData(monthKey: string): Promise<MonthlyReportData | null> {
+  if (isDemoMode()) {
     return DEMO_MONTHLY_REPORTS[monthKey] || DEMO_MONTHLY_REPORTS[AVAILABLE_MONTHS[0].key];
   }
-  
-  // TODO: Real report generation from Supabase data
-  return DEMO_MONTHLY_REPORTS[monthKey] || DEMO_MONTHLY_REPORTS[AVAILABLE_MONTHS[0].key];
+  return null;
 }
 
 export function getAvailableReportMonths() {
@@ -220,21 +281,17 @@ export function getAvailableReportMonths() {
 // ============================================================================
 
 export async function getBills(userId?: string) {
-  if (!isSupabaseConfigured()) {
+  if (isDemoMode()) {
     return DEMO_BILLS;
   }
-  
-  // TODO: Real Supabase query
-  return DEMO_BILLS;
+  return [];
 }
 
 export async function getUtilityAccounts(userId?: string) {
-  if (!isSupabaseConfigured()) {
+  if (isDemoMode()) {
     return DEMO_UTILITY_ACCOUNTS;
   }
-  
-  // TODO: Real Supabase query
-  return DEMO_UTILITY_ACCOUNTS;
+  return [];
 }
 
 // ============================================================================

@@ -5,7 +5,7 @@
  */
 
 // Configuration
-export { isSupabaseConfigured, isDemoMode } from './data-provider';
+export { isSupabaseConfigured, isDemoMode, enterDemoMode, exitDemoMode } from './data-provider';
 
 // Data providers (use these for fetching data)
 export {
