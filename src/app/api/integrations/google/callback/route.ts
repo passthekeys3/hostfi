@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exchangeGoogleCode, createSpreadsheet } from '@/lib/integrations/google';
+import { exchangeGoogleCode, createSpreadsheet, appendRows } from '@/lib/integrations/google';
 
 /**
  * GET /api/integrations/google/callback — Google OAuth callback
- * Receives auth code, exchanges for tokens, creates default spreadsheet
+ * Receives auth code, exchanges for tokens, creates default spreadsheet, stores in Supabase
  */
 export async function GET(request: NextRequest) {
   try {
@@ -40,20 +40,36 @@ export async function GET(request: NextRequest) {
     const spreadsheet = await createSpreadsheet(tokens.access_token, 'HostFi Expenses');
 
     // Add header row
-    const { appendRows } = await import('@/lib/integrations/google');
     await appendRows(tokens.access_token, spreadsheet.spreadsheetId, 'Expenses', [
       ['Date', 'Property', 'Category', 'Amount', 'Vendor', 'Notes', 'Receipt'],
     ]);
+    await appendRows(tokens.access_token, spreadsheet.spreadsheetId, 'Revenue', [
+      ['Date', 'Property', 'Source', 'Amount', 'Booking ID', 'Notes'],
+    ]);
 
-    // TODO: Store tokens + spreadsheet ID in Supabase integration_connections table
-    // For now, store in a cookie/session for demo purposes
-    console.log('Google OAuth complete for user:', stateData.userId);
+    // Store tokens + spreadsheet ID in Supabase
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (supabaseUrl && serviceKey) {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(supabaseUrl, serviceKey);
+
+      await supabase.from('integration_connections').upsert({
+        user_id: stateData.userId,
+        provider: 'google_sheets',
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        metadata: {
+          spreadsheet_id: spreadsheet.spreadsheetId,
+          spreadsheet_url: spreadsheet.spreadsheetUrl,
+          expires_at: Date.now() + (tokens.expires_in * 1000),
+        },
+      }, { onConflict: 'user_id,provider' });
+    }
 
     return NextResponse.redirect(
-      new URL(
-        `/dashboard/integrations?connected=google_sheets&spreadsheet=${spreadsheet.spreadsheetId}`,
-        request.url
-      )
+      new URL('/dashboard/integrations?connected=google_sheets', request.url)
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
