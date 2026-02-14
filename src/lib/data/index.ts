@@ -28,7 +28,9 @@ export {
   type DashboardStats,
 } from './data-provider';
 
-// Direct demo data access (for client components that need synchronous data)
+export { AVAILABLE_MONTHS } from './data-provider';
+
+// Direct demo data access (always returns data regardless of mode — use getDemoData() instead)
 export {
   DEMO_PROPERTIES,
   DEMO_EXPENSES,
@@ -38,7 +40,6 @@ export {
   DEMO_ANALYTICS_DATA,
   DEMO_BENCHMARKS,
   DEMO_MONTHLY_REPORTS,
-  AVAILABLE_MONTHS,
 } from './data-provider';
 
 // Types

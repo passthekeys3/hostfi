@@ -1,6 +1,7 @@
+"use client";
+
 import Link from "next/link";
 import { StatCard } from "@/components/stat-card";
-import { DEMO_PROPERTIES, DEMO_EXPENSES, DEMO_ANOMALIES } from "@/lib/data";
 import { getSourceIcon } from "@/lib/demo-expenses";
 import { EXPENSE_CATEGORY_CONFIG, getCategoryColorClasses } from "@/lib/expense-categories";
 import { formatCurrency, formatDate, cn, getStatusColor } from "@/lib/utils";
@@ -8,12 +9,22 @@ import { DollarSign, Building2, Receipt, Plus, Search, StickyNote } from "lucide
 import { AnomalySummary } from "@/components/anomaly-summary";
 import { OnboardingGate } from "@/components/onboarding-gate";
 import { DuplicateAlert } from "@/components/duplicate-alert";
+import { useDashboardData } from "@/hooks/useDashboardData";
 
 export default function DashboardPage() {
-  // Data layer — returns demo data when Supabase is not configured
-  const properties = DEMO_PROPERTIES;
-  const expenses = DEMO_EXPENSES;
-  const anomalies = DEMO_ANOMALIES;
+  const { properties, expenses, anomalies, isDemo, loading } = useDashboardData();
+
+  if (loading) {
+    return (
+      <div className="space-y-8 sm:space-y-12 animate-pulse">
+        <div className="h-8 w-48 bg-gray-200 rounded-lg" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+          {[1,2,3,4].map(i => <div key={i} className="h-28 bg-gray-100 rounded-2xl" />)}
+        </div>
+        <div className="h-64 bg-gray-100 rounded-2xl" />
+      </div>
+    );
+  }
 
   const totalSpend = expenses.reduce((sum, e) => sum + e.amount, 0);
   const pendingExpenses = expenses.filter((e) => e.status === 'pending');
@@ -122,7 +133,7 @@ export default function DashboardPage() {
               {recentExpenses.map((expense, index) => {
                 const catConfig = EXPENSE_CATEGORY_CONFIG[expense.category];
                 const colorClasses = getCategoryColorClasses(catConfig.color);
-                const property = DEMO_PROPERTIES.find(p => p.id === expense.property_id);
+                const property = properties.find(p => p.id === expense.property_id);
                 return (
                   <tr 
                     key={expense.id} 
@@ -179,7 +190,7 @@ export default function DashboardPage() {
           {recentExpenses.map((expense) => {
             const catConfig = EXPENSE_CATEGORY_CONFIG[expense.category];
             const colorClasses = getCategoryColorClasses(catConfig.color);
-            const property = DEMO_PROPERTIES.find(p => p.id === expense.property_id);
+            const property = properties.find(p => p.id === expense.property_id);
             return (
               <div 
                 key={expense.id} 
