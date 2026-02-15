@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -16,6 +16,14 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(true);
   const router = useRouter();
   const supabase = createClient();
+
+  // Redirect to dashboard if already logged in
+  useEffect(() => {
+    if (!supabase) return;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace("/dashboard");
+    });
+  }, [supabase, router]);
 
   const handleGoogleSignIn = async () => {
     if (!supabase) {

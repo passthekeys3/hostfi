@@ -79,7 +79,7 @@ function AnimatedNumber({ value, prefix = "", suffix = "", visible }: { value: n
 }
 
 /* ─── Get Started CTA ─── */
-function PricingSection() {
+function PricingSection({ authTarget = "/login" }: { authTarget?: string }) {
   const [annual, setAnnual] = useState(false);
   const tiers = [
     {
@@ -140,7 +140,7 @@ function PricingSection() {
                   ))}
                 </ul>
                 <Link
-                  href="/login"
+                  href={authTarget}
                   className={`block w-full text-center py-3 px-6 rounded-xl text-sm font-semibold transition-colors cursor-pointer ${tier.highlighted ? "bg-white text-gray-900 hover:bg-gray-100" : "bg-gray-900 text-white hover:bg-gray-800"}`}
                 >
                   Get Started
@@ -154,10 +154,10 @@ function PricingSection() {
   );
 }
 
-function GetStartedButton({ className = "", size = "default" }: { className?: string; size?: "default" | "large" }) {
+function GetStartedButton({ className = "", size = "default", authTarget = "/login" }: { className?: string; size?: "default" | "large"; authTarget?: string }) {
   return (
     <Link
-      href="/login"
+      href={authTarget}
       className={`inline-flex items-center justify-center gap-2 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 transition-colors ${
         size === "large" ? "px-8 py-4 text-base" : "px-6 py-3 text-sm"
       } ${className}`}
@@ -167,11 +167,30 @@ function GetStartedButton({ className = "", size = "default" }: { className?: st
   );
 }
 
+/* ─── Auth-aware link target ─── */
+function useAuthTarget() {
+  const [target, setTarget] = useState("/login");
+  useEffect(() => {
+    // Check if user has an active Supabase session
+    (async () => {
+      try {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        if (!supabase) return;
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) setTarget("/dashboard");
+      } catch {}
+    })();
+  }, []);
+  return target;
+}
+
 /* ─── Main ─── */
 export default function LandingPage() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const statsSection = useInView(0.3);
+  const authTarget = useAuthTarget();
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 20);
@@ -232,8 +251,8 @@ export default function LandingPage() {
             <Link href="/blog" className="hover:text-gray-900 transition-colors">Blog</Link>
           </div>
           <div className="hidden md:flex items-center gap-3">
-            <Link href="/login" className="px-4 py-2 text-[13px] font-medium text-gray-600 hover:text-gray-900 transition-colors">Log in</Link>
-            <Link href="/login" className="px-4 py-2 text-[13px] font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer">Get Started</Link>
+            <Link href={authTarget} className="px-4 py-2 text-[13px] font-medium text-gray-600 hover:text-gray-900 transition-colors">Log in</Link>
+            <Link href={authTarget} className="px-4 py-2 text-[13px] font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer">Get Started</Link>
           </div>
           <button onClick={() => setMobileMenu(!mobileMenu)} className="md:hidden p-2 cursor-pointer">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={mobileMenu ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} /></svg>
@@ -246,8 +265,8 @@ export default function LandingPage() {
             ))}
             <Link href="/blog" onClick={() => setMobileMenu(false)} className="block w-full text-left py-2.5 text-sm text-gray-600">Blog</Link>
             <div className="pt-3 flex gap-2">
-              <Link href="/login" className="flex-1 text-center py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg">Log in</Link>
-              <Link href="/login" onClick={() => setMobileMenu(false)} className="flex-1 text-center py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg cursor-pointer">Get Started</Link>
+              <Link href={authTarget} className="flex-1 text-center py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg">Log in</Link>
+              <Link href={authTarget} onClick={() => setMobileMenu(false)} className="flex-1 text-center py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg cursor-pointer">Get Started</Link>
             </div>
           </div>
         )}
@@ -268,7 +287,7 @@ export default function LandingPage() {
             <p className="text-lg sm:text-xl text-gray-500 leading-relaxed max-w-2xl mb-10">
               Forward your bills. Snap your receipts. HostFi uses AI to automatically track, categorize, and map every expense to the right property — down to the IRS Schedule E line item.
             </p>
-            <GetStartedButton size="large" />
+            <GetStartedButton size="large" authTarget={authTarget} />
             <p className="text-xs text-gray-400 mt-3">Free for up to 3 properties. No credit card required.</p>
           </FadeIn>
 
@@ -649,7 +668,7 @@ export default function LandingPage() {
             <p className="text-gray-500">No credit card required. No time limits on free.</p>
           </FadeIn>
 
-          <PricingSection />
+          <PricingSection authTarget={authTarget} />
         </div>
       </section>
       {/* ─── TRUST / BUILT BY ─── */}
@@ -720,7 +739,7 @@ export default function LandingPage() {
           <p className="text-gray-500 mb-10">
             Free for up to 3 properties. No credit card required.
           </p>
-          <GetStartedButton size="large" />
+          <GetStartedButton size="large" authTarget={authTarget} />
         </FadeIn>
       </section>
 
