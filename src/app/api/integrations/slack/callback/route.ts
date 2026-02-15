@@ -33,12 +33,30 @@ export async function GET(request: NextRequest) {
 
     const slackData = await exchangeSlackCode(code);
 
-    // TODO: Store bot token + team info in Supabase integration_connections table
-    console.log('Slack OAuth complete');
+    // Store bot token + team info in Supabase
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (supabaseUrl && serviceKey) {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(supabaseUrl, serviceKey);
+
+      await supabase.from('integration_connections').upsert({
+        user_id: stateData.userId,
+        provider: 'slack',
+        access_token: slackData.access_token,
+        metadata: {
+          team_id: slackData.team.id,
+          team_name: slackData.team.name,
+          bot_user_id: slackData.bot_user_id,
+        },
+        active: true,
+      }, { onConflict: 'user_id,provider' });
+    }
 
     return NextResponse.redirect(
       new URL(
-        `/dashboard/integrations?connected=slack&team=${encodeURIComponent(slackData.team.name)}`,
+        `/dashboard/integrations?connected=slack`,
         request.url
       )
     );

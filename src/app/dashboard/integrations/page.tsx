@@ -264,7 +264,7 @@ export default function IntegrationsPage() {
       {/* Modals */}
       {openModal === "quickbooks" && <QuickBooksModal onClose={handleModalClose("quickbooks")} />}
       {openModal === "xero" && <XeroModal onClose={handleModalClose("xero")} />}
-      {openModal === "slack" && <SlackModal onClose={handleModalClose("slack")} />}
+      {openModal === "slack" && <SlackModal onClose={handleModalClose("slack")} isConnected={connectedIds.has("slack")} onDisconnect={() => handleDisconnect("slack")} />}
       {openModal === "google_sheets" && <GoogleSheetsModal onClose={handleModalClose("google_sheets")} isConnected={connectedIds.has("google_sheets")} onDisconnect={() => handleDisconnect("google_sheets")} />}
       {openModal === "zapier" && <ZapierModal onClose={handleModalClose("zapier")} />}
       {openModal === "teams" && <TeamsModal onClose={handleModalClose("teams")} />}
