@@ -55,21 +55,36 @@ export async function GET(request: NextRequest) {
       const { createClient } = await import('@supabase/supabase-js');
       const supabase = createClient(supabaseUrl, serviceKey);
 
-      await supabase.from('integration_connections').upsert({
-        user_id: stateData.userId,
-        provider: 'google_sheets',
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-        metadata: {
-          spreadsheet_id: spreadsheet.spreadsheetId,
-          spreadsheet_url: spreadsheet.spreadsheetUrl,
-          expires_at: Date.now() + (tokens.expires_in * 1000),
-        },
-      }, { onConflict: 'user_id,provider' });
+      const expiresAt = new Date(Date.now() + (tokens.expires_in * 1000)).toISOString();
+
+      // Save both Google Sheets and Google Drive connections (same OAuth grant covers both)
+      await Promise.all([
+        supabase.from('integration_connections').upsert({
+          user_id: stateData.userId,
+          provider: 'google_sheets',
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+          token_expires_at: expiresAt,
+          metadata: {
+            spreadsheet_id: spreadsheet.spreadsheetId,
+            spreadsheet_url: spreadsheet.spreadsheetUrl,
+          },
+          active: true,
+        }, { onConflict: 'user_id,provider' }),
+        supabase.from('integration_connections').upsert({
+          user_id: stateData.userId,
+          provider: 'google_drive',
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+          token_expires_at: expiresAt,
+          metadata: {},
+          active: true,
+        }, { onConflict: 'user_id,provider' }),
+      ]);
     }
 
     return NextResponse.redirect(
-      new URL('/dashboard/integrations?connected=google_sheets', request.url)
+      new URL('/dashboard/integrations?connected=google_sheets&connected=google_drive', request.url)
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';

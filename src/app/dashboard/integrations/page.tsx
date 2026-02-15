@@ -55,9 +55,13 @@ export default function IntegrationsPage() {
   // Check URL params for OAuth redirect results
   const searchParams = useSearchParams();
   useEffect(() => {
-    const connected = searchParams.get("connected");
-    if (connected) {
-      setConnectedIds(prev => new Set(prev).add(connected));
+    const connectedParams = searchParams.getAll("connected");
+    if (connectedParams.length > 0) {
+      setConnectedIds(prev => {
+        const next = new Set(prev);
+        connectedParams.forEach(id => next.add(id));
+        return next;
+      });
       // Clean URL
       window.history.replaceState({}, "", "/dashboard/integrations");
     }
