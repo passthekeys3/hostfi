@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Building2, Receipt, Settings, Menu, X, Inbox, BarChart3, Bell, GitCompareArrows, FileText, Calculator, Upload, MessageSquare, DollarSign, Link2, CreditCard } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { DEMO_ALERTS } from "@/lib/data";
 import { DEMO_INBOX_ITEMS } from "@/lib/demo-inbox";
 import { isDemoMode } from "@/lib/data/data-provider";
@@ -33,6 +33,48 @@ const bottomNav = [
   { href: "/dashboard/billing", label: "Billing", icon: CreditCard, badge: 0 },
   { href: "/dashboard/settings", label: "Settings", icon: Settings, badge: 0 },
 ];
+
+function SidebarUser({ demo }: { demo: boolean }) {
+  const [user, setUser] = useState<{ email?: string; name?: string; plan?: string } | null>(null);
+
+  useEffect(() => {
+    if (demo) {
+      setUser({ email: 'demo@hostfi.ai', name: 'Demo User', plan: 'Demo' });
+      return;
+    }
+    (async () => {
+      try {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        if (!supabase) return;
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (!authUser) return;
+        const { data: profile } = await supabase.from('profiles').select('full_name, plan').eq('id', authUser.id).single();
+        setUser({
+          email: authUser.email,
+          name: profile?.full_name || authUser.email?.split('@')[0] || 'User',
+          plan: profile?.plan || 'free',
+        });
+      } catch {}
+    })();
+  }, [demo]);
+
+  const initial = (user?.name || user?.email || 'U')[0].toUpperCase();
+  const planLabel = user?.plan === 'free' ? 'Free Plan' : user?.plan === 'pro' ? 'Pro Plan' : user?.plan === 'business' ? 'Business Plan' : user?.plan || 'Free Plan';
+
+  return (
+    <div className="px-5 py-4 border-t border-gray-100">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-semibold text-gray-600">{initial}</div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium text-gray-900 truncate">{user?.name || 'Loading...'}</p>
+          <p className="text-[10px] text-gray-400">{planLabel}</p>
+        </div>
+        {demo && <span className="text-[9px] font-medium text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">Demo</span>}
+      </div>
+    </div>
+  );
+}
 
 interface SidebarProps {
   externalOpen?: boolean;
@@ -152,16 +194,7 @@ export function Sidebar({ externalOpen, onClose }: SidebarProps) {
           </ul>
         </nav>
         
-        <div className="px-5 py-4 border-t border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-semibold text-gray-600">K</div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-gray-900 truncate">Kevin</p>
-              <p className="text-[10px] text-gray-400">Pro Plan</p>
-            </div>
-            {demo && <span className="text-[9px] font-medium text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">Demo</span>}
-          </div>
-        </div>
+        <SidebarUser demo={demo} />
       </aside>
     </>
   );

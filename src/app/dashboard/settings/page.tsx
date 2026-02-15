@@ -9,8 +9,24 @@ export default function SettingsPage() {
   const [testSent, setTestSent] = useState(false);
   const [billingEmail, setBillingEmail] = useState("loading...");
   const [generating, setGenerating] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
+    // Load user profile
+    (async () => {
+      try {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        if (!supabase) return;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUserEmail(user.email || "");
+          const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user.id).single();
+          setUserName(profile?.full_name || "");
+        }
+      } catch {}
+    })();
     fetch("/api/email/setup")
       .then(r => r.json())
       .then(data => {
@@ -56,11 +72,11 @@ export default function SettingsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-xl">
           <div>
             <label htmlFor="settings-fullname" className="block text-sm font-medium mb-2">Full Name</label>
-            <input id="settings-fullname" defaultValue="" placeholder="Your name" className={inputClass} />
+            <input id="settings-fullname" defaultValue={userName} placeholder="Your name" className={inputClass} />
           </div>
           <div>
             <label htmlFor="settings-email" className="block text-sm font-medium mb-2">Email</label>
-            <input id="settings-email" defaultValue="" placeholder="your@email.com" disabled className={`${inputClass} text-muted-foreground`} aria-describedby="email-note" />
+            <input id="settings-email" value={userEmail} placeholder="your@email.com" disabled className={`${inputClass} text-muted-foreground`} aria-describedby="email-note" />
           </div>
         </div>
         <button className="px-5 py-2.5 bg-gray-900 text-white font-medium rounded-xl transition-all text-sm hover:bg-gray-800">
