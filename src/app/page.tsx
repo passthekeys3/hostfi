@@ -637,6 +637,44 @@ export default function LandingPage() {
           <PricingSection />
         </div>
       </section>
+      {/* ─── TRUST / BUILT BY ─── */}
+      <section className="py-20 sm:py-24 px-5">
+        <div className="max-w-3xl mx-auto text-center">
+          <FadeIn>
+            <p className="text-xs font-semibold text-teal-600 uppercase tracking-widest mb-3">Why HostFi</p>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">Built by an Operator, for Operators</h2>
+            <p className="text-gray-500 text-sm leading-relaxed max-w-xl mx-auto mb-10">
+              I got tired of spending days organizing expenses at tax time. Spreadsheets don't understand Schedule E. QuickBooks is overkill. So I built something that just works for rental properties.
+            </p>
+          </FadeIn>
+          <FadeIn delay={150}>
+            <div className="grid sm:grid-cols-3 gap-6 text-left">
+              <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+                <div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center mb-4">
+                  <Shield className="w-5 h-5 text-teal-600" />
+                </div>
+                <p className="font-semibold text-sm mb-2">Your Data, Your Control</p>
+                <p className="text-xs text-gray-500 leading-relaxed">HostFi never touches your money. All payments go through licensed third-party providers. Your financial data is encrypted and only accessible to you.</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+                <div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center mb-4">
+                  <Zap className="w-5 h-5 text-teal-600" />
+                </div>
+                <p className="font-semibold text-sm mb-2">Up and Running in 2 Minutes</p>
+                <p className="text-xs text-gray-500 leading-relaxed">No complex setup. Add a property, log an expense, and you're already ahead of where you were with spreadsheets. Works on any device.</p>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+                <div className="w-10 h-10 bg-teal-50 rounded-lg flex items-center justify-center mb-4">
+                  <CheckCircle2 className="w-5 h-5 text-teal-600" />
+                </div>
+                <p className="font-semibold text-sm mb-2">Free Forever (3 Properties)</p>
+                <p className="text-xs text-gray-500 leading-relaxed">No trials, no credit card, no bait and switch. The free plan includes every feature. Paid plans are for operators who need more properties.</p>
+              </div>
+            </div>
+          </FadeIn>
+        </div>
+      </section>
+
                     {/* ─── FAQ ─── */}
       <section id="faq" className="py-24 sm:py-28 px-5 scroll-mt-16">
         <div className="max-w-2xl mx-auto">
