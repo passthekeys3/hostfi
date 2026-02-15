@@ -11,6 +11,8 @@ export default function SettingsPage() {
   const [generating, setGenerating] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     // Load user profile
@@ -57,6 +59,25 @@ export default function SettingsPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const saveProfile = async () => {
+    setSaving(true);
+    setSaved(false);
+    try {
+      const nameInput = document.getElementById("settings-fullname") as HTMLInputElement;
+      const newName = nameInput?.value || "";
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      if (!supabase) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase.from("profiles").update({ full_name: newName, updated_at: new Date().toISOString() }).eq("id", user.id);
+      setUserName(newName);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {}
+    setSaving(false);
+  };
+
   const inputClass = "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 text-sm transition-all";
 
   return (
@@ -79,8 +100,13 @@ export default function SettingsPage() {
             <input id="settings-email" value={userEmail} placeholder="your@email.com" disabled className={`${inputClass} text-muted-foreground`} aria-describedby="email-note" />
           </div>
         </div>
-        <button className="px-5 py-2.5 bg-gray-900 text-white font-medium rounded-xl transition-all text-sm hover:bg-gray-800">
-          Save Changes
+        <button
+          type="button"
+          onClick={saveProfile}
+          disabled={saving}
+          className="px-5 py-2.5 bg-gray-900 text-white font-medium rounded-xl transition-all text-sm hover:bg-gray-800 disabled:opacity-50"
+        >
+          {saving ? "Saving..." : saved ? "Saved!" : "Save Changes"}
         </button>
       </div>
 

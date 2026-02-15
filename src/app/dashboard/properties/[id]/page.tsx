@@ -164,50 +164,6 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
         </div>
       )}
 
-      {/* Utility Accounts */}
-      <div>
-        <div className="flex items-center justify-between gap-3 mb-5">
-          <h2 className="text-sm sm:text-base font-semibold uppercase tracking-wide text-muted-foreground">Utility Accounts</h2>
-          <button className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-white text-foreground font-medium rounded-xl hover:bg-gray-100 transition-all duration-200 border border-gray-200 text-xs sm:text-sm shadow-sm min-h-[44px] shrink-0">
-            <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Add Account</span><span className="sm:hidden">Add</span>
-          </button>
-        </div>
-        {utilityAccounts.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-12 text-center">
-            <p className="font-medium">No utility accounts yet</p>
-            <p className="text-sm text-muted-foreground mt-1">Add one to start tracking bills.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            {utilityAccounts.map((ua) => (
-              <div key={ua.id} className="bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-4 sm:p-6 flex items-start gap-3 sm:gap-4 hover:shadow-md hover:translate-y-[-1px] transition-all duration-200">
-                {(() => { const UtilIcon = getUtilityIcon(ua.utility_type); return <UtilIcon className="w-5 sm:w-6 h-5 sm:h-6 text-muted-foreground shrink-0" />; })()}
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm sm:text-base truncate">{ua.provider_name}</p>
-                  <p className="text-xs sm:text-sm text-muted-foreground capitalize">{ua.utility_type}</p>
-                  {ua.account_number && <p className="text-xs text-muted-foreground mt-1">Acct: •••{ua.account_number.slice(-4)}</p>}
-                </div>
-                {ua.autopay && (
-                  <span className="text-[10px] sm:text-xs font-medium px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-teal-500/10 text-teal-600 border border-teal-500/20 shrink-0">
-                    Autopay
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Bills */}
-      {propertyBills.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-base font-semibold uppercase tracking-wide text-muted-foreground">Utility Bills</h2>
-            <Link href="/dashboard/expenses/new?category=utility" className="text-sm text-accent hover:underline font-medium">Add bill →</Link>
-          </div>
-          <BillTable bills={propertyBills} showProperty={false} />
-        </div>
-      )}
     </div>
   );
 }
