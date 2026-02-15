@@ -4,8 +4,9 @@ import { useState } from "react";
 import { DEMO_INBOX_ITEMS, getPropertyName, type InboxItem } from "@/lib/demo-inbox";
 import { DEMO_PROPERTIES } from "@/lib/data";
 import { isDemoMode } from "@/lib/data/data-provider";
+import { useDashboardData } from "@/hooks/useDashboardData";
 
-const _properties = isDemoMode() ? DEMO_PROPERTIES : [];
+const _demoProperties = isDemoMode() ? DEMO_PROPERTIES : [];
 import { formatCurrency } from "@/lib/utils";
 import {
   Flame, Droplets, Zap, Wifi, Trash2, Home, Shield, HelpCircle,
@@ -69,7 +70,7 @@ function MatchBadge({ type }: { type: string }) {
   );
 }
 
-function InboxCard({ item, onConfirm, onReject, onUpdate }: { item: InboxItem; onConfirm: () => void; onReject: () => void; onUpdate: (updates: Partial<InboxItem['parsed']> & { property_id?: string | null }) => void }) {
+function InboxCard({ item, onConfirm, onReject, onUpdate, properties }: { item: InboxItem; onConfirm: () => void; onReject: () => void; onUpdate: (updates: Partial<InboxItem['parsed']> & { property_id?: string | null }) => void; properties: { id: string; name: string }[] }) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [assignedProperty, setAssignedProperty] = useState(item.match.property_id);
@@ -135,7 +136,7 @@ function InboxCard({ item, onConfirm, onReject, onUpdate }: { item: InboxItem; o
                     className="text-xs bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                   >
                     <option value="">Assign property...</option>
-                    {_properties.map((p) => (
+                    {properties.map((p) => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
                   </select>
@@ -203,7 +204,7 @@ function InboxCard({ item, onConfirm, onReject, onUpdate }: { item: InboxItem; o
                   className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                 >
                   <option value="">Unassigned</option>
-                  {_properties.map((p) => (
+                  {properties.map((p) => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
@@ -316,7 +317,52 @@ function InboxCard({ item, onConfirm, onReject, onUpdate }: { item: InboxItem; o
 
 export default function InboxPage() {
   const demo = isDemoMode();
+  const { properties: realProperties } = useDashboardData();
+  const allProperties = demo ? _demoProperties : realProperties;
   const [items, setItems] = useState(demo ? DEMO_INBOX_ITEMS : []);
+
+  // Fetch real parsed emails
+  useState(() => {
+    if (demo) return;
+    (async () => {
+      try {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        if (!supabase) return;
+        const { data } = await supabase.from("parsed_emails").select("*").order("received_at", { ascending: false });
+        if (data && data.length > 0) {
+          const mapped: InboxItem[] = data.map((row: Record<string, unknown>) => ({
+            id: row.id as string,
+            sender_email: row.source_from as string || "Unknown",
+            subject: row.source_subject as string || "Parsed Bill",
+            body_preview: "",
+            received_at: row.received_at as string || new Date().toISOString(),
+            status: (row.status as string) === "approved" ? "confirmed" as const : (row.status as string) === "dismissed" ? "rejected" as const : "pending_review" as const,
+            parsed: {
+              provider_name: row.vendor_name as string || "Unknown",
+              utility_type: row.category as string || "other",
+              amount: row.amount as number || 0,
+              due_date: row.due_date as string || null,
+              billing_period_start: null,
+              billing_period_end: null,
+              account_number: null,
+              service_address: null,
+              confidence: row.confidence as number || 0.8,
+              raw_extraction: {},
+            },
+            match: {
+              property_id: row.property_id as string || null,
+              utility_account_id: null,
+              match_type: row.property_id ? "exact_mapping" as const : "none" as const,
+              confidence: row.confidence as number || 0,
+              candidates: [],
+            },
+          }));
+          setItems(mapped);
+        }
+      } catch {}
+    })();
+  });
   const pendingItems = items.filter((i) => i.status === "pending_review");
   const processedItems = items.filter((i) => i.status !== "pending_review");
 
@@ -372,6 +418,7 @@ export default function InboxPage() {
             <InboxCard
               key={item.id}
               item={item}
+              properties={allProperties}
               onConfirm={() => handleConfirm(item.id)}
               onReject={() => handleReject(item.id)}
               onUpdate={(updates) => handleUpdate(item.id, updates)}

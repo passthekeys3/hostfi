@@ -9,6 +9,7 @@ import {
 import { cn } from "@/lib/utils";
 import { DEMO_REVENUE, DEMO_PROPERTIES, DEMO_EXPENSES } from "@/lib/data";
 import { isDemoMode } from "@/lib/data/data-provider";
+import { useDashboardData } from "@/hooks/useDashboardData";
 import { REVENUE_SOURCES, getRevenueByMonth, getRevenueBySource, type RevenueEntry, type RevenueSource } from "@/lib/demo-revenue";
 import { parseRevenueCSV, SAMPLE_CSV } from "@/lib/revenue-csv-parser";
 import { StatCard } from "@/components/stat-card";
@@ -23,7 +24,25 @@ interface ImportApiResult {
 
 export default function RevenuePage() {
   const demo = isDemoMode();
+  const { properties: realProperties, expenses: realExpenses, loading: dashLoading } = useDashboardData();
   const [revenue, setRevenue] = useState<RevenueEntry[]>(demo ? DEMO_REVENUE : []);
+  const [realRevenue, setRealRevenue] = useState<RevenueEntry[]>([]);
+  const [revenueLoaded, setRevenueLoaded] = useState(false);
+
+  // Fetch real revenue from Supabase
+  useState(() => {
+    if (demo) return;
+    (async () => {
+      try {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        if (!supabase) return;
+        const { data } = await supabase.from("revenue").select("*").order("check_in", { ascending: false });
+        if (data) { setRealRevenue(data as RevenueEntry[]); setRevenue(data as RevenueEntry[]); }
+      } catch {}
+      setRevenueLoaded(true);
+    })();
+  });
   const [modal, setModal] = useState<ModalView>(null);
   const [filterProperty, setFilterProperty] = useState<string>('all');
   const [filterSource, setFilterSource] = useState<string>('all');
@@ -58,14 +77,14 @@ export default function RevenuePage() {
   const totalGross = useMemo(() => revenue.reduce((s, r) => s + r.amount, 0), [revenue]);
   const totalNet = useMemo(() => revenue.reduce((s, r) => s + r.payout_amount, 0), [revenue]);
   const totalFees = useMemo(() => revenue.reduce((s, r) => s + r.platform_fee, 0), [revenue]);
-  const allExpenses = demo ? DEMO_EXPENSES : [];
+  const allExpenses = demo ? DEMO_EXPENSES : realExpenses;
+  const allProperties = demo ? DEMO_PROPERTIES : realProperties;
   const totalExpenses = useMemo(() => allExpenses.reduce((s, e) => s + e.amount, 0), [allExpenses]);
   const netProfit = totalNet - totalExpenses;
   const totalBookings = revenue.length;
 
   // P&L per property
   const propertyPnL = useMemo(() => {
-    const allProperties = demo ? DEMO_PROPERTIES : [];
     return allProperties.map(prop => {
       const propRevenue = revenue.filter(r => r.property_id === prop.id);
       const propExpenses = allExpenses.filter(e => e.property_id === prop.id);
@@ -363,7 +382,7 @@ export default function RevenuePage() {
             <div className="relative">
               <select value={filterProperty} onChange={e => setFilterProperty(e.target.value)} className="appearance-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-xs font-medium text-gray-700 focus:ring-2 focus:ring-teal-500/20 focus:outline-none">
                 <option value="all">All Properties</option>
-                {DEMO_PROPERTIES.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                {allProperties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
               <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>
@@ -392,7 +411,7 @@ export default function RevenuePage() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {filtered.map(r => {
-                const prop = DEMO_PROPERTIES.find(p => p.id === r.property_id);
+                const prop = allProperties.find(p => p.id === r.property_id);
                 const src = REVENUE_SOURCES.find(s => s.value === r.source);
                 return (
                   <tr key={r.id} className="hover:bg-gray-50/50 transition-colors">
@@ -438,7 +457,7 @@ export default function RevenuePage() {
                 <label className="block text-xs font-medium text-gray-700 mb-1.5">Property</label>
                 <select value={form.property_id} onChange={e => setForm(f => ({ ...f, property_id: e.target.value }))} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none bg-white">
                   <option value="">Select property...</option>
-                  {DEMO_PROPERTIES.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  {allProperties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -598,7 +617,7 @@ export default function RevenuePage() {
                             </thead>
                             <tbody className="divide-y divide-gray-50">
                               {csvResult.entries.map((e, i) => {
-                                const prop = DEMO_PROPERTIES.find(p => p.id === e.property_id);
+                                const prop = allProperties.find(p => p.id === e.property_id);
                                 return (
                                   <tr key={i} className={!e.property_id ? 'opacity-40' : ''}>
                                     <td className="px-3 py-2">

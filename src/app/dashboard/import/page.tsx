@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/utils";
 import { DEMO_PROPERTIES } from "@/lib/data";
 import { isDemoMode } from "@/lib/data/data-provider";
+import { useDashboardData } from "@/hooks/useDashboardData";
 import { EXPENSE_CATEGORY_CONFIG, type ExpenseCategory } from "@/lib/expense-categories";
 import {
   parseCSV,
@@ -48,7 +49,9 @@ export default function ImportPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const demo = isDemoMode();
-  const propertyNames = demo ? DEMO_PROPERTIES.map(p => p.name) : [];
+  const { properties: realProperties } = useDashboardData();
+  const allProperties = demo ? DEMO_PROPERTIES : realProperties;
+  const propertyNames = allProperties.map(p => p.name);
 
   const handleFile = useCallback((file: File) => {
     setFileName(file.name);
@@ -109,7 +112,6 @@ export default function ImportPage() {
     
     // Match property names to IDs
     const expensesWithPropertyIds = expenses.map(expense => {
-      const allProperties = demo ? DEMO_PROPERTIES : [];
       const matchedProperty = allProperties.find(p => 
         p.name.toLowerCase() === expense.property.toLowerCase() ||
         p.city.toLowerCase() === expense.property.toLowerCase() ||

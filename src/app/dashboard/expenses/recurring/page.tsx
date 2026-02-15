@@ -5,13 +5,15 @@ import { DEMO_RECURRING_EXPENSES } from "@/lib/demo-expenses";
 import { EXPENSE_CATEGORY_CONFIG, FREQUENCY_LABELS, getCategoryColorClasses } from "@/lib/expense-categories";
 import { DEMO_PROPERTIES } from "@/lib/data";
 import { isDemoMode } from "@/lib/data/data-provider";
+import { useDashboardData } from "@/hooks/useDashboardData";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { Plus, Pause, Pencil, ArrowLeft } from "lucide-react";
 
 export default function RecurringExpensesPage() {
   const demo = isDemoMode();
+  const { properties: realProperties } = useDashboardData();
   const recurringExpenses = demo ? DEMO_RECURRING_EXPENSES : [];
-  const properties = demo ? DEMO_PROPERTIES : [];
+  const properties = demo ? DEMO_PROPERTIES : realProperties;
   const activeExpenses = recurringExpenses.filter(e => e.is_active);
   const totalMonthly = activeExpenses.reduce((sum, e) => {
     switch (e.frequency) {
