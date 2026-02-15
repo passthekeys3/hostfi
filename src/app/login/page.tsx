@@ -25,6 +25,12 @@ export default function LoginPage() {
     localStorage.removeItem('hostfi_demo_mode');
     localStorage.removeItem('hostfi_onboarding_complete');
     sessionStorage.setItem('hostfi_tab_alive', '1');
+    // Apply remember-me preference for Google sign-in too
+    if (!rememberMe) {
+      localStorage.setItem('hostfi_session_only', 'true');
+    } else {
+      localStorage.removeItem('hostfi_session_only');
+    }
     setGoogleLoading(true);
     setError(null);
 
