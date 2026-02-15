@@ -3,6 +3,8 @@
  * Call this from anywhere in the app to fire an alert (non-blocking)
  */
 
+import { sendSlackAlert } from '@/lib/integrations/slack-alerts';
+
 type AlertType = 'anomaly' | 'bill_due' | 'bill_overdue' | 'weekly_digest' | 'monthly_report';
 
 /**
@@ -31,6 +33,7 @@ export async function triggerAlert(
                   'http://localhost:3000';
 
   // Fire and forget - don't await
+  // 1. Send email alert via API
   fetch(`${baseUrl}/api/alerts/send`, {
     method: 'POST',
     headers: {
@@ -43,7 +46,12 @@ export async function triggerAlert(
       data,
     }),
   }).catch(err => {
-    console.error('[triggerAlert] Failed to send alert:', err);
+    console.error('[triggerAlert] Failed to send email alert:', err);
+  });
+
+  // 2. Send Slack alert (fire and forget)
+  sendSlackAlert(userId, alertType, data).catch(err => {
+    console.error('[triggerAlert] Failed to send Slack alert:', err);
   });
 }
 

@@ -1,6 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { handleSlackFileUpload } from '@/lib/integrations/slack';
+import { createClient } from '@supabase/supabase-js';
+import { handleSlackFileUpload, buildWeeklyDigestBlocks, sendSlackMessage } from '@/lib/integrations/slack';
+
+/**
+ * Get bot token from Supabase by Slack team ID
+ */
+async function getBotTokenByTeam(teamId: string): Promise<{ token: string; userId: string } | null> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!supabaseUrl || !serviceKey) {
+    console.warn('Supabase not configured for Slack token lookup');
+    return null;
+  }
+  
+  const supabase = createClient(supabaseUrl, serviceKey);
+  
+  const { data, error } = await supabase
+    .from('integration_connections')
+    .select('access_token, user_id')
+    .eq('provider', 'slack')
+    .eq('active', true)
+    .filter('metadata->>team_id', 'eq', teamId)
+    .single();
+  
+  if (error || !data) {
+    console.warn('No Slack connection found for team:', teamId);
+    return null;
+  }
+  
+  return { token: data.access_token, userId: data.user_id };
+}
 
 /**
  * POST /api/integrations/slack/events — Slack Events API endpoint
@@ -95,10 +126,9 @@ async function processFileEvent(
   event: Record<string, unknown>,
   teamId: string
 ): Promise<void> {
-  // TODO: Look up bot token from Supabase by team_id
-  const botToken = process.env.SLACK_BOT_TOKEN;
-  if (!botToken) {
-    console.warn('SLACK_BOT_TOKEN not configured, skipping file processing');
+  const connection = await getBotTokenByTeam(teamId);
+  if (!connection) {
+    console.warn('No Slack connection found for team:', teamId);
     return;
   }
 
@@ -107,7 +137,7 @@ async function processFileEvent(
   if (!files || files.length === 0) return;
 
   for (const file of files) {
-    await handleSlackFileUpload(botToken, {
+    await handleSlackFileUpload(connection.token, {
       file: {
         id: file.id as string,
         name: file.name as string,
@@ -129,42 +159,80 @@ async function processSpendingQuery(
   event: Record<string, unknown>,
   teamId: string
 ): Promise<void> {
-  const botToken = process.env.SLACK_BOT_TOKEN;
-  if (!botToken) return;
+  const connection = await getBotTokenByTeam(teamId);
+  if (!connection) return;
 
-  const { sendSlackMessage } = await import('@/lib/integrations/slack');
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!supabaseUrl || !serviceKey) {
+    console.warn('Supabase not configured for spending query');
+    return;
+  }
+  
+  const supabase = createClient(supabaseUrl, serviceKey);
 
-  // TODO: Query actual expense data from Supabase
-  // For now, send a demo response
-  const blocks = [
-    {
-      type: 'header',
-      text: { type: 'plain_text', text: '📊 Spending Summary', emoji: true },
-    },
-    {
-      type: 'section',
-      text: {
-        type: 'mrkdwn',
-        text: 'View your full spending breakdown in HostFi:',
-      },
-    },
-    {
-      type: 'actions',
-      elements: [
-        {
-          type: 'button',
-          text: { type: 'plain_text', text: 'Open Analytics', emoji: true },
-          url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://hostfi.ai'}/dashboard/analytics`,
-          action_id: 'open_analytics',
-        },
-      ],
-    },
-  ];
+  // Get last 7 days of expenses
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const today = new Date();
+  
+  const { data: expenses, error } = await supabase
+    .from('expenses')
+    .select('amount, category, property_id, properties(name)')
+    .eq('user_id', connection.userId)
+    .gte('date', sevenDaysAgo.toISOString().split('T')[0])
+    .lte('date', today.toISOString().split('T')[0]);
+
+  if (error) {
+    console.error('Failed to fetch expenses:', error);
+    await sendSlackMessage(
+      connection.token,
+      event.channel as string,
+      '❌ Failed to fetch spending data. Please try again.',
+      undefined,
+      event.ts as string
+    );
+    return;
+  }
+
+  // Calculate summary
+  const totalSpent = expenses?.reduce((sum, e) => sum + Number(e.amount || 0), 0) || 0;
+  const expenseCount = expenses?.length || 0;
+
+  // Get top category
+  const categoryTotals: Record<string, number> = {};
+  expenses?.forEach(e => {
+    categoryTotals[e.category] = (categoryTotals[e.category] || 0) + Number(e.amount || 0);
+  });
+  const topCategory = Object.entries(categoryTotals)
+    .sort(([, a], [, b]) => b - a)[0]?.[0] || 'N/A';
+
+  // Get top property
+  const propertyTotals: Record<string, number> = {};
+  expenses?.forEach(e => {
+    const propName = (e.properties as { name?: string } | null)?.name || 'Unknown';
+    propertyTotals[propName] = (propertyTotals[propName] || 0) + Number(e.amount || 0);
+  });
+  const topProperty = Object.entries(propertyTotals)
+    .sort(([, a], [, b]) => b - a)[0]?.[0] || 'N/A';
+
+  // Format date range
+  const period = `${sevenDaysAgo.toLocaleDateString()} - ${today.toLocaleDateString()}`;
+
+  const blocks = buildWeeklyDigestBlocks({
+    total_spent: totalSpent,
+    expense_count: expenseCount,
+    top_category: topCategory,
+    top_property: topProperty,
+    anomalies: 0, // TODO: could query anomaly_logs table
+    period,
+  });
 
   await sendSlackMessage(
-    botToken,
+    connection.token,
     event.channel as string,
-    'Here\'s your spending summary',
+    `📊 Spending Summary: $${totalSpent.toFixed(2)} across ${expenseCount} expenses`,
     blocks,
     event.ts as string
   );
