@@ -195,11 +195,15 @@ export function getMoMComparison(data: MonthlyBill[]) {
   const current = months[months.length - 1];
   const previous = months[months.length - 2];
 
-  const result: { utility: string; type: UtilityType; current: number; previous: number }[] = [];
-  for (const ut of ALL_UTILITY_TYPES) {
+  const result: { utility: string; type: UtilityType; current: number; previous: number; change: number }[] = [];
+  for (const ut of ALL_EXPENSE_TYPES) {
     const curr = data.filter(b => b.month === current && b.utility_type === ut).reduce((s, b) => s + b.amount, 0);
     const prev = data.filter(b => b.month === previous && b.utility_type === ut).reduce((s, b) => s + b.amount, 0);
-    result.push({ utility: UTILITY_LABELS[ut], type: ut, current: Math.round(curr * 100) / 100, previous: Math.round(prev * 100) / 100 });
+    // Only include categories that have data in either month
+    if (curr > 0 || prev > 0) {
+      const change = prev > 0 ? Math.round(((curr - prev) / prev) * 1000) / 10 : (curr > 0 ? 100 : 0);
+      result.push({ utility: UTILITY_LABELS[ut], type: ut, current: Math.round(curr * 100) / 100, previous: Math.round(prev * 100) / 100, change });
+    }
   }
   return result;
 }

@@ -131,6 +131,22 @@ export function UtilityBreakdownChart({ data }: { data: MonthlyBill[] }) {
   const chartData = useMemo(() => getUtilityBreakdown(data), [data]);
   const total = chartData.reduce((s, d) => s + d.value, 0);
 
+  // Custom label renderer for pie slices
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const renderLabel = ({ name, value, cx, cy, midAngle, outerRadius }: any) => {
+    const pct = ((value / total) * 100);
+    if (pct < 3) return null; // hide tiny slices
+    const RADIAN = Math.PI / 180;
+    const radius = outerRadius + 24;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
+    return (
+      <text x={x} y={y} textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize={11} fontWeight={500} fill="#374151">
+        {name} {pct.toFixed(0)}%
+      </text>
+    );
+  };
+
   return (
     <div 
       className="bg-white rounded-2xl p-6 border border-gray-200"
@@ -139,7 +155,7 @@ export function UtilityBreakdownChart({ data }: { data: MonthlyBill[] }) {
       }}
     >
       <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-6">Expense Breakdown</h3>
-      <div className="h-[280px]">
+      <div className="h-[340px]">
         <ResponsiveContainer width="100%" height="100%" minHeight={200}>
           <PieChart>
             <defs>
@@ -153,14 +169,16 @@ export function UtilityBreakdownChart({ data }: { data: MonthlyBill[] }) {
             <Pie
               data={chartData}
               cx="50%"
-              cy="50%"
-              innerRadius={65}
-              outerRadius={100}
-              paddingAngle={4}
+              cy="45%"
+              innerRadius={55}
+              outerRadius={85}
+              paddingAngle={3}
               dataKey="value"
-              cornerRadius={6}
+              cornerRadius={4}
               animationDuration={1000}
               animationEasing="ease-out"
+              label={renderLabel}
+              labelLine={false}
             >
               {chartData.map((entry, i) => (
                 <Cell key={i} fill={`url(#pieGrad-${i})`} stroke="none" />
@@ -168,19 +186,21 @@ export function UtilityBreakdownChart({ data }: { data: MonthlyBill[] }) {
             </Pie>
             <Tooltip
               {...tooltipStyle}
-              // Recharts Tooltip `formatter` expects a complex overloaded signature that doesn't
-              // align with simple callback typings. Using `as any` is the accepted workaround.
-              // See: https://github.com/recharts/recharts/issues/3615
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               formatter={((v: unknown, name: unknown) => { const n = Number(v); return [fmt(n) + ` (${((n / total) * 100).toFixed(1)}%)`, String(name)]; }) as any}
             />
-            <Legend 
-              wrapperStyle={{ fontSize: 12, color: '#6b7280', paddingTop: '8px' }} 
-              iconType="circle"
-              iconSize={8}
-            />
           </PieChart>
         </ResponsiveContainer>
+      </div>
+      {/* Category list below chart */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 mt-2">
+        {chartData.map((item) => (
+          <div key={item.type} className="flex items-center gap-2 text-xs">
+            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+            <span className="text-gray-600 truncate">{item.name}</span>
+            <span className="text-gray-900 font-medium ml-auto tabular-nums">{fmt(item.value)}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -188,6 +208,13 @@ export function UtilityBreakdownChart({ data }: { data: MonthlyBill[] }) {
 
 export function MoMComparisonChart({ data }: { data: MonthlyBill[] }) {
   const chartData = useMemo(() => getMoMComparison(data), [data]);
+  const months = useMemo(() => {
+    const m = [...new Set(data.map(b => b.month))].sort();
+    return { current: m[m.length - 1], previous: m[m.length - 2] };
+  }, [data]);
+
+  const currentLabel = months.current ? formatMonthLabel(months.current) : 'This Month';
+  const previousLabel = months.previous ? formatMonthLabel(months.previous) : 'Last Month';
 
   return (
     <div 
@@ -197,37 +224,48 @@ export function MoMComparisonChart({ data }: { data: MonthlyBill[] }) {
       }}
     >
       <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-6">Month-over-Month Comparison</h3>
-      <div className="h-[280px]">
-        <ResponsiveContainer width="100%" height="100%" minHeight={200}>
-          <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.8} vertical={false} />
-            <XAxis dataKey="utility" stroke="#6b7280" fontSize={11} fontWeight={500} tickLine={false} axisLine={false} dy={8} />
-            <YAxis stroke="#6b7280" fontSize={11} fontWeight={500} tickFormatter={fmt} tickLine={false} axisLine={false} dx={-8} />
-            <Tooltip {...tooltipStyle} formatter={(v: unknown) => [fmt(Number(v))]} />
-            <Legend 
-              wrapperStyle={{ fontSize: 12, color: '#6b7280', paddingTop: '16px' }} 
-              iconType="circle"
-              iconSize={8}
-            />
-            <Bar 
-              dataKey="previous" 
-              name="Last Month" 
-              fill="#a1a1aa" 
-              radius={[6, 6, 0, 0]}
-              animationDuration={800}
-            />
-            <Bar 
-              dataKey="current" 
-              name="This Month" 
-              fill="#14B8A6" 
-              radius={[6, 6, 0, 0]}
-              animationDuration={800}
-            />
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="space-y-3">
+        {chartData.map((row) => {
+          const max = Math.max(row.current, row.previous, 1);
+          return (
+            <div key={row.type} className="group">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs font-medium text-gray-700">{row.utility}</span>
+                <span className={cn(
+                  "text-xs font-semibold px-1.5 py-0.5 rounded",
+                  row.change > 0 ? "text-rose-600 bg-rose-50" : row.change < 0 ? "text-emerald-600 bg-emerald-50" : "text-gray-500 bg-gray-50"
+                )}>
+                  {row.change > 0 ? '+' : ''}{row.change}%
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 rounded-full bg-gray-200" style={{ width: `${(row.previous / max) * 100}%`, minWidth: row.previous > 0 ? 4 : 0 }} />
+                    <span className="text-[10px] text-gray-400 tabular-nums w-14 text-right">{fmt(row.previous)}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 rounded-full bg-gray-900" style={{ width: `${(row.current / max) * 100}%`, minWidth: row.current > 0 ? 4 : 0 }} />
+                    <span className="text-[10px] text-gray-700 font-medium tabular-nums w-14 text-right">{fmt(row.current)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex items-center gap-4 mt-4 pt-3 border-t border-gray-100">
+        <div className="flex items-center gap-1.5 text-[11px] text-gray-400"><span className="w-3 h-2 rounded-full bg-gray-200" />{previousLabel}</div>
+        <div className="flex items-center gap-1.5 text-[11px] text-gray-600"><span className="w-3 h-2 rounded-full bg-gray-900" />{currentLabel}</div>
       </div>
     </div>
   );
+}
+
+function formatMonthLabel(ym: string): string {
+  const [y, m] = ym.split('-');
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return `${months[parseInt(m) - 1]} '${y.slice(2)}`;
 }
 
 export function PropertyCostTable({ data }: { data: MonthlyBill[] }) {
