@@ -17,26 +17,22 @@ interface AddressAutocompleteProps {
   className?: string;
 }
 
-interface Prediction {
-  place_id: string;
+interface Suggestion {
+  placeId: string;
+  mainText: string;
+  secondaryText: string;
   description: string;
-  structured_formatting: {
-    main_text: string;
-    secondary_text: string;
-  };
 }
 
 export function AddressAutocomplete({ onSelect, defaultValue = "", className }: AddressAutocompleteProps) {
   const [query, setQuery] = useState(defaultValue);
-  const [predictions, setPredictions] = useState<Prediction[]>([]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>(null);
-  const serviceRef = useRef<google.maps.places.AutocompleteService | null>(null);
-  const placesRef = useRef<google.maps.places.PlacesService | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
 
   // Load Google Maps script
@@ -49,7 +45,6 @@ export function AddressAutocomplete({ onSelect, defaultValue = "", className }: 
       return;
     }
 
-    // Check if script is already being loaded
     if (document.querySelector('script[src*="maps.googleapis.com"]')) {
       const check = setInterval(() => {
         if (window.google?.maps?.places) {
@@ -61,20 +56,18 @@ export function AddressAutocomplete({ onSelect, defaultValue = "", className }: 
     }
 
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async`;
     script.async = true;
-    script.onload = () => setScriptLoaded(true);
+    script.onload = () => {
+      const check = setInterval(() => {
+        if (window.google?.maps?.places) {
+          setScriptLoaded(true);
+          clearInterval(check);
+        }
+      }, 50);
+    };
     document.head.appendChild(script);
   }, []);
-
-  // Initialize services
-  useEffect(() => {
-    if (!scriptLoaded) return;
-    serviceRef.current = new google.maps.places.AutocompleteService();
-    // PlacesService needs a DOM element
-    const div = document.createElement("div");
-    placesRef.current = new google.maps.places.PlacesService(div);
-  }, [scriptLoaded]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -88,69 +81,79 @@ export function AddressAutocomplete({ onSelect, defaultValue = "", className }: 
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
-  const fetchPredictions = useCallback((input: string) => {
-    if (!serviceRef.current || input.length < 3) {
-      setPredictions([]);
+  const fetchSuggestions = useCallback(async (input: string) => {
+    if (!scriptLoaded || input.length < 3) {
+      setSuggestions([]);
       return;
     }
 
     setLoading(true);
-    serviceRef.current.getPlacePredictions(
-      {
+    try {
+      const { suggestions: results } = await google.maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
         input,
-        componentRestrictions: { country: "us" },
-        types: ["address"],
-      },
-      (results, status) => {
-        setLoading(false);
-        if (status === google.maps.places.PlacesServiceStatus.OK && results) {
-          setPredictions(results.slice(0, 5));
-          setShowDropdown(true);
-        } else {
-          setPredictions([]);
-        }
-      }
-    );
-  }, []);
+        includedRegionCodes: ["us"],
+        includedPrimaryTypes: ["street_address", "subpremise", "premise"],
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mapped: Suggestion[] = (results || []).slice(0, 5).map((s: any) => {
+        const prediction = s.placePrediction;
+        const mainText = prediction?.mainText?.text || "";
+        const secondaryText = prediction?.secondaryText?.text || "";
+        return {
+          placeId: prediction?.placeId || "",
+          mainText,
+          secondaryText,
+          description: prediction?.text?.text || `${mainText}, ${secondaryText}`,
+        };
+      });
+
+      setSuggestions(mapped);
+      setShowDropdown(mapped.length > 0);
+    } catch {
+      setSuggestions([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [scriptLoaded]);
 
   const handleInput = (value: string) => {
     setQuery(value);
     setSelected(false);
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => fetchPredictions(value), 300);
+    debounceRef.current = setTimeout(() => fetchSuggestions(value), 300);
   };
 
-  const handleSelect = (prediction: Prediction) => {
-    if (!placesRef.current) return;
+  const handleSelect = async (suggestion: Suggestion) => {
+    try {
+      const place = new google.maps.places.Place({ id: suggestion.placeId });
+      await place.fetchFields({ fields: ["addressComponents", "formattedAddress"] });
 
-    placesRef.current.getDetails(
-      {
-        placeId: prediction.place_id,
-        fields: ["address_components", "formatted_address"],
-      },
-      (place, status) => {
-        if (status !== google.maps.places.PlacesServiceStatus.OK || !place?.address_components) return;
+      const components = place.addressComponents || [];
+      const get = (type: string) => components.find((c: { types: string[] }) => c.types.includes(type));
 
-        const components = place.address_components;
-        const get = (type: string) => components.find(c => c.types.includes(type));
+      const streetNumber = get("street_number")?.longText || "";
+      const route = get("route")?.longText || "";
+      const city = get("locality")?.longText || get("sublocality_level_1")?.longText || get("administrative_area_level_2")?.longText || "";
+      const state = get("administrative_area_level_1")?.shortText || "";
+      const zip = get("postal_code")?.longText || "";
 
-        const streetNumber = get("street_number")?.long_name || "";
-        const route = get("route")?.long_name || "";
-        const city = get("locality")?.long_name || get("sublocality_level_1")?.long_name || get("administrative_area_level_2")?.long_name || "";
-        const state = get("administrative_area_level_1")?.short_name || "";
-        const zip = get("postal_code")?.long_name || "";
+      const address_line1 = streetNumber ? `${streetNumber} ${route}` : route;
 
-        const address_line1 = streetNumber ? `${streetNumber} ${route}` : route;
+      setQuery(address_line1);
+      setSelected(true);
+      setShowDropdown(false);
+      setSuggestions([]);
 
-        setQuery(address_line1);
-        setSelected(true);
-        setShowDropdown(false);
-        setPredictions([]);
-
-        onSelect({ address_line1, city, state, zip });
-      }
-    );
+      onSelect({ address_line1, city, state, zip });
+    } catch {
+      // Fallback - just use the suggestion text
+      setQuery(suggestion.mainText);
+      setSelected(true);
+      setShowDropdown(false);
+      setSuggestions([]);
+    }
   };
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -164,7 +167,7 @@ export function AddressAutocomplete({ onSelect, defaultValue = "", className }: 
           type="text"
           value={query}
           onChange={(e) => handleInput(e.target.value)}
-          onFocus={() => predictions.length > 0 && setShowDropdown(true)}
+          onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
           placeholder={apiKey ? "Start typing an address..." : "1234 Main St"}
           name="address_line1"
           required
@@ -180,22 +183,22 @@ export function AddressAutocomplete({ onSelect, defaultValue = "", className }: 
         )}
       </div>
 
-      {showDropdown && predictions.length > 0 && (
+      {showDropdown && suggestions.length > 0 && (
         <div
           ref={dropdownRef}
           className="absolute z-50 w-full mt-1.5 bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden"
         >
-          {predictions.map((p) => (
+          {suggestions.map((s) => (
             <button
-              key={p.place_id}
+              key={s.placeId}
               type="button"
-              onClick={() => handleSelect(p)}
+              onClick={() => handleSelect(s)}
               className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-start gap-3 border-b border-gray-50 last:border-0"
             >
               <MapPin className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
               <div className="min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{p.structured_formatting.main_text}</p>
-                <p className="text-xs text-gray-500 truncate">{p.structured_formatting.secondary_text}</p>
+                <p className="text-sm font-medium text-gray-900 truncate">{s.mainText}</p>
+                <p className="text-xs text-gray-500 truncate">{s.secondaryText}</p>
               </div>
             </button>
           ))}
