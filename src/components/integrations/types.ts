@@ -8,6 +8,7 @@ export interface Integration {
   status: ConnectionStatus;
   logo: string;
   logoColor: string;
+  logoUrl?: string;
   tier: "free" | "pro" | "business";
   lastSync?: string;
   details?: string;

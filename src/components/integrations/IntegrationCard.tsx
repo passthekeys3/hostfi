@@ -22,10 +22,25 @@ export function IntegrationCard({ integration, status, onConnect, onDisconnect }
     )}>
       {/* Logo */}
       <div className={cn(
-        "w-10 h-10 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0",
-        integration.logoColor
+        "w-10 h-10 rounded-lg flex items-center justify-center shrink-0 overflow-hidden",
+        !integration.logoUrl && integration.logoColor,
+        !integration.logoUrl && "text-white text-xs font-bold"
       )}>
-        {integration.logo}
+        {integration.logoUrl ? (
+          <img
+            src={integration.logoUrl}
+            alt={integration.name}
+            className="w-full h-full object-contain rounded-lg"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              target.parentElement!.classList.add(integration.logoColor, 'text-white', 'text-xs', 'font-bold');
+              target.parentElement!.textContent = integration.logo;
+            }}
+          />
+        ) : (
+          integration.logo
+        )}
       </div>
 
       {/* Info */}
