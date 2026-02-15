@@ -6,9 +6,7 @@ if (!stripeKey && process.env.NODE_ENV === 'production') {
   console.error('STRIPE_SECRET_KEY not configured — payments will not work');
 }
 
-export const stripe = new Stripe(stripeKey || 'sk_test_placeholder_not_configured', {
-  apiVersion: '2025-12-18.acacia' as Stripe.LatestApiVersion,
-});
+export const stripe = new Stripe(stripeKey || 'sk_test_placeholder_not_configured');
 
 // Plan configuration
 export const PLANS = {

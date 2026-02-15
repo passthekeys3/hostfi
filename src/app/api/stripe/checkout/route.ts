@@ -69,7 +69,6 @@ export async function POST(request: NextRequest) {
     // Build checkout session options
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       mode: 'subscription',
-      payment_method_types: ['card'],
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${origin}/dashboard/billing?upgrade=success&plan=${plan}`,
       cancel_url: `${origin}/dashboard/billing?upgrade=cancelled`,
