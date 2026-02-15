@@ -74,9 +74,9 @@ export default function RevenuePage() {
   }, [revenue, filterProperty, filterSource]);
 
   // Stats
-  const totalGross = useMemo(() => revenue.reduce((s, r) => s + r.amount, 0), [revenue]);
-  const totalNet = useMemo(() => revenue.reduce((s, r) => s + r.payout_amount, 0), [revenue]);
-  const totalFees = useMemo(() => revenue.reduce((s, r) => s + r.platform_fee, 0), [revenue]);
+  const totalGross = useMemo(() => revenue.reduce((s, r) => s + (r.amount ?? 0), 0), [revenue]);
+  const totalNet = useMemo(() => revenue.reduce((s, r) => s + (r.payout_amount ?? r.amount ?? 0), 0), [revenue]);
+  const totalFees = useMemo(() => revenue.reduce((s, r) => s + (r.platform_fee ?? 0), 0), [revenue]);
   const allExpenses = demo ? DEMO_EXPENSES : realExpenses;
   const allProperties = demo ? DEMO_PROPERTIES : realProperties;
   const totalExpenses = useMemo(() => allExpenses.reduce((s, e) => s + e.amount, 0), [allExpenses]);
@@ -88,8 +88,8 @@ export default function RevenuePage() {
     return allProperties.map(prop => {
       const propRevenue = revenue.filter(r => r.property_id === prop.id);
       const propExpenses = allExpenses.filter(e => e.property_id === prop.id);
-      const gross = propRevenue.reduce((s, r) => s + r.amount, 0);
-      const net = propRevenue.reduce((s, r) => s + r.payout_amount, 0);
+      const gross = propRevenue.reduce((s, r) => s + (r.amount ?? 0), 0);
+      const net = propRevenue.reduce((s, r) => s + (r.payout_amount ?? r.amount ?? 0), 0);
       const expenses = propExpenses.reduce((s, e) => s + e.amount, 0);
       return { property: prop, gross, net, expenses, profit: net - expenses, bookings: propRevenue.length };
     });
@@ -225,7 +225,7 @@ export default function RevenuePage() {
     reader.readAsText(file);
   }, []);
 
-  const fmt = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmt = (n: number | null | undefined) => (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
     <div className="space-y-6 pb-24 lg:pb-6">
