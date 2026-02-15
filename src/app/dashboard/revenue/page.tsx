@@ -196,8 +196,9 @@ export default function RevenuePage() {
       const result = await response.json();
       
       if (result.success) {
-        // Add imported entries to local state
-        setRevenue(prev => [...prev, ...result.entries]);
+        // Refresh from Supabase if available, otherwise add to local state
+        if (refresh && !demo) { refresh(); }
+        else { setRevenue(prev => [...prev, ...result.entries]); }
         setImportResult({
           imported: result.imported,
           skipped: result.skipped,

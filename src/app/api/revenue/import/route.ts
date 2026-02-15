@@ -131,6 +131,29 @@ export async function POST(request: NextRequest) {
       result.imported++;
     }
 
+    // Save to Supabase
+    if (result.entries.length > 0) {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (supabaseUrl && serviceKey) {
+        const { createClient: createAdminClient } = await import('@supabase/supabase-js');
+        const admin = createAdminClient(supabaseUrl, serviceKey);
+
+        // Strip client-generated IDs, let Supabase generate UUIDs
+        const rows = result.entries.map(({ id: _id, ...rest }) => rest);
+        const { data, error } = await admin.from('revenue').insert(rows).select();
+        if (error) {
+          console.error('Revenue import DB error:', error.message);
+          return NextResponse.json(
+            { success: false, error: 'Failed to save imported entries' },
+            { status: 500 }
+          );
+        }
+        // Return the saved entries with real IDs
+        if (data) result.entries = data as RevenueEntry[];
+      }
+    }
+
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error importing revenue:', error);

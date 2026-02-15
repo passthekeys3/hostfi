@@ -257,18 +257,19 @@ export default function SettingsPage() {
         <button 
           onClick={async () => {
             if (!confirm('Are you sure you want to delete your account? This action is permanent and cannot be undone.')) return;
-            if (!confirm('This will delete ALL your properties, expenses, revenue data, and settings. Type "delete" in the next prompt to confirm.')) return;
-            const confirmation = prompt('Type "delete" to permanently delete your account:');
+            const confirmation = prompt('This will delete ALL your properties, expenses, revenue data, and settings.\n\nType "delete" to confirm:');
             if (confirmation?.toLowerCase() !== 'delete') { alert('Account deletion cancelled.'); return; }
             try {
-              const { createClient } = await import("@/lib/supabase/client");
-              const supabase = createClient();
-              if (!supabase) return;
-              // Sign out and redirect — actual data deletion requires admin/edge function
-              await supabase.auth.signOut();
+              const res = await fetch('/api/account/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ confirmation: 'delete' }),
+              });
+              if (!res.ok) { const data = await res.json(); throw new Error(data.error || 'Failed'); }
               localStorage.clear();
+              sessionStorage.clear();
               window.location.href = '/login';
-            } catch { alert('Failed to delete account. Please contact support.'); }
+            } catch (err) { alert('Failed to delete account. Please contact support at kevin@hostfi.ai'); }
           }}
           className="px-5 py-2.5 bg-red-50 text-red-600 font-medium rounded-xl transition-all border border-red-200 text-sm hover:bg-red-100"
         >
