@@ -56,15 +56,15 @@ export default function SettingsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-xl">
           <div>
             <label htmlFor="settings-fullname" className="block text-sm font-medium mb-2">Full Name</label>
-            <input id="settings-fullname" defaultValue="Demo User" className={inputClass} />
+            <input id="settings-fullname" defaultValue="" placeholder="Your name" className={inputClass} />
           </div>
           <div>
             <label htmlFor="settings-email" className="block text-sm font-medium mb-2">Email</label>
-            <input id="settings-email" defaultValue="demo@hostfi.ai" disabled className={`${inputClass} text-muted-foreground`} aria-describedby="email-note" />
+            <input id="settings-email" defaultValue="" placeholder="your@email.com" disabled className={`${inputClass} text-muted-foreground`} aria-describedby="email-note" />
           </div>
         </div>
-        <button disabled className="px-5 py-2.5 bg-teal-600/50 text-white font-medium rounded-xl transition-all text-sm cursor-not-allowed shadow-sm" title="Not available in demo mode">
-          Save Changes (Demo)
+        <button className="px-5 py-2.5 bg-gray-900 text-white font-medium rounded-xl transition-all text-sm hover:bg-gray-800">
+          Save Changes
         </button>
       </div>
 
@@ -212,8 +212,8 @@ export default function SettingsPage() {
         <p className="text-sm text-muted-foreground leading-relaxed">
           Permanently delete your account and all associated data.
         </p>
-        <button disabled className="px-5 py-2.5 bg-red-500/10 text-red-600/50 font-medium rounded-xl transition-all border border-red-500/15 text-sm cursor-not-allowed" title="Not available in demo mode">
-          Delete Account (Demo)
+        <button className="px-5 py-2.5 bg-red-50 text-red-600 font-medium rounded-xl transition-all border border-red-200 text-sm hover:bg-red-100">
+          Delete Account
         </button>
       </div>
     </div>

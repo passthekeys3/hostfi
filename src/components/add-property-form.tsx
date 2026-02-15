@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Info } from "lucide-react";
+import { Info, AlertCircle } from "lucide-react";
+import { isDemoMode } from "@/lib/data/data-provider";
 
 const PROPERTY_TYPES = [
   { value: "str", label: "Short-Term Rental" },
@@ -13,20 +14,74 @@ const PROPERTY_TYPES = [
 export function AddPropertyForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const demo = isDemoMode();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => { router.push("/dashboard/properties"); }, 500);
+    setError(null);
+
+    if (demo) {
+      setTimeout(() => { router.push("/dashboard/properties"); }, 500);
+      return;
+    }
+
+    try {
+      const form = new FormData(e.currentTarget);
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      if (!supabase) { setError("Database not configured."); setLoading(false); return; }
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setError("You must be logged in to add a property.");
+        setLoading(false);
+        return;
+      }
+
+      const { error: insertError } = await supabase.from("properties").insert({
+        user_id: user.id,
+        name: form.get("name") as string,
+        property_type: form.get("property_type") as string,
+        address_line1: form.get("address_line1") as string,
+        address_line2: (form.get("address_line2") as string) || null,
+        city: form.get("city") as string,
+        state: form.get("state") as string,
+        zip: form.get("zip") as string,
+        bedrooms: parseInt(form.get("bedrooms") as string) || 1,
+        bathrooms: parseFloat(form.get("bathrooms") as string) || 1,
+        sqft: form.get("sqft") ? parseInt(form.get("sqft") as string) : null,
+        status: "active",
+      });
+
+      if (insertError) {
+        setError(insertError.message);
+        setLoading(false);
+        return;
+      }
+
+      router.push("/dashboard/properties");
+    } catch (err) {
+      setError("Something went wrong. Please try again.");
+      setLoading(false);
+    }
   };
 
   const inputClass = "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 text-sm transition-all";
 
   return (
     <>
-      <div className="max-w-xl mb-4 px-4 py-3 bg-amber-500/5 border border-amber-500/15 rounded-xl text-sm text-muted-foreground flex items-center gap-2">
-        <Info className="w-4 h-4 shrink-0" /> Demo Mode — Data won&apos;t be saved
-      </div>
+      {demo && (
+        <div className="max-w-xl mb-4 px-4 py-3 bg-amber-500/5 border border-amber-500/15 rounded-xl text-sm text-muted-foreground flex items-center gap-2">
+          <Info className="w-4 h-4 shrink-0" /> Demo Mode — Data won&apos;t be saved
+        </div>
+      )}
+      {error && (
+        <div className="max-w-xl mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 shrink-0" /> {error}
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="space-y-6 max-w-xl">
         <div>
           <label className="block text-sm font-medium mb-2">Property Name</label>
@@ -87,14 +142,14 @@ export function AddPropertyForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full sm:w-auto min-h-[40px] px-5 py-2.5 bg-teal-600 text-white font-medium rounded-xl hover:bg-teal-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            className="w-full sm:w-auto min-h-[40px] px-5 py-2.5 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Adding..." : "Add Property"}
           </button>
           <button
             type="button"
             onClick={() => router.back()}
-            className="w-full sm:w-auto min-h-[36px] px-4 py-2 bg-white text-foreground font-medium rounded-xl hover:bg-gray-100 transition-all duration-200 border border-gray-200 shadow-sm"
+            className="w-full sm:w-auto min-h-[36px] px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-all duration-200"
           >
             Cancel
           </button>

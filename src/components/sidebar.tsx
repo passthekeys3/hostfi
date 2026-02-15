@@ -7,21 +7,23 @@ import { LayoutDashboard, Building2, Receipt, Settings, Menu, X, Inbox, BarChart
 import { useState, useEffect } from "react";
 import { DEMO_ALERTS } from "@/lib/data";
 import { DEMO_INBOX_ITEMS } from "@/lib/demo-inbox";
+import { isDemoMode } from "@/lib/data/data-provider";
 
-const inboxCount = DEMO_INBOX_ITEMS.filter(i => i.status === "pending_review").length;
-const unreadAlertCount = DEMO_ALERTS.filter(a => !a.read).length;
-
-const mainNav = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard, badge: 0 },
-  { href: "/dashboard/inbox", label: "Inbox", icon: Inbox, badge: inboxCount },
-  { href: "/dashboard/properties", label: "Properties", icon: Building2, badge: 0 },
-  { href: "/dashboard/expenses", label: "Expenses", icon: Receipt, badge: 0 },
-  { href: "/dashboard/revenue", label: "Revenue", icon: DollarSign, badge: 0 },
-  { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3, badge: 0 },
-  { href: "/dashboard/tax", label: "Tax Prep", icon: Calculator, badge: 0 },
-  { href: "/dashboard/ask", label: "Ask AI", icon: MessageSquare, badge: 0 },
-  { href: "/dashboard/alerts", label: "Alerts", icon: Bell, badge: unreadAlertCount, badgeColor: 'red' as const },
-];
+function getMainNav(demo: boolean) {
+  const inboxCount = demo ? DEMO_INBOX_ITEMS.filter(i => i.status === "pending_review").length : 0;
+  const unreadAlertCount = demo ? DEMO_ALERTS.filter(a => !a.read).length : 0;
+  return [
+    { href: "/dashboard", label: "Overview", icon: LayoutDashboard, badge: 0 },
+    { href: "/dashboard/inbox", label: "Inbox", icon: Inbox, badge: inboxCount },
+    { href: "/dashboard/properties", label: "Properties", icon: Building2, badge: 0 },
+    { href: "/dashboard/expenses", label: "Expenses", icon: Receipt, badge: 0 },
+    { href: "/dashboard/revenue", label: "Revenue", icon: DollarSign, badge: 0 },
+    { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3, badge: 0 },
+    { href: "/dashboard/tax", label: "Tax Prep", icon: Calculator, badge: 0 },
+    { href: "/dashboard/ask", label: "Ask AI", icon: MessageSquare, badge: 0 },
+    { href: "/dashboard/alerts", label: "Alerts", icon: Bell, badge: unreadAlertCount, badgeColor: 'red' as const },
+  ];
+}
 
 const bottomNav = [
   { href: "/dashboard/reports", label: "Reports", icon: FileText, badge: 0 },
@@ -40,6 +42,8 @@ interface SidebarProps {
 export function Sidebar({ externalOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const [internalOpen, setInternalOpen] = useState(false);
+  const demo = isDemoMode();
+  const mainNav = getMainNav(demo);
 
   const open = externalOpen ?? internalOpen;
   const setOpen = (v: boolean) => {
@@ -155,7 +159,7 @@ export function Sidebar({ externalOpen, onClose }: SidebarProps) {
               <p className="text-xs font-medium text-gray-900 truncate">Kevin</p>
               <p className="text-[10px] text-gray-400">Pro Plan</p>
             </div>
-            <span className="text-[9px] font-medium text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">Demo</span>
+            {demo && <span className="text-[9px] font-medium text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">Demo</span>}
           </div>
         </div>
       </aside>
