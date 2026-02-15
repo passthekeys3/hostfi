@@ -3,12 +3,10 @@
 import { use } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BillTable } from "@/components/bill-table";
-import { DEMO_UTILITY_ACCOUNTS, DEMO_BILLS } from "@/lib/types";
 import { getExpensesByCategory } from "@/lib/demo-expenses";
 import { EXPENSE_CATEGORY_CONFIG } from "@/lib/expense-categories";
-import { cn, getPropertyTypeLabel, getUtilityIcon, formatCurrency } from "@/lib/utils";
-import { ArrowLeft, MapPin, Plus, Bed, Bath, Ruler, Building2 } from "lucide-react";
+import { cn, getPropertyTypeLabel, formatCurrency } from "@/lib/utils";
+import { ArrowLeft, MapPin, Plus, Bed, Bath, Ruler, Building2, Landmark, Mail } from "lucide-react";
 import { PropertyExportBar } from "@/components/property-export-bar";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
@@ -34,9 +32,6 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   const propertyExpenses = expenses.filter(e => e.property_id === id);
   const expensesByCategory = getExpensesByCategory(propertyExpenses);
   const totalExpenses = propertyExpenses.reduce((sum, e) => sum + e.amount, 0);
-
-  const utilityAccounts = isDemo ? DEMO_UTILITY_ACCOUNTS.filter((ua) => ua.property_id === property.id) : [];
-  const propertyBills = isDemo ? DEMO_BILLS.filter((b) => b.utility_account?.property?.id === property.id) : [];
 
   const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb'];
   const spendData = isDemo ? [320, 285, 410, 345, totalExpenses > 0 ? Math.round(totalExpenses / 3) : 0] : [0, 0, 0, 0, 0];
@@ -163,6 +158,28 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
           </div>
         </div>
       )}
+
+      {/* Data Sources */}
+      <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400">Data Sources</h2>
+          <Link href="/dashboard/integrations" className="text-xs text-accent hover:underline font-medium">Manage →</Link>
+        </div>
+        <p className="text-sm text-muted-foreground mb-4">
+          Connect integrations to automatically track expenses for this property.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/dashboard/integrations" className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors">
+            <Landmark className="w-3.5 h-3.5" /> Connect Bank
+          </Link>
+          <Link href="/dashboard/settings" className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors">
+            <Mail className="w-3.5 h-3.5" /> Forward Bills
+          </Link>
+          <Link href="/dashboard/expenses/new" className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors">
+            <Plus className="w-3.5 h-3.5" /> Add Manually
+          </Link>
+        </div>
+      </div>
 
     </div>
   );
