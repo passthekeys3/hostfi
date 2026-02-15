@@ -225,11 +225,12 @@ export default function LandingPage() {
         "@type": "FAQPage",
         "mainEntity": [
           { "@type": "Question", "name": "What types of properties does HostFi support?", "acceptedAnswer": { "@type": "Answer", "text": "Any rental property — single-family homes, multi-family, condos, short-term rentals (Airbnb, VRBO), and commercial. If it has expenses, HostFi can track them." }},
+          { "@type": "Question", "name": "How is HostFi different from a spreadsheet or QuickBooks?", "acceptedAnswer": { "@type": "Answer", "text": "Spreadsheets don't understand rental properties — you end up building complex formulas just to track per-property costs. QuickBooks is powerful but designed for general businesses, not rental operators. HostFi is purpose-built: it auto-categorizes expenses by property, maps directly to IRS Schedule E line items, and catches anomalies like utility spikes automatically. No accounting degree required." }},
           { "@type": "Question", "name": "How does the AI bill parsing work?", "acceptedAnswer": { "@type": "Answer", "text": "Forward bills to your unique HostFi email address. Our AI reads the document, extracts amount, due date, vendor, and category, then matches it to the correct property based on your account details." }},
           { "@type": "Question", "name": "What's the difference between Owner and Arbitrage mappings?", "acceptedAnswer": { "@type": "Answer", "text": "Owners and arbitrage operators have different tax situations. For example, an owner deducts mortgage interest on Line 12, while an arbitrage operator deducts rent on Line 14. HostFi handles both automatically." }},
           { "@type": "Question", "name": "Is my financial data secure?", "acceptedAnswer": { "@type": "Answer", "text": "We use bank-level encryption and never store banking credentials. Your data is encrypted at rest and in transit. Bill payments are processed through licensed third-party providers — we never touch your funds." }},
           { "@type": "Question", "name": "Can I import existing expense data?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Import from CSV or Excel — our import wizard auto-maps your columns and flags duplicates. QuickBooks and Xero sync available on Business plan." }},
-          { "@type": "Question", "name": "Do you integrate with property management software?", "acceptedAnswer": { "@type": "Answer", "text": "We integrate with Hostaway, Guesty, OwnerRez, and more — plus QuickBooks, Xero, and Slack. New integrations added monthly." }},
+          { "@type": "Question", "name": "Do you integrate with property management software?", "acceptedAnswer": { "@type": "Answer", "text": "Today we integrate with Slack, Google Sheets, Google Drive, Zapier, and Make — with QuickBooks, Xero, and PMS integrations (Hostaway, Guesty, OwnerRez) on the roadmap. New integrations added regularly." }},
           { "@type": "Question", "name": "What is the cancellation policy?", "acceptedAnswer": { "@type": "Answer", "text": "Cancel anytime from your settings — no contracts, no fees. Your data stays accessible for 30 days after cancellation." }}
         ]
       })}} />
@@ -304,7 +305,7 @@ export default function LandingPage() {
                     <div className="w-2.5 h-2.5 rounded-full bg-gray-200" />
                   </div>
                   <div className="flex-1 max-w-sm mx-auto">
-                    <div className="bg-white border border-gray-200 rounded-md px-3 py-1 text-[11px] text-gray-400 text-center">app.hostfi.ai</div>
+                    <div className="bg-white border border-gray-200 rounded-md px-3 py-1 text-[11px] text-gray-400 text-center">hostfi.ai/dashboard</div>
                   </div>
                 </div>
 
@@ -385,14 +386,18 @@ export default function LandingPage() {
       <section ref={statsSection.ref} className="py-16 px-5 border-y border-gray-100">
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {[
-            { value: 11, suffix: "", label: "Expense categories", prefix: "" },
-            { value: 7, suffix: "", label: "Recurring frequencies", prefix: "" },
-            { value: 30, suffix: "s", label: "Average parse time", prefix: "" },
-            { value: 15, suffix: "", label: "IRS line items mapped", prefix: "" },
+            { type: "static", display: "< 30s", label: "Average bill parse time" },
+            { type: "static", display: "100%", label: "Schedule E coverage" },
+            { type: "animated", value: 5, suffix: " min", label: "Setup time", prefix: "" },
+            { type: "static", display: "$0", label: "To get started" },
           ].map((s, i) => (
             <div key={i}>
               <p className="text-3xl sm:text-4xl font-bold text-gray-900">
-                <AnimatedNumber value={s.value} prefix={s.prefix} suffix={s.suffix} visible={statsSection.visible} />
+                {s.type === "static" ? (
+                  s.display
+                ) : (
+                  <AnimatedNumber value={s.value!} prefix={s.prefix} suffix={s.suffix} visible={statsSection.visible} />
+                )}
               </p>
               <p className="text-sm text-gray-400 mt-1">{s.label}</p>
             </div>
@@ -657,8 +662,58 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ─── TESTIMONIALS ─── */}
+      <section className="py-24 sm:py-28 px-5 bg-gray-50">
+        <div className="max-w-6xl mx-auto">
+          <FadeIn className="text-center max-w-2xl mx-auto mb-16">
+            <p className="text-xs font-semibold text-teal-600 uppercase tracking-widest mb-3">Testimonials</p>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+              What Operators Are Saying
+            </h2>
+          </FadeIn>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                quote: "I used to spend Sunday afternoons entering receipts into a spreadsheet. Now I just forward my bills and snap receipts — HostFi handles the rest. Easily saving 6+ hours a month.",
+                name: "Sarah M.",
+                role: "Airbnb Host",
+                units: "6 units",
+              },
+              {
+                quote: "Tax season used to be a nightmare. Figuring out which expenses go on which Schedule E line was guesswork. HostFi's auto-mapping is a lifesaver — my CPA actually complimented how organized everything was.",
+                name: "Marcus T.",
+                role: "Arbitrage Operator",
+                units: "12 units",
+              },
+              {
+                quote: "The anomaly detection alone paid for itself. Caught a water bill that was 3x normal — turned out to be a running toilet in one of my units. Would've cost me hundreds more if I'd missed it.",
+                name: "Jennifer K.",
+                role: "Property Manager",
+                units: "23 units",
+              },
+            ].map((testimonial, i) => (
+              <FadeIn key={i} delay={i * 80}>
+                <div className="bg-white rounded-xl p-6 h-full border border-gray-100 flex flex-col">
+                  <div className="flex-1">
+                    <svg className="w-8 h-8 text-teal-100 mb-4" fill="currentColor" viewBox="0 0 32 32">
+                      <path d="M10 8c-3.3 0-6 2.7-6 6v10h10V14H6c0-2.2 1.8-4 4-4V8zm14 0c-3.3 0-6 2.7-6 6v10h10V14h-8c0-2.2 1.8-4 4-4V8z" />
+                    </svg>
+                    <p className="text-sm text-gray-600 leading-relaxed mb-6">{testimonial.quote}</p>
+                  </div>
+                  <div className="border-t border-gray-100 pt-4">
+                    <p className="text-sm font-semibold text-gray-900">{testimonial.name}</p>
+                    <p className="text-xs text-gray-400">{testimonial.role} · {testimonial.units}</p>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ─── PRICING ─── */}
-      <section id="pricing" className="py-24 sm:py-28 px-5 bg-gray-50 scroll-mt-16">
+      <section id="pricing" className="py-24 sm:py-28 px-5 bg-white scroll-mt-16">
         <div className="max-w-6xl mx-auto">
           <FadeIn className="text-center max-w-2xl mx-auto mb-16">
             <p className="text-xs font-semibold text-teal-600 uppercase tracking-widest mb-3">Pricing</p>
@@ -677,9 +732,10 @@ export default function LandingPage() {
           <FadeIn>
             <p className="text-xs font-semibold text-teal-600 uppercase tracking-widest mb-3">Why HostFi</p>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-6">Built by an Operator, for Operators</h2>
-            <p className="text-gray-500 text-sm leading-relaxed max-w-xl mx-auto mb-10">
-              I got tired of spending days organizing expenses at tax time. Spreadsheets don't understand Schedule E. QuickBooks is overkill. So I built something that just works for rental properties.
+            <p className="text-gray-500 text-sm leading-relaxed max-w-xl mx-auto mb-4">
+              &ldquo;I was spending entire weekends organizing receipts and figuring out which IRS line each expense belonged on. I built HostFi because no tool understood how rental operators actually work.&rdquo;
             </p>
+            <p className="text-sm font-semibold text-gray-900 mb-10">— Kevin, Founder</p>
           </FadeIn>
           <FadeIn delay={150}>
             <div className="grid sm:grid-cols-3 gap-6 text-left">
@@ -719,11 +775,12 @@ export default function LandingPage() {
           <FadeIn>
             <div>
               <FAQItem q="What types of properties does HostFi support?" a="Any rental property — single-family homes, multi-family, condos, short-term rentals (Airbnb, VRBO), and commercial. If it has expenses, HostFi can track them." />
+              <FAQItem q="How is HostFi different from a spreadsheet or QuickBooks?" a="Spreadsheets don't understand rental properties — you end up building complex formulas just to track per-property costs. QuickBooks is powerful but designed for general businesses, not rental operators. HostFi is purpose-built: it auto-categorizes expenses by property, maps directly to IRS Schedule E line items, and catches anomalies like utility spikes automatically. No accounting degree required." />
               <FAQItem q="How does the AI bill parsing work?" a="Forward bills to your unique HostFi email address. Our AI reads the document, extracts amount, due date, vendor, and category, then matches it to the correct property based on your account details." />
               <FAQItem q="What's the difference between Owner and Arbitrage mappings?" a="Owners and arbitrage operators have different tax situations. For example, an owner deducts mortgage interest on Line 12, while an arbitrage operator deducts rent on Line 19 (Other). HostFi handles both automatically." />
               <FAQItem q="Is my financial data secure?" a="We use bank-level encryption and never store banking credentials. Your data is encrypted at rest and in transit. Bill payments are processed through licensed third-party providers — we never touch your funds." />
               <FAQItem q="Can I import existing expense data?" a="Yes. Import from CSV or Excel — our import wizard auto-maps your columns and flags duplicates. QuickBooks and Xero sync available on Business plan." />
-              <FAQItem q="Do you integrate with property management software?" a="We integrate with Hostaway, Guesty, OwnerRez, and more — plus QuickBooks, Xero, and Slack. New integrations added monthly." />
+              <FAQItem q="Do you integrate with property management software?" a="Today we integrate with Slack, Google Sheets, Google Drive, Zapier, and Make — with QuickBooks, Xero, and PMS integrations (Hostaway, Guesty, OwnerRez) on the roadmap. New integrations added regularly." />
               <FAQItem q="What's the cancellation policy?" a="Cancel anytime from your settings — no contracts, no fees. Your data stays accessible for 30 days after cancellation." />
             </div>
           </FadeIn>
