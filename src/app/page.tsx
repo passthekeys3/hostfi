@@ -748,8 +748,8 @@ export default function LandingPage() {
             <div>
               <p className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-4">Resources</p>
               <div className="space-y-2.5">
-                <a href="#" className="block text-sm text-gray-400 hover:text-gray-700 transition-colors">Blog</a>
-                <a href="#" className="block text-sm text-gray-400 hover:text-gray-700 transition-colors">Contact</a>
+                <Link href="/blog" className="block text-sm text-gray-400 hover:text-gray-700 transition-colors">Blog</Link>
+                <a href="mailto:kevin@hostfi.ai" className="block text-sm text-gray-400 hover:text-gray-700 transition-colors">Contact</a>
               </div>
             </div>
             <div>
@@ -763,8 +763,8 @@ export default function LandingPage() {
           <div className="border-t border-gray-100 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-gray-400">&copy; 2026 HostFi. All rights reserved.</p>
             <div className="flex gap-6">
-              <a href="#" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">Twitter</a>
-              <a href="#" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">LinkedIn</a>
+              <a href="https://x.com/hostfi_ai" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">Twitter</a>
+              <a href="mailto:kevin@hostfi.ai" className="text-xs text-gray-400 hover:text-gray-700 transition-colors">Contact</a>
             </div>
           </div>
         </div>
