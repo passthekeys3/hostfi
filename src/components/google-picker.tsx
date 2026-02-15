@@ -72,6 +72,8 @@ export interface GooglePickerProps {
   title?: string;
   buttonText?: string;
   className?: string;
+  /** If true, fetches a fresh access token from the API before opening */
+  autoRefreshToken?: boolean;
 }
 
 const GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY || "";
@@ -84,13 +86,14 @@ function getAppId(clientId: string): string {
 }
 
 export function GooglePicker({
-  accessToken,
+  accessToken: initialAccessToken,
   onSelect,
   onCancel,
   mode,
   title,
   buttonText,
   className,
+  autoRefreshToken = true,
 }: GooglePickerProps) {
   const [loading, setLoading] = useState(false);
   const [apiLoaded, setApiLoaded] = useState(false);
@@ -134,7 +137,7 @@ export function GooglePicker({
     };
   }, []);
 
-  const openPicker = useCallback(() => {
+  const openPicker = useCallback(async () => {
     if (!apiLoaded || !window.google?.picker) {
       console.error("Google Picker API not loaded");
       return;
@@ -146,6 +149,18 @@ export function GooglePicker({
     }
 
     setLoading(true);
+
+    // Always fetch a fresh token to avoid expiry issues
+    let accessToken = initialAccessToken;
+    if (autoRefreshToken) {
+      try {
+        const res = await fetch("/api/integrations/google/access-token");
+        const data = await res.json();
+        if (data.access_token) accessToken = data.access_token;
+      } catch {
+        // Fall back to the provided token
+      }
+    }
 
     try {
       const appId = getAppId(GOOGLE_CLIENT_ID);
@@ -187,7 +202,7 @@ export function GooglePicker({
       console.error("Error opening picker:", err);
       setLoading(false);
     }
-  }, [apiLoaded, accessToken, mode, title, onSelect, onCancel]);
+  }, [apiLoaded, initialAccessToken, autoRefreshToken, mode, title, onSelect, onCancel]);
 
   const Icon = mode === "spreadsheet" ? FileSpreadsheet : FolderOpen;
   const defaultText = mode === "spreadsheet" ? "Choose Spreadsheet" : "Choose Folder";

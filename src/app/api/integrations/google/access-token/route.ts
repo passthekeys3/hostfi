@@ -61,8 +61,9 @@ export async function GET() {
       ? new Date(conn.token_expires_at).getTime()
       : 0;
 
-    // Refresh token if expired or expiring within 1 minute
-    if (tokenExpiresAt && Date.now() > tokenExpiresAt - 60_000) {
+    // Refresh token if expired, expiring within 5 minutes, or no expiry stored (always refresh to be safe)
+    const shouldRefresh = !tokenExpiresAt || Date.now() > tokenExpiresAt - 300_000;
+    if (shouldRefresh && conn.refresh_token) {
       try {
         const refreshed = await refreshGoogleToken(conn.refresh_token);
         accessToken = refreshed.access_token;
