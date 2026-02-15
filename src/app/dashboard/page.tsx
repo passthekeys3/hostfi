@@ -1,18 +1,162 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { StatCard } from "@/components/stat-card";
 import { getSourceIcon } from "@/lib/demo-expenses";
 import { getCategoryConfig, getCategoryColorClasses } from "@/lib/expense-categories";
 import { formatCurrency, formatDate, cn, getStatusColor } from "@/lib/utils";
-import { DollarSign, Building2, Receipt, Plus, Search, StickyNote } from "lucide-react";
+import { DollarSign, Building2, Receipt, Plus, Search, StickyNote, CheckCircle2, Circle, ArrowRight, Sparkles, Link2 } from "lucide-react";
 import { AnomalySummary } from "@/components/anomaly-summary";
 import { OnboardingGate } from "@/components/onboarding-gate";
 import { DuplicateAlert } from "@/components/duplicate-alert";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
+// Welcome checklist component for new users
+function WelcomeChecklist({ 
+  hasProperty, 
+  hasExpense, 
+  onDismiss 
+}: { 
+  hasProperty: boolean; 
+  hasExpense: boolean;
+  onDismiss: () => void;
+}) {
+  const steps = [
+    {
+      id: 'property',
+      title: 'Add your first property',
+      description: 'Start by adding a rental property to track',
+      href: '/dashboard/properties/new',
+      completed: hasProperty,
+      icon: Building2,
+    },
+    {
+      id: 'expense',
+      title: 'Track an expense',
+      description: 'Log your first expense or import from CSV',
+      href: '/dashboard/expenses/new',
+      completed: hasExpense,
+      icon: Receipt,
+    },
+    {
+      id: 'integrations',
+      title: 'Connect an integration',
+      description: 'Link Airbnb, Guesty, or your email for auto-import',
+      href: '/dashboard/integrations',
+      completed: false,
+      icon: Link2,
+    },
+  ];
+
+  const completedCount = steps.filter(s => s.completed).length;
+  const allCompleted = completedCount === steps.length;
+
+  return (
+    <div className="bg-gradient-to-br from-teal-50 via-white to-cyan-50 rounded-2xl border border-teal-100/60 p-6 sm:p-8 mb-8 sm:mb-10 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-teal-100/30 to-transparent rounded-full -mr-32 -mt-32 pointer-events-none" />
+      
+      <div className="relative">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-teal-500 flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900">Welcome to HostFi 👋</h2>
+              <p className="text-sm text-gray-600 mt-0.5">Let&apos;s get your property finances organized</p>
+            </div>
+          </div>
+          {(hasProperty && hasExpense) && (
+            <button
+              onClick={onDismiss}
+              className="text-xs text-gray-500 hover:text-gray-700 font-medium px-3 py-1.5 rounded-lg hover:bg-white/60 transition-colors"
+            >
+              Dismiss
+            </button>
+          )}
+        </div>
+
+        {/* Progress bar */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between text-xs mb-2">
+            <span className="text-gray-600 font-medium">{completedCount} of {steps.length} completed</span>
+            {allCompleted && <span className="text-teal-600 font-semibold">All done! 🎉</span>}
+          </div>
+          <div className="h-2 bg-gray-200/60 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-teal-400 to-teal-500 rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${(completedCount / steps.length) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Steps */}
+        <div className="space-y-3">
+          {steps.map((step) => (
+            <Link
+              key={step.id}
+              href={step.href}
+              className={cn(
+                "flex items-center gap-4 p-4 rounded-xl border transition-all duration-200 group",
+                step.completed
+                  ? "bg-white/60 border-teal-200/60"
+                  : "bg-white border-gray-200/80 hover:border-teal-300 hover:shadow-sm"
+              )}
+            >
+              <div className={cn(
+                "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors",
+                step.completed ? "bg-teal-100" : "bg-gray-100 group-hover:bg-teal-50"
+              )}>
+                <step.icon className={cn(
+                  "w-5 h-5",
+                  step.completed ? "text-teal-600" : "text-gray-500 group-hover:text-teal-600"
+                )} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className={cn(
+                    "font-medium text-sm",
+                    step.completed ? "text-gray-500" : "text-gray-900"
+                  )}>
+                    {step.title}
+                  </p>
+                </div>
+                <p className="text-xs text-gray-500 mt-0.5">{step.description}</p>
+              </div>
+              <div className="shrink-0">
+                {step.completed ? (
+                  <CheckCircle2 className="w-5 h-5 text-teal-500" />
+                ) : (
+                  <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-teal-500 transition-colors" />
+                )}
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const { properties, expenses, anomalies, isDemo, loading } = useDashboardData();
+  const [welcomeDismissed, setWelcomeDismissed] = useState(false);
+
+  // Check localStorage for dismissed state
+  useEffect(() => {
+    const dismissed = localStorage.getItem('hostfi-welcome-dismissed');
+    if (dismissed === 'true') {
+      setWelcomeDismissed(true);
+    }
+  }, []);
+
+  const handleDismissWelcome = () => {
+    setWelcomeDismissed(true);
+    localStorage.setItem('hostfi-welcome-dismissed', 'true');
+  };
 
   if (loading) {
     return (
@@ -25,6 +169,10 @@ export default function DashboardPage() {
       </div>
     );
   }
+
+  // Show welcome checklist for new real users (not demo, has 0 properties OR 0 expenses)
+  const isNewUser = !isDemo && (properties.length === 0 || expenses.length === 0);
+  const showWelcome = isNewUser && !welcomeDismissed;
 
   const totalSpend = expenses.reduce((sum, e) => sum + e.amount, 0);
   const pendingExpenses = expenses.filter((e) => e.status === 'pending');
@@ -39,6 +187,15 @@ export default function DashboardPage() {
   return (
     <OnboardingGate>
     <div className="space-y-8 sm:space-y-12">
+      {/* Welcome Checklist for New Users */}
+      {showWelcome && (
+        <WelcomeChecklist
+          hasProperty={properties.length > 0}
+          hasExpense={expenses.length > 0}
+          onDismiss={handleDismissWelcome}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-start sm:items-center justify-between gap-4">
         <div>
@@ -230,6 +387,20 @@ export default function DashboardPage() {
             );
           })}
         </div>
+
+        {/* Empty state for Recent Expenses */}
+        {recentExpenses.length === 0 && !isDemo && (
+          <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
+            <Receipt className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+            <p className="text-gray-500 text-sm">No expenses yet</p>
+            <Link 
+              href="/dashboard/expenses/new" 
+              className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-gray-900 text-white font-medium rounded-xl text-sm hover:bg-gray-800 transition-colors"
+            >
+              <Plus className="w-4 h-4" /> Add Expense
+            </Link>
+          </div>
+        )}
       </section>
     </div>
     </OnboardingGate>

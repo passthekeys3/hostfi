@@ -227,6 +227,9 @@ export default function RevenuePage() {
 
   const fmt = (n: number | null | undefined) => (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+  // Show empty state for real users with no revenue data
+  const showEmptyState = !demo && revenue.length === 0 && revenueLoaded;
+
   return (
     <div className="space-y-6 pb-24 lg:pb-6">
       {/* Header */}
@@ -250,6 +253,26 @@ export default function RevenuePage() {
         </div>
       </div>
 
+      {/* Empty State */}
+      {showEmptyState && (
+        <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+          <DollarSign className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <p className="font-medium text-gray-700">No revenue tracked yet</p>
+          <p className="text-gray-500 text-sm mt-1 max-w-md mx-auto">Track rental income from Airbnb, VRBO, direct bookings and more. Import from CSV or add entries manually.</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-5">
+            <button onClick={() => setModal('csv')} className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-gray-700 font-medium rounded-xl text-sm border border-gray-200 hover:bg-gray-50 transition-colors">
+              <Upload className="w-4 h-4" /> Import CSV
+            </button>
+            <button onClick={() => setModal('add')} className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-500 text-white font-medium rounded-xl text-sm hover:bg-teal-600 transition-colors">
+              <Plus className="w-4 h-4" /> Add Revenue Entry
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Main content - hidden when empty */}
+      {!showEmptyState && (
+      <>
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
         <StatCard title="Gross Revenue" value={`$${fmt(totalGross)}`} accent="teal" icon={DollarSign} subtitle={`${totalBookings} bookings`} />
@@ -443,6 +466,8 @@ export default function RevenuePage() {
           <div className="py-12 text-center text-sm text-gray-400">No revenue entries match your filters.</div>
         )}
       </div>
+      </>
+      )}
 
       {/* Add Revenue Modal */}
       {modal === 'add' && (

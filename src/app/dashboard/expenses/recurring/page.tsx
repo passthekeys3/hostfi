@@ -7,11 +7,11 @@ import { DEMO_PROPERTIES } from "@/lib/data";
 import { isDemoMode } from "@/lib/data/data-provider";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
-import { Plus, Pause, Pencil, ArrowLeft } from "lucide-react";
+import { Plus, Pause, Pencil, ArrowLeft, RefreshCw } from "lucide-react";
 
 export default function RecurringExpensesPage() {
   const demo = isDemoMode();
-  const { properties: realProperties } = useDashboardData();
+  const { properties: realProperties, loading } = useDashboardData();
   const recurringExpenses = demo ? DEMO_RECURRING_EXPENSES : [];
   const properties = demo ? DEMO_PROPERTIES : realProperties;
   const activeExpenses = recurringExpenses.filter(e => e.is_active);
@@ -25,6 +25,17 @@ export default function RecurringExpensesPage() {
       default: return sum;
     }
   }, 0);
+
+  if (loading) {
+    return (
+      <div className="space-y-10 animate-pulse">
+        <div className="h-8 w-48 bg-gray-200 rounded-lg" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          {[1,2,3,4].map(i => <div key={i} className="h-32 bg-gray-100 rounded-2xl" />)}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10">
@@ -45,6 +56,16 @@ export default function RecurringExpensesPage() {
         </Link>
       </div>
 
+      {recurringExpenses.length === 0 ? (
+        <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+          <RefreshCw className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <p className="font-medium text-gray-700">No recurring expenses yet</p>
+          <p className="text-gray-500 text-sm mt-1">Set up recurring expenses to track monthly bills like utilities, insurance, and subscriptions.</p>
+          <Link href="/dashboard/expenses/new" className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 bg-teal-600 text-white font-medium rounded-xl text-sm hover:bg-teal-700 transition-colors">
+            <Plus className="w-4 h-4" /> Add Recurring Expense
+          </Link>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-5">
         {recurringExpenses.map((expense) => {
           const catConfig = getCategoryConfig(expense.category);
@@ -83,6 +104,7 @@ export default function RecurringExpensesPage() {
           );
         })}
       </div>
+      )}
     </div>
   );
 }
