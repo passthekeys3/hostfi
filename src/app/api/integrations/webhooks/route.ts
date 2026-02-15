@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
     if (rateLimiter(ip)) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
 
-    const subscriptions = getSubscriptions(auth.userId);
+    const subscriptions = await getSubscriptions(auth.userId);
     const events = getAvailableEvents();
 
     return NextResponse.json({ subscriptions, available_events: events });
@@ -69,12 +69,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Max 20 subscriptions per user
-    const existing = getSubscriptions(auth.userId);
+    const existing = await getSubscriptions(auth.userId);
     if (existing.length >= 20) {
       return NextResponse.json({ error: 'Maximum 20 webhook subscriptions allowed' }, { status: 400 });
     }
 
-    const sub = createSubscription(auth.userId, target_url, event_types as WebhookEventType[]);
+    const sub = await createSubscription(auth.userId, target_url, event_types as WebhookEventType[]);
     return NextResponse.json(sub, { status: 201 });
   } catch (error) {
     if (error instanceof NextResponse) return error;
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
-    await authenticateRequest();
+    const auth = await authenticateRequest();
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
     if (rateLimiter(ip)) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
 
@@ -99,7 +99,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'subscription_id is required' }, { status: 400 });
     }
 
-    const removed = removeSubscription(subscription_id);
+    const removed = await removeSubscription(subscription_id, auth.userId);
     if (!removed) {
       return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
     }
