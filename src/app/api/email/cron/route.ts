@@ -9,9 +9,30 @@ import { tipsEmail, checkInEmail, weeklyDigestEmail } from '@/lib/email-template
  * Body: { type: 'tips' | 'check-in' | 'weekly-digest' }
  * Auth: CRON_SECRET header
  */
+/**
+ * GET handler for Vercel Cron Jobs.
+ * Vercel cron calls GET with ?type=tips|check-in|weekly-digest
+ * Auth: CRON_SECRET env var checked against Authorization header (Vercel sets this automatically)
+ */
+export async function GET(request: NextRequest) {
+  const type = request.nextUrl.searchParams.get('type');
+  if (!type) {
+    return NextResponse.json({ error: 'Missing type param' }, { status: 400 });
+  }
+
+  // Vercel Cron sets Authorization: Bearer <CRON_SECRET> automatically
+  const cronSecret = process.env.CRON_SECRET;
+  const authHeader = request.headers.get('authorization');
+  if (process.env.NODE_ENV === 'production' && cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  return handleCron(type);
+}
+
 export async function POST(request: NextRequest) {
   try {
-    // Verify cron secret
+    // Verify cron secret or service role key
     const cronSecret = process.env.CRON_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
     const authHeader = request.headers.get('authorization');
     if (process.env.NODE_ENV === 'production' && authHeader !== `Bearer ${cronSecret}`) {
@@ -19,7 +40,15 @@ export async function POST(request: NextRequest) {
     }
 
     const { type } = await request.json();
+    return handleCron(type);
+  } catch (error) {
+    console.error('Email cron error:', error);
+    return NextResponse.json({ error: 'Failed' }, { status: 500 });
+  }
+}
 
+async function handleCron(type: string) {
+  try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !serviceKey) {
