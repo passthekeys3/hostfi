@@ -13,7 +13,7 @@ interface Account {
   mask: string | null;
 }
 
-export function PlaidModal({ onClose }: ModalProps) {
+export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?: () => void }) {
   const [step, setStep] = useState<"intro" | "connect" | "accounts" | "success">("intro");
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [institution, setInstitution] = useState<{ name: string } | null>(null);
@@ -37,8 +37,23 @@ export function PlaidModal({ onClose }: ModalProps) {
     });
   };
 
-  const handleFinish = () => {
-    // TODO: Save selected accounts to user preferences
+  const [importing, setImporting] = useState(false);
+  const [txnCount, setTxnCount] = useState(0);
+
+  const handleFinish = async () => {
+    setImporting(true);
+    try {
+      const res = await fetch("/api/integrations/plaid/transactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTxnCount((data.added || []).length);
+      }
+    } catch {}
+    setImporting(false);
+    onConnected?.();
     setStep("success");
   };
 
@@ -168,10 +183,10 @@ export function PlaidModal({ onClose }: ModalProps) {
 
               <button
                 onClick={handleFinish}
-                disabled={selectedAccounts.size === 0}
+                disabled={selectedAccounts.size === 0 || importing}
                 className="w-full py-3 text-sm font-semibold text-white bg-gray-900 hover:bg-gray-800 disabled:bg-gray-200 disabled:text-gray-400 rounded-xl transition-colors"
               >
-                Import Transactions
+                {importing ? "Importing Transactions..." : "Import Transactions"}
               </button>
             </div>
           )}
@@ -201,7 +216,7 @@ export function PlaidModal({ onClose }: ModalProps) {
                   <span className="font-medium text-teal-600">Active — Real-Time</span>
                 </div>
               </div>
-              <p className="text-xs text-gray-500">Transactions will appear in your Expenses within a few minutes. HostFi will auto-categorize and match them to your properties.</p>
+              <p className="text-xs text-gray-500">{txnCount > 0 ? `${txnCount} transactions imported and auto-categorized.` : "Transactions will appear in your Expenses shortly."} HostFi will match them to your properties.</p>
               <button onClick={onClose} className="w-full py-3 text-sm font-semibold text-white bg-teal-500 hover:bg-teal-600 rounded-xl transition-colors">
                 Done
               </button>

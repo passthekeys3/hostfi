@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link2, Zap } from "lucide-react";
 import { UpgradeGate } from "@/components/upgrade-gate";
 import {
@@ -50,6 +50,28 @@ const grouped = INTEGRATIONS.reduce<{ category: string; items: Integration[] }[]
 
 export default function IntegrationsPage() {
   const [connectedIds, setConnectedIds] = useState<Set<string>>(new Set());
+
+  // Load existing connections from Supabase on mount
+  useEffect(() => {
+    async function loadConnections() {
+      try {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        if (!supabase) return;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data } = await supabase
+          .from("integration_connections")
+          .select("provider")
+          .eq("user_id", user.id)
+          .eq("active", true);
+        if (data && data.length > 0) {
+          setConnectedIds(new Set(data.map((c: { provider: string }) => c.provider)));
+        }
+      } catch {}
+    }
+    loadConnections();
+  }, []);
 
   // Modal states
   const [openModal, setOpenModal] = useState<string | null>(null);
@@ -134,7 +156,7 @@ export default function IntegrationsPage() {
       {openModal === "make" && <MakeModal onClose={handleModalClose("make")} />}
       {openModal === "sms_alerts" && <SMSAlertsModal onClose={handleModalClose("sms_alerts")} />}
       {openModal === "email_smtp" && <EmailAlertsModal onClose={handleModalClose("email_smtp")} />}
-      {openModal === "plaid" && <PlaidModal onClose={handleModalClose("plaid")} />}
+      {openModal === "plaid" && <PlaidModal onClose={handleModalClose("plaid")} onConnected={() => setConnectedIds(prev => new Set(prev).add("plaid"))} />}
       {/* Note: modals call onClose() without didConnect=true, so closing a modal
           does NOT mark the integration as connected. In production, the OAuth
           callback or API verification will call onClose with didConnect=true. */}
