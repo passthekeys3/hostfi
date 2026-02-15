@@ -18,7 +18,7 @@ import { DEMO_PROPERTIES, DEMO_EXPENSES } from "@/lib/data";
 import { isDemoMode } from "@/lib/data/data-provider";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { type Property } from "@/lib/types";
-import { EXPENSE_CATEGORY_CONFIG, getCategoryColorClasses } from "@/lib/expense-categories";
+import { getCategoryConfig, EXPENSE_CATEGORY_CONFIG, getCategoryColorClasses } from "@/lib/expense-categories";
 import { 
   generatePropertyTaxSummary, 
   generateTaxInsights, 
@@ -117,7 +117,7 @@ function ScheduleELineRow({
           <td colSpan={3} className="px-4 py-0 bg-gray-50/60">
             <div className="py-3 pl-8 space-y-2">
               {lineItem.expenses.map((expense) => {
-                const catConfig = EXPENSE_CATEGORY_CONFIG[expense.category];
+                const catConfig = getCategoryConfig(expense.category);
                 const colorClasses = getCategoryColorClasses(catConfig.color);
                 return (
                   <div 

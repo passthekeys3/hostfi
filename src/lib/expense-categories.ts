@@ -69,6 +69,12 @@ export const FREQUENCY_LABELS: Record<ExpenseFrequency, string> = {
   'annual': 'Annual',
 };
 
+const FALLBACK_CATEGORY: ExpenseCategoryConfig = { label: 'Other', icon: ClipboardList, color: 'gray', description: 'Uncategorized expense' };
+
+export function getCategoryConfig(category: string): ExpenseCategoryConfig {
+  return EXPENSE_CATEGORY_CONFIG[category as ExpenseCategory] || FALLBACK_CATEGORY;
+}
+
 export function getCategoryColorClasses(color: string): { bg: string; text: string; border: string } {
   const map: Record<string, { bg: string; text: string; border: string }> = {
     blue: { bg: 'bg-blue-500/10', text: 'text-blue-600', border: 'border-blue-500/20' },

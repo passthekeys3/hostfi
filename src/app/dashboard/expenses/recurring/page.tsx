@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { DEMO_RECURRING_EXPENSES } from "@/lib/demo-expenses";
-import { EXPENSE_CATEGORY_CONFIG, FREQUENCY_LABELS, getCategoryColorClasses } from "@/lib/expense-categories";
+import { getCategoryConfig, EXPENSE_CATEGORY_CONFIG, FREQUENCY_LABELS, getCategoryColorClasses } from "@/lib/expense-categories";
 import { DEMO_PROPERTIES } from "@/lib/data";
 import { isDemoMode } from "@/lib/data/data-provider";
 import { useDashboardData } from "@/hooks/useDashboardData";
@@ -47,7 +47,7 @@ export default function RecurringExpensesPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-5">
         {recurringExpenses.map((expense) => {
-          const catConfig = EXPENSE_CATEGORY_CONFIG[expense.category];
+          const catConfig = getCategoryConfig(expense.category);
           const colors = getCategoryColorClasses(catConfig.color);
           const property = properties.find(p => p.id === expense.property_id);
 

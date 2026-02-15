@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { StatCard } from "@/components/stat-card";
 import { getSourceIcon } from "@/lib/demo-expenses";
-import { EXPENSE_CATEGORY_CONFIG, getCategoryColorClasses } from "@/lib/expense-categories";
+import { getCategoryConfig, getCategoryColorClasses } from "@/lib/expense-categories";
 import { formatCurrency, formatDate, cn, getStatusColor } from "@/lib/utils";
 import { DollarSign, Building2, Receipt, Plus, Search, StickyNote } from "lucide-react";
 import { AnomalySummary } from "@/components/anomaly-summary";
@@ -135,7 +135,7 @@ export default function DashboardPage() {
             </thead>
             <tbody>
               {recentExpenses.map((expense, index) => {
-                const catConfig = EXPENSE_CATEGORY_CONFIG[expense.category];
+                const catConfig = getCategoryConfig(expense.category);
                 const colorClasses = getCategoryColorClasses(catConfig.color);
                 const property = properties.find(p => p.id === expense.property_id);
                 return (
@@ -192,7 +192,7 @@ export default function DashboardPage() {
         {/* Mobile card layout */}
         <div className="lg:hidden space-y-3">
           {recentExpenses.map((expense) => {
-            const catConfig = EXPENSE_CATEGORY_CONFIG[expense.category];
+            const catConfig = getCategoryConfig(expense.category);
             const colorClasses = getCategoryColorClasses(catConfig.color);
             const property = properties.find(p => p.id === expense.property_id);
             return (

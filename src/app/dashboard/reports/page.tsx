@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { DEMO_PROPERTIES, AVAILABLE_MONTHS } from "@/lib/data";
 import { isDemoMode } from "@/lib/data/data-provider";
-import { EXPENSE_CATEGORY_CONFIG } from "@/lib/expense-categories";
+import { getCategoryConfig, EXPENSE_CATEGORY_CONFIG } from "@/lib/expense-categories";
 import { getMonthlyReport, type MonthlyReportData } from "@/lib/demo-reports";
 import { cn } from "@/lib/utils";
 
@@ -213,7 +213,7 @@ export default function ReportsPage() {
           </h3>
           <div className="space-y-4">
             {report.propertySummaries.map((summary) => {
-              const catConfig = EXPENSE_CATEGORY_CONFIG[summary.topCategory];
+              const catConfig = getCategoryConfig(summary.topCategory);
               return (
                 <div 
                   key={summary.property.id}

@@ -84,6 +84,7 @@ export function getSourceIcon(source: DemoExpense['source']): LucideIcon {
     case 'manual': return PenLine;
     case 'recurring_auto': return RefreshCw;
     case 'receipt_scan': return Camera;
+    default: return PenLine;
   }
 }
 

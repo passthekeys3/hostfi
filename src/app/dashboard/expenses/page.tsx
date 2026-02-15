@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { EXPENSE_CATEGORY_CONFIG, getCategoryColorClasses, ALL_EXPENSE_CATEGORIES, type ExpenseCategory } from "@/lib/expense-categories";
+import { getCategoryConfig, EXPENSE_CATEGORY_CONFIG, getCategoryColorClasses, ALL_EXPENSE_CATEGORIES, type ExpenseCategory } from "@/lib/expense-categories";
 import { getSourceIcon } from "@/lib/demo-expenses";
 import { formatCurrency, formatDate, cn, getStatusColor } from "@/lib/utils";
 import { Receipt, Plus, StickyNote, Pencil, Trash2, Check, X } from "lucide-react";
@@ -178,7 +178,7 @@ export default function ExpensesPage() {
               </thead>
               <tbody>
                 {filteredExpenses.map((expense, index) => {
-                  const catConfig = EXPENSE_CATEGORY_CONFIG[expense.category];
+                  const catConfig = getCategoryConfig(expense.category);
                   const colorClasses = getCategoryColorClasses(catConfig?.color || 'gray');
                   const property = properties.find(p => p.id === expense.property_id);
                   const isEditing = editingId === expense.id;
@@ -273,7 +273,7 @@ export default function ExpensesPage() {
           {/* Mobile cards */}
           <div className="lg:hidden space-y-3">
             {filteredExpenses.map((expense) => {
-              const catConfig = EXPENSE_CATEGORY_CONFIG[expense.category];
+              const catConfig = getCategoryConfig(expense.category);
               const colorClasses = getCategoryColorClasses(catConfig?.color || 'gray');
               const property = properties.find(p => p.id === expense.property_id);
               const isEditing = editingId === expense.id;
