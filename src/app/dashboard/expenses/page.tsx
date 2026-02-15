@@ -210,12 +210,12 @@ export default function ExpensesPage() {
                           </select>
                         </td>
                         <td className="px-6 py-3">
-                          <div className="flex items-center justify-end gap-1">
-                            <button onClick={saveEdit} disabled={saving} className="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors" aria-label="Save">
-                              <Check className="w-4 h-4" />
+                          <div className="flex items-center justify-end gap-2">
+                            <button type="button" onClick={() => saveEdit()} disabled={saving} className="px-3 py-1.5 text-xs font-medium text-white bg-teal-500 hover:bg-teal-600 rounded-lg transition-colors disabled:opacity-50 cursor-pointer">
+                              {saving ? '...' : 'Save'}
                             </button>
-                            <button onClick={cancelEdit} className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Cancel">
-                              <X className="w-4 h-4" />
+                            <button type="button" onClick={() => cancelEdit()} className="px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer">
+                              Cancel
                             </button>
                           </div>
                         </td>
