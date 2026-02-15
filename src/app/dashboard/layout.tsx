@@ -1,11 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { MobileNav } from "@/components/mobile-nav";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Session-only mode: sign out when all browser tabs close
+  // sessionStorage is cleared when the browser closes, localStorage persists
+  useEffect(() => {
+    const sessionOnly = localStorage.getItem('hostfi_session_only');
+    if (!sessionOnly) return;
+
+    const tabAlive = sessionStorage.getItem('hostfi_tab_alive');
+    if (!tabAlive) {
+      // Browser was closed and reopened — clear the session
+      localStorage.removeItem('hostfi_session_only');
+      (async () => {
+        try {
+          const { createClient } = await import("@/lib/supabase/client");
+          const supabase = createClient();
+          if (supabase) await supabase.auth.signOut();
+        } catch {}
+        window.location.href = '/login';
+      })();
+    }
+  }, []);
 
   return (
     <div className="flex min-h-screen">

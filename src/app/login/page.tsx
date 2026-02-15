@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<"login" | "signup">("login");
+  const [rememberMe, setRememberMe] = useState(true);
   const router = useRouter();
   const supabase = createClient();
 
@@ -23,6 +24,7 @@ export default function LoginPage() {
     }
     localStorage.removeItem('hostfi_demo_mode');
     localStorage.removeItem('hostfi_onboarding_complete');
+    sessionStorage.setItem('hostfi_tab_alive', '1');
     setGoogleLoading(true);
     setError(null);
 
@@ -53,6 +55,13 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
+    // Store remember-me preference before sign in
+    if (mode === "login" && !rememberMe) {
+      localStorage.setItem('hostfi_session_only', 'true');
+    } else {
+      localStorage.removeItem('hostfi_session_only');
+    }
+
     const { error } = mode === "login"
       ? await supabase.auth.signInWithPassword({ email, password })
       : await supabase.auth.signUp({ email, password });
@@ -63,6 +72,8 @@ export default function LoginPage() {
     } else {
       localStorage.removeItem('hostfi_demo_mode');
       localStorage.removeItem('hostfi_onboarding_complete');
+      // Set tab-alive marker for session-only mode detection
+      sessionStorage.setItem('hostfi_tab_alive', '1');
       router.push("/dashboard");
     }
   };
@@ -137,6 +148,18 @@ export default function LoginPage() {
                 required
               />
             </div>
+            {mode === "login" && (
+              <div className="flex items-center gap-2">
+                <input
+                  id="remember-me"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-teal-500 focus:ring-teal-500/20"
+                />
+                <label htmlFor="remember-me" className="text-sm text-gray-500">Keep me logged in</label>
+              </div>
+            )}
             {error && (
               <div className="bg-rose-50 border border-rose-100 rounded-xl p-3 text-sm text-rose-600">
                 {error}

@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Building2, Receipt, Settings, Menu, X, Inbox, BarChart3, Bell, GitCompareArrows, FileText, Calculator, Upload, MessageSquare, DollarSign, Link2, CreditCard } from "lucide-react";
+import { LayoutDashboard, Building2, Receipt, Settings, Menu, X, Inbox, BarChart3, Bell, GitCompareArrows, FileText, Calculator, Upload, MessageSquare, DollarSign, Link2, CreditCard, LogOut } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { DEMO_ALERTS } from "@/lib/data";
 import { DEMO_INBOX_ITEMS } from "@/lib/demo-inbox";
@@ -36,6 +36,7 @@ const bottomNav = [
 
 function SidebarUser({ demo }: { demo: boolean }) {
   const [user, setUser] = useState<{ email?: string; name?: string; plan?: string } | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (demo) {
@@ -59,6 +60,20 @@ function SidebarUser({ demo }: { demo: boolean }) {
     })();
   }, [demo]);
 
+  const handleLogout = async () => {
+    if (demo) {
+      localStorage.removeItem('hostfi_demo_mode');
+      router.push('/login');
+      return;
+    }
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      if (supabase) await supabase.auth.signOut();
+    } catch {}
+    router.push('/login');
+  };
+
   const initial = (user?.name || user?.email || 'U')[0].toUpperCase();
   const planLabel = user?.plan === 'free' ? 'Free Plan' : user?.plan === 'pro' ? 'Pro Plan' : user?.plan === 'business' ? 'Business Plan' : user?.plan || 'Free Plan';
 
@@ -71,6 +86,13 @@ function SidebarUser({ demo }: { demo: boolean }) {
           <p className="text-[10px] text-gray-400">{planLabel}</p>
         </div>
         {demo && <span className="text-[9px] font-medium text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">Demo</span>}
+        <button
+          onClick={handleLogout}
+          aria-label="Log out"
+          className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+        >
+          <LogOut className="w-4 h-4" />
+        </button>
       </div>
     </div>
   );
