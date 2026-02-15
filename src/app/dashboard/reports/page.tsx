@@ -84,8 +84,7 @@ export default function ReportsPage() {
 
   const [emailSent, setEmailSent] = useState(false);
   const handleEmailReport = () => {
-    setEmailSent(true);
-    setTimeout(() => setEmailSent(false), 2000);
+    alert('Email reports are coming soon. For now, use the PDF download button.');
   };
 
   if (!report) {

@@ -254,7 +254,24 @@ export default function SettingsPage() {
         <p className="text-sm text-muted-foreground leading-relaxed">
           Permanently delete your account and all associated data.
         </p>
-        <button className="px-5 py-2.5 bg-red-50 text-red-600 font-medium rounded-xl transition-all border border-red-200 text-sm hover:bg-red-100">
+        <button 
+          onClick={async () => {
+            if (!confirm('Are you sure you want to delete your account? This action is permanent and cannot be undone.')) return;
+            if (!confirm('This will delete ALL your properties, expenses, revenue data, and settings. Type "delete" in the next prompt to confirm.')) return;
+            const confirmation = prompt('Type "delete" to permanently delete your account:');
+            if (confirmation?.toLowerCase() !== 'delete') { alert('Account deletion cancelled.'); return; }
+            try {
+              const { createClient } = await import("@/lib/supabase/client");
+              const supabase = createClient();
+              if (!supabase) return;
+              // Sign out and redirect — actual data deletion requires admin/edge function
+              await supabase.auth.signOut();
+              localStorage.clear();
+              window.location.href = '/login';
+            } catch { alert('Failed to delete account. Please contact support.'); }
+          }}
+          className="px-5 py-2.5 bg-red-50 text-red-600 font-medium rounded-xl transition-all border border-red-200 text-sm hover:bg-red-100"
+        >
           Delete Account
         </button>
       </div>

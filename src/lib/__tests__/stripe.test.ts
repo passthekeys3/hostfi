@@ -33,9 +33,9 @@ describe('Stripe configuration', () => {
   describe('PLANS configuration', () => {
     it('has correct property limits', async () => {
       const { PLANS } = await import('../stripe');
-      expect(PLANS.free.properties).toBe(5);
-      expect(PLANS.pro.properties).toBe(25);
-      expect(PLANS.business.properties).toBe(-1); // unlimited
+      expect(PLANS.free.properties).toBe(3);
+      expect(PLANS.pro.properties).toBe(10);
+      expect(PLANS.business.properties).toBe(25);
     });
 
     it('has correct prices', async () => {

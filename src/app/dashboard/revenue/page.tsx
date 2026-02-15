@@ -24,7 +24,7 @@ interface ImportApiResult {
 
 export default function RevenuePage() {
   const demo = isDemoMode();
-  const { properties: realProperties, expenses: realExpenses, loading: dashLoading } = useDashboardData();
+  const { properties: realProperties, expenses: realExpenses, revenue: dashRevenue, loading: dashLoading, refresh } = useDashboardData();
   const [revenue, setRevenue] = useState<RevenueEntry[]>(demo ? DEMO_REVENUE : []);
   const [realRevenue, setRealRevenue] = useState<RevenueEntry[]>([]);
   const [revenueLoaded, setRevenueLoaded] = useState(false);
@@ -148,6 +148,7 @@ export default function RevenuePage() {
               import_source: 'manual',
             });
             if (error) { console.error("Revenue insert error:", error.message); }
+            else if (refresh) { refresh(); setModal(null); setForm({ property_id: '', source: 'airbnb', guest_name: '', amount: '', platform_fee: '', check_in: '', check_out: '', confirmation_code: '', payout_date: '' }); return; }
           }
         }
       } catch {}
