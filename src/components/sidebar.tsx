@@ -119,6 +119,12 @@ export function Sidebar({ externalOpen, onClose }: SidebarProps) {
     if (externalOpen !== undefined) setInternalOpen(externalOpen);
   }, [externalOpen]);
 
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    setOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
   const NavLink = ({ item }: { item: typeof mainNav[0] }) => {
     const isActive = item.href === "/dashboard"
       ? pathname === "/dashboard"
