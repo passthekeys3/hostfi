@@ -63,7 +63,7 @@ export function isSupabaseConfigured(): boolean {
  * 2. User explicitly entered demo mode via login page (localStorage flag)
  */
 export function isDemoMode(): boolean {
-  if (isDemoMode()) return true;
+  if (!isSupabaseConfigured()) return true;
   if (typeof window !== 'undefined') {
     return localStorage.getItem('hostfi_demo_mode') === 'true';
   }
