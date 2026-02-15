@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Building2, Receipt, Settings, Menu, X, Inbox, BarChart3, Bell, GitCompareArrows, FileText, Calculator, Upload, MessageSquare, DollarSign, Link2, CreditCard, LogOut } from "lucide-react";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { DEMO_ALERTS } from "@/lib/data";
 import { DEMO_INBOX_ITEMS } from "@/lib/demo-inbox";
 import { isDemoMode } from "@/lib/data/data-provider";
@@ -120,8 +120,12 @@ export function Sidebar({ externalOpen, onClose }: SidebarProps) {
   }, [externalOpen]);
 
   // Close sidebar on route change (mobile)
+  const prevPathname = useRef(pathname);
   useEffect(() => {
-    setOpen(false);
+    if (prevPathname.current !== pathname) {
+      setOpen(false);
+      prevPathname.current = pathname;
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
