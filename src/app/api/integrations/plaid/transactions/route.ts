@@ -25,17 +25,50 @@ export async function POST(request: NextRequest) {
     // Demo mode
     if (!isPlaidConfigured()) {
       const demoTxns = getDemoTransactions();
+      const mapped = demoTxns.map(t => ({
+        ...t,
+        hostfi_category: mapPlaidCategory(t),
+      }));
+
+      // Save demo transactions to expenses
+      const supabaseDemo = await createClient();
+      if (supabaseDemo) {
+        const { data: props } = await supabaseDemo
+          .from('properties')
+          .select('id')
+          .eq('user_id', auth.userId)
+          .limit(1);
+
+        if (props?.[0]?.id) {
+          const rows = mapped
+            .filter(t => (t.amount || 0) > 0)
+            .map(t => ({
+              user_id: auth.userId,
+              property_id: props[0].id,
+              category: t.hostfi_category || 'other',
+              description: t.name || t.merchant_name || 'Bank transaction',
+              vendor: t.merchant_name || t.name || null,
+              amount: Math.abs(t.amount),
+              date: t.date,
+              source: 'csv_import' as const,
+              status: 'paid' as const,
+              notes: `Imported from Plaid (demo)`,
+            }));
+          if (rows.length > 0) {
+            await supabaseDemo.from('expenses').insert(rows);
+          }
+        }
+      }
+
       return NextResponse.json({
         demo: true,
-        added: demoTxns.map(t => ({
-          ...t,
-          hostfi_category: mapPlaidCategory(t),
-        })),
+        added: mapped,
         modified: [],
         removed: [],
         accounts: [
           { account_id: 'acc_1', name: 'Business Checking', type: 'depository', mask: '4521' },
         ],
+        imported: mapped.filter(t => (t.amount || 0) > 0).length,
       });
     }
 
@@ -74,6 +107,37 @@ export async function POST(request: NextRequest) {
       hostfi_category: mapPlaidCategory(t),
     }));
 
+    // Get user's first property as default assignment
+    const { data: properties } = await supabase
+      .from('properties')
+      .select('id')
+      .eq('user_id', auth.userId)
+      .limit(1);
+
+    const defaultPropertyId = properties?.[0]?.id;
+
+    // Save new transactions to expenses table
+    if (addedWithCategories.length > 0 && defaultPropertyId) {
+      const expenseRows = addedWithCategories
+        .filter(t => (t.amount || 0) > 0) // Only expenses (positive amounts in Plaid = money out)
+        .map(t => ({
+          user_id: auth.userId,
+          property_id: defaultPropertyId,
+          category: t.hostfi_category || 'other',
+          description: t.name || t.merchant_name || 'Bank transaction',
+          vendor: t.merchant_name || t.name || null,
+          amount: Math.abs(t.amount),
+          date: t.date,
+          source: 'csv_import' as const, // Using csv_import since plaid_import not in constraint
+          status: 'paid' as const,
+          notes: `Imported from Plaid (${t.transaction_id})`,
+        }));
+
+      if (expenseRows.length > 0) {
+        await supabase.from('expenses').insert(expenseRows);
+      }
+    }
+
     // Update cursor in Supabase
     await supabase
       .from('integration_connections')
@@ -88,6 +152,7 @@ export async function POST(request: NextRequest) {
       modified: modifiedWithCategories,
       removed: result.removed,
       accounts: result.accounts,
+      imported: addedWithCategories.filter(t => (t.amount || 0) > 0).length,
     });
   } catch (error) {
     if (error instanceof NextResponse) return error;
