@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { type LucideIcon } from "lucide-react";
 
@@ -8,6 +9,7 @@ interface StatCardProps {
   icon: LucideIcon;
   trend?: { value: string; positive: boolean };
   accent?: "teal" | "blue" | "amber" | "rose";
+  href?: string;
 }
 
 const accentStyles = {
@@ -33,14 +35,15 @@ const accentStyles = {
   },
 };
 
-export function StatCard({ title, value, subtitle, icon: Icon, trend, accent = "teal" }: StatCardProps) {
+export function StatCard({ title, value, subtitle, icon: Icon, trend, accent = "teal", href }: StatCardProps) {
   const a = accentStyles[accent];
   
-  return (
+  const content = (
     <div className={cn(
       "bg-white rounded-xl border border-gray-200/60 border-t-2 p-5 sm:p-6",
       "shadow-sm hover:shadow-md",
       "transition-all duration-200 hover:-translate-y-0.5",
+      href && "cursor-pointer",
       a.border,
     )}>
       <div className="flex items-start justify-between mb-3">
@@ -72,4 +75,10 @@ export function StatCard({ title, value, subtitle, icon: Icon, trend, accent = "
       )}
     </div>
   );
+
+  if (href) {
+    return <Link href={href}>{content}</Link>;
+  }
+
+  return content;
 }

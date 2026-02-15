@@ -75,6 +75,7 @@ export default function DashboardPage() {
           value={formatCurrency(totalSpend)}
           icon={DollarSign}
           accent="teal"
+          href="/dashboard/analytics"
           trend={isDemo ? { value: "12% from last month", positive: false } : undefined}
         />
         <StatCard
@@ -83,6 +84,7 @@ export default function DashboardPage() {
           subtitle={`${properties.filter(p => p.property_type === 'str').length} STR, ${properties.filter(p => p.property_type === 'ltr').length} LTR`}
           icon={Building2}
           accent="blue"
+          href="/dashboard/properties"
         />
         <StatCard
           title="Pending"
@@ -90,6 +92,7 @@ export default function DashboardPage() {
           subtitle={overdueExpenses.length > 0 ? `${overdueExpenses.length} overdue` : 'This month'}
           icon={Receipt}
           accent="amber"
+          href="/dashboard/expenses"
         />
         <StatCard
           title="Anomalies"
@@ -97,6 +100,7 @@ export default function DashboardPage() {
           subtitle={`${criticalCount} critical, ${highCount} high`}
           icon={Search}
           accent="rose"
+          href="/dashboard/alerts"
           trend={{ value: `${newCount} new`, positive: false }}
         />
       </div>
