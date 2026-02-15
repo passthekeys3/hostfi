@@ -248,6 +248,47 @@ export default function SettingsPage() {
         </button>
       </div>
 
+      {/* Email Preferences */}
+      <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-100 p-7 space-y-5">
+        <h2 className="text-base font-semibold uppercase tracking-wide">Email Preferences</h2>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Choose which emails you receive from HostFi.
+        </p>
+        <div className="space-y-4">
+          {[
+            { id: 'email_weekly_digest', label: 'Weekly Digest', desc: 'Expense summary every Monday' },
+            { id: 'email_monthly_report', label: 'Monthly Report', desc: 'Full financial report on the 1st of each month' },
+            { id: 'email_tips', label: 'Tips and Updates', desc: 'Product tips and feature announcements' },
+            { id: 'email_anomaly_alerts', label: 'Anomaly Alerts', desc: 'Unusual expense notifications' },
+          ].map((pref) => (
+            <label key={pref.id} className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                defaultChecked={true}
+                onChange={async (e) => {
+                  try {
+                    const { createClient } = await import("@/lib/supabase/client");
+                    const sb = createClient();
+                    if (!sb) return;
+                    const { data: { user } } = await sb.auth.getUser();
+                    if (!user) return;
+                    const { data: current } = await sb.from('profiles').select('email_preferences').eq('id', user.id).single();
+                    const prefs = (current?.email_preferences as Record<string, boolean>) || {};
+                    prefs[pref.id] = e.target.checked;
+                    await sb.from('profiles').update({ email_preferences: prefs }).eq('id', user.id);
+                  } catch {}
+                }}
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-teal-500 focus:ring-teal-500/20"
+              />
+              <div>
+                <p className="text-sm font-medium text-gray-900">{pref.label}</p>
+                <p className="text-xs text-gray-500">{pref.desc}</p>
+              </div>
+            </label>
+          ))}
+        </div>
+      </div>
+
       {/* Danger Zone */}
       <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-red-500/15 p-7 space-y-4">
         <h2 className="text-base font-semibold uppercase tracking-wide text-red-600">Danger Zone</h2>

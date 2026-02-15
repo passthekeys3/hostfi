@@ -23,7 +23,8 @@ const FOOTER = `
     <p style="font-size:12px;color:#9ca3af;margin:4px 0 0;">
       <a href="https://hostfi.ai/privacy" style="color:#9ca3af;text-decoration:none;">Privacy</a> &middot;
       <a href="https://hostfi.ai/terms" style="color:#9ca3af;text-decoration:none;">Terms</a> &middot;
-      <a href="https://hostfi.ai/dashboard/settings" style="color:#9ca3af;text-decoration:none;">Manage Preferences</a>
+      <a href="https://hostfi.ai/dashboard/settings" style="color:#9ca3af;text-decoration:none;">Manage Preferences</a> &middot;
+      <a href="https://hostfi.ai/unsubscribe" style="color:#9ca3af;text-decoration:none;">Unsubscribe</a>
     </p>
   </div>
 </div>

@@ -9,6 +9,13 @@ import { tipsEmail, checkInEmail, weeklyDigestEmail, monthlyReportEmail } from '
  * Body: { type: 'tips' | 'check-in' | 'weekly-digest' }
  * Auth: CRON_SECRET header
  */
+type EmailPrefs = Record<string, boolean>;
+
+function isEmailEnabled(prefs: EmailPrefs | null | undefined, key: string): boolean {
+  if (!prefs) return true; // Default: all enabled
+  return prefs[key] !== false; // Only disabled if explicitly false
+}
+
 /**
  * GET handler for Vercel Cron Jobs.
  * Vercel cron calls GET with ?type=tips|check-in|weekly-digest
@@ -77,11 +84,11 @@ async function handleCron(type: string) {
         for (const user of targetUsers) {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('full_name, email')
+            .select('full_name, email, email_preferences')
             .eq('id', user.id)
             .single();
 
-          if (!profile?.email) { skipped++; continue; }
+          if (!profile?.email || !isEmailEnabled(profile.email_preferences as EmailPrefs, "email_tips")) { skipped++; continue; }
 
           const template = tipsEmail(profile.full_name || '');
           await sendEmail({
@@ -110,11 +117,11 @@ async function handleCron(type: string) {
         for (const user of targetUsers) {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('full_name, email')
+            .select('full_name, email, email_preferences')
             .eq('id', user.id)
             .single();
 
-          if (!profile?.email) { skipped++; continue; }
+          if (!profile?.email || !isEmailEnabled(profile.email_preferences as EmailPrefs, "email_tips")) { skipped++; continue; }
 
           const { count: propertyCount } = await supabase
             .from('properties')
@@ -146,7 +153,7 @@ async function handleCron(type: string) {
         // Find all active users (have at least 1 property)
         const { data: activeProfiles } = await supabase
           .from('profiles')
-          .select('id, full_name, email')
+          .select('id, full_name, email, email_preferences')
           .not('email', 'is', null);
 
         if (!activeProfiles) break;
@@ -161,7 +168,7 @@ async function handleCron(type: string) {
             .select('*', { count: 'exact', head: true })
             .eq('user_id', profile.id);
 
-          if (!propCount || propCount === 0) { skipped++; continue; }
+          if (!propCount || propCount === 0 || !isEmailEnabled(profile.email_preferences as EmailPrefs, 'email_weekly_digest')) { skipped++; continue; }
 
           // Get this week's expenses
           const { data: weekExpenses } = await supabase
@@ -204,7 +211,7 @@ async function handleCron(type: string) {
         // Find all users with at least 1 property
         const { data: monthlyProfiles } = await supabase
           .from('profiles')
-          .select('id, full_name, email')
+          .select('id, full_name, email, email_preferences')
           .not('email', 'is', null);
 
         if (!monthlyProfiles) break;
@@ -229,7 +236,7 @@ async function handleCron(type: string) {
             .select('id, name')
             .eq('user_id', profile.id);
 
-          if (!userProps || userProps.length === 0) { skipped++; continue; }
+          if (!userProps || userProps.length === 0 || !isEmailEnabled(profile.email_preferences as EmailPrefs, 'email_monthly_report')) { skipped++; continue; }
 
           // Get this month's expenses
           const { data: monthExpenses } = await supabase
