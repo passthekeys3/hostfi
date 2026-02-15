@@ -131,22 +131,6 @@ export function UtilityBreakdownChart({ data }: { data: MonthlyBill[] }) {
   const chartData = useMemo(() => getUtilityBreakdown(data), [data]);
   const total = chartData.reduce((s, d) => s + d.value, 0);
 
-  // Custom label renderer for pie slices
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const renderLabel = ({ name, value, cx, cy, midAngle, outerRadius }: any) => {
-    const pct = ((value / total) * 100);
-    if (pct < 3) return null; // hide tiny slices
-    const RADIAN = Math.PI / 180;
-    const radius = outerRadius + 24;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-    return (
-      <text x={x} y={y} textAnchor={x > cx ? 'start' : 'end'} dominantBaseline="central" fontSize={11} fontWeight={500} fill="#374151">
-        {name} {pct.toFixed(0)}%
-      </text>
-    );
-  };
-
   return (
     <div 
       className="bg-white rounded-2xl p-6 border border-gray-200"
@@ -155,8 +139,8 @@ export function UtilityBreakdownChart({ data }: { data: MonthlyBill[] }) {
       }}
     >
       <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-6">Expense Breakdown</h3>
-      <div className="h-[340px]">
-        <ResponsiveContainer width="100%" height="100%" minHeight={200}>
+      <div className="h-[220px]">
+        <ResponsiveContainer width="100%" height="100%" minHeight={180}>
           <PieChart>
             <defs>
               {chartData.map((entry, i) => (
@@ -169,16 +153,14 @@ export function UtilityBreakdownChart({ data }: { data: MonthlyBill[] }) {
             <Pie
               data={chartData}
               cx="50%"
-              cy="45%"
+              cy="50%"
               innerRadius={55}
               outerRadius={85}
-              paddingAngle={3}
+              paddingAngle={chartData.length > 1 ? 3 : 0}
               dataKey="value"
               cornerRadius={4}
               animationDuration={1000}
               animationEasing="ease-out"
-              label={renderLabel}
-              labelLine={false}
             >
               {chartData.map((entry, i) => (
                 <Cell key={i} fill={`url(#pieGrad-${i})`} stroke="none" />
@@ -193,14 +175,18 @@ export function UtilityBreakdownChart({ data }: { data: MonthlyBill[] }) {
         </ResponsiveContainer>
       </div>
       {/* Category list below chart */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 mt-2">
-        {chartData.map((item) => (
-          <div key={item.type} className="flex items-center gap-2 text-xs">
-            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
-            <span className="text-gray-600 truncate">{item.name}</span>
-            <span className="text-gray-900 font-medium ml-auto tabular-nums">{fmt(item.value)}</span>
-          </div>
-        ))}
+      <div className="space-y-2.5 mt-4 pt-4 border-t border-gray-100">
+        {chartData.map((item) => {
+          const pct = ((item.value / total) * 100).toFixed(1);
+          return (
+            <div key={item.type} className="flex items-center gap-3 text-sm">
+              <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+              <span className="text-gray-700 font-medium">{item.name}</span>
+              <span className="text-gray-400 text-xs">{pct}%</span>
+              <span className="text-gray-900 font-semibold ml-auto tabular-nums">{fmt(item.value)}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
