@@ -43,6 +43,7 @@ export function StatCard({ title, value, subtitle, icon: Icon, trend, accent = "
       "bg-white rounded-xl border border-gray-200/60 border-t-2 p-5 sm:p-6",
       "shadow-sm hover:shadow-md",
       "transition-all duration-200 hover:-translate-y-0.5",
+      "h-full",
       href && "cursor-pointer",
       a.border,
     )}>
