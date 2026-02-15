@@ -186,38 +186,48 @@ export default function ExpensesPage() {
                   if (isEditing && editState) {
                     return (
                       <tr key={expense.id} className="border-b border-gray-100 bg-gray-50/40">
-                        <td className="px-6 py-3">
-                          <input value={editState.description} onChange={e => setEditState({ ...editState, description: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white" placeholder="Description" />
-                          <select value={editState.category} onChange={e => setEditState({ ...editState, category: e.target.value as ExpenseCategory })} className="mt-2 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
-                            {ALL_EXPENSE_CATEGORIES.map(cat => <option key={cat} value={cat}>{EXPENSE_CATEGORY_CONFIG[cat]?.label || cat}</option>)}
-                          </select>
-                        </td>
-                        <td className="px-6 py-3">
-                          <select value={editState.property_id} onChange={e => setEditState({ ...editState, property_id: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
-                            {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                          </select>
-                        </td>
-                        <td className="px-6 py-3">
-                          <input type="number" step="0.01" value={editState.amount} onChange={e => setEditState({ ...editState, amount: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white text-right" />
-                        </td>
-                        <td className="px-6 py-3">
-                          <input type="date" value={editState.date} onChange={e => setEditState({ ...editState, date: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white" />
-                        </td>
-                        <td className="px-6 py-3">
-                          <select value={editState.status} onChange={e => setEditState({ ...editState, status: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
-                            <option value="paid">Paid</option>
-                            <option value="pending">Pending</option>
-                            <option value="overdue">Overdue</option>
-                          </select>
-                        </td>
-                        <td className="px-6 py-3">
-                          <div className="flex items-center justify-end gap-1">
-                            <button type="button" onClick={() => saveEdit()} disabled={saving} className="p-2 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors disabled:opacity-50 cursor-pointer" aria-label="Save">
-                              <Check className="w-4 h-4" />
-                            </button>
-                            <button type="button" onClick={() => cancelEdit()} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer" aria-label="Cancel">
-                              <X className="w-4 h-4" />
-                            </button>
+                        <td colSpan={6} className="px-6 py-4">
+                          <div className="grid grid-cols-12 gap-3 items-end">
+                            <div className="col-span-3">
+                              <label className="block text-[11px] font-medium text-gray-500 mb-1">Description</label>
+                              <input value={editState.description} onChange={e => setEditState({ ...editState, description: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white" placeholder="Description" />
+                            </div>
+                            <div className="col-span-2">
+                              <label className="block text-[11px] font-medium text-gray-500 mb-1">Category</label>
+                              <select value={editState.category} onChange={e => setEditState({ ...editState, category: e.target.value as ExpenseCategory })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+                                {ALL_EXPENSE_CATEGORIES.map(cat => <option key={cat} value={cat}>{EXPENSE_CATEGORY_CONFIG[cat]?.label || cat}</option>)}
+                              </select>
+                            </div>
+                            <div className="col-span-2">
+                              <label className="block text-[11px] font-medium text-gray-500 mb-1">Property</label>
+                              <select value={editState.property_id} onChange={e => setEditState({ ...editState, property_id: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+                                {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                              </select>
+                            </div>
+                            <div className="col-span-1">
+                              <label className="block text-[11px] font-medium text-gray-500 mb-1">Amount</label>
+                              <input type="number" step="0.01" value={editState.amount} onChange={e => setEditState({ ...editState, amount: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white text-right" />
+                            </div>
+                            <div className="col-span-2">
+                              <label className="block text-[11px] font-medium text-gray-500 mb-1">Date</label>
+                              <input type="date" value={editState.date} onChange={e => setEditState({ ...editState, date: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white" />
+                            </div>
+                            <div className="col-span-1">
+                              <label className="block text-[11px] font-medium text-gray-500 mb-1">Status</label>
+                              <select value={editState.status} onChange={e => setEditState({ ...editState, status: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+                                <option value="paid">Paid</option>
+                                <option value="pending">Pending</option>
+                                <option value="overdue">Overdue</option>
+                              </select>
+                            </div>
+                            <div className="col-span-1 flex items-center justify-end gap-1">
+                              <button type="button" onClick={() => saveEdit()} disabled={saving} className="p-2 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors disabled:opacity-50 cursor-pointer" aria-label="Save">
+                                <Check className="w-4 h-4" />
+                              </button>
+                              <button type="button" onClick={() => cancelEdit()} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer" aria-label="Cancel">
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         </td>
                       </tr>
