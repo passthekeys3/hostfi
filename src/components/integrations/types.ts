@@ -17,3 +17,8 @@ export interface Integration {
 export interface ModalProps {
   onClose: () => void;
 }
+
+export interface GoogleSheetsModalProps extends ModalProps {
+  isConnected?: boolean;
+  onDisconnect?: () => void;
+}

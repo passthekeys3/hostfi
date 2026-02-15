@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateRequest } from '@/lib/auth';
 import { createRateLimiter } from '@/lib/rate-limit';
-import { appendRows, refreshGoogleToken } from '@/lib/integrations/google';
+import { syncAllExpensesToSheets, getSpreadsheetUrl } from '@/lib/integrations/google-sync';
 
 const isRateLimited = createRateLimiter('google-sync', 10, 60_000);
 
 /**
  * POST /api/integrations/google/sync — Sync expenses to Google Sheets
- * Reads tokens from Supabase, refreshes if needed, appends rows
- * Body: { expenses: Array<{ date, property, category, amount, vendor, notes? }> }
+ * Body: { expenses: Array<{ date, property_name, category, amount, description, notes? }> }
  */
 export async function POST(request: NextRequest) {
   try {
@@ -20,10 +19,10 @@ export async function POST(request: NextRequest) {
     const { expenses } = body as {
       expenses: Array<{
         date: string;
-        property: string;
+        property_name: string;
         category: string;
         amount: number;
-        vendor: string;
+        description: string;
         notes?: string;
       }>;
     };
@@ -36,71 +35,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Maximum 1000 expenses per sync' }, { status: 400 });
     }
 
-    // Get stored connection from Supabase
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const result = await syncAllExpensesToSheets(auth.userId, expenses);
 
-    if (!supabaseUrl || !serviceKey) {
-      return NextResponse.json({ error: 'Google Sheets not configured' }, { status: 400 });
-    }
-
-    const { createClient } = await import('@supabase/supabase-js');
-    const supabase = createClient(supabaseUrl, serviceKey);
-
-    const { data: connection } = await supabase
-      .from('integration_connections')
-      .select('*')
-      .eq('user_id', auth.userId)
-      .eq('provider', 'google_sheets')
-      .single();
-
-    if (!connection) {
+    if (!result) {
       return NextResponse.json({ error: 'Google Sheets not connected. Go to Integrations to connect.' }, { status: 400 });
     }
 
-    let accessToken = connection.access_token;
-    const metadata = connection.metadata as { spreadsheet_id: string; expires_at: number };
-
-    // Refresh token if expired
-    if (metadata.expires_at && Date.now() > metadata.expires_at - 60_000) {
-      try {
-        const refreshed = await refreshGoogleToken(connection.refresh_token);
-        accessToken = refreshed.access_token;
-
-        // Update stored token
-        await supabase
-          .from('integration_connections')
-          .update({
-            access_token: refreshed.access_token,
-            metadata: {
-              ...metadata,
-              expires_at: Date.now() + (refreshed.expires_in * 1000),
-            },
-          })
-          .eq('user_id', auth.userId)
-          .eq('provider', 'google_sheets');
-      } catch {
-        return NextResponse.json({ error: 'Google token expired. Please reconnect in Integrations.' }, { status: 401 });
-      }
-    }
-
-    // Convert expenses to rows
-    const rows = expenses.map(e => [
-      e.date,
-      e.property,
-      e.category,
-      `$${Number(e.amount).toFixed(2)}`,
-      e.vendor,
-      e.notes || '',
-    ]);
-
-    const result = await appendRows(accessToken, metadata.spreadsheet_id, 'Expenses', rows);
-
     return NextResponse.json({
       success: true,
-      synced_rows: result.updatedRows,
-      spreadsheet_url: `https://docs.google.com/spreadsheets/d/${metadata.spreadsheet_id}`,
+      synced_rows: result.synced,
+      spreadsheet_url: result.spreadsheetUrl,
     });
+  } catch (error) {
+    if (error instanceof NextResponse) return error;
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+/**
+ * GET /api/integrations/google/sync — Get spreadsheet URL
+ */
+export async function GET() {
+  try {
+    const auth = await authenticateRequest();
+    const url = await getSpreadsheetUrl(auth.userId);
+
+    if (!url) {
+      return NextResponse.json({ connected: false });
+    }
+
+    return NextResponse.json({ connected: true, spreadsheet_url: url });
   } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Unknown error';

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { Link2, Zap } from "lucide-react";
+import { Zap, ExternalLink, RefreshCw, Check } from "lucide-react";
 import { UpgradeGate } from "@/components/upgrade-gate";
 import {
   QuickBooksModal,
@@ -51,6 +51,9 @@ const grouped = INTEGRATIONS.reduce<{ category: string; items: Integration[] }[]
 
 export default function IntegrationsPage() {
   const [connectedIds, setConnectedIds] = useState<Set<string>>(new Set());
+  const [googleSheetsUrl, setGoogleSheetsUrl] = useState<string | null>(null);
+  const [sheetsSyncing, setSheetsSyncing] = useState(false);
+  const [sheetsSyncSuccess, setSheetsSyncSuccess] = useState(false);
 
   // Check URL params for OAuth redirect results
   const searchParams = useSearchParams();
@@ -78,15 +81,68 @@ export default function IntegrationsPage() {
         if (!user) return;
         const { data } = await supabase
           .from("integration_connections")
-          .select("provider")
+          .select("provider, metadata")
           .eq("user_id", user.id)
           .eq("active", true);
         if (data && data.length > 0) {
           setConnectedIds(new Set(data.map((c: { provider: string }) => c.provider)));
+          // Extract Google Sheets URL
+          const sheetsConn = data.find((c: { provider: string }) => c.provider === "google_sheets");
+          if (sheetsConn?.metadata?.spreadsheet_id) {
+            setGoogleSheetsUrl(`https://docs.google.com/spreadsheets/d/${sheetsConn.metadata.spreadsheet_id}`);
+          }
         }
       } catch {}
     }
     loadConnections();
+  }, []);
+
+  // Handle Google Sheets sync all
+  const handleSheetsSyncAll = useCallback(async () => {
+    setSheetsSyncing(true);
+    setSheetsSyncSuccess(false);
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      if (!supabase) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Fetch expenses with property names
+      const { data: expenses } = await supabase
+        .from("expenses")
+        .select("date, amount, category, description, notes, properties(name)")
+        .eq("user_id", user.id)
+        .order("date", { ascending: false })
+        .limit(500);
+
+      if (!expenses || expenses.length === 0) {
+        setSheetsSyncSuccess(true);
+        setTimeout(() => setSheetsSyncSuccess(false), 3000);
+        return;
+      }
+
+      const formatted = expenses.map((e: Record<string, unknown>) => ({
+        date: e.date as string,
+        property_name: (e.properties as { name: string } | null)?.name || "Unknown",
+        category: e.category as string,
+        amount: e.amount as number,
+        description: e.description as string,
+        notes: (e.notes as string) || "",
+      }));
+
+      const res = await fetch("/api/integrations/google/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ expenses: formatted }),
+      });
+
+      if (res.ok) {
+        setSheetsSyncSuccess(true);
+        setTimeout(() => setSheetsSyncSuccess(false), 3000);
+      }
+    } catch {}
+    setSheetsSyncing(false);
   }, []);
 
   // Modal states
@@ -144,6 +200,35 @@ export default function IntegrationsPage() {
                 status={getStatus(integration)}
                 onConnect={handleConnect}
                 onDisconnect={handleDisconnect}
+                actions={
+                  integration.id === "google_sheets" && connectedIds.has("google_sheets") ? (
+                    <>
+                      {googleSheetsUrl && (
+                        <a
+                          href={googleSheetsUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium text-[#0F9D58] bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors"
+                        >
+                          <ExternalLink className="w-3 h-3" /> Open Spreadsheet
+                        </a>
+                      )}
+                      <button
+                        onClick={handleSheetsSyncAll}
+                        disabled={sheetsSyncing}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+                      >
+                        {sheetsSyncing ? (
+                          <><RefreshCw className="w-3 h-3 animate-spin" /> Syncing...</>
+                        ) : sheetsSyncSuccess ? (
+                          <><Check className="w-3 h-3 text-teal-500" /> Synced!</>
+                        ) : (
+                          <><RefreshCw className="w-3 h-3" /> Sync All</>
+                        )}
+                      </button>
+                    </>
+                  ) : undefined
+                }
               />
             ))}
           </div>
@@ -164,7 +249,7 @@ export default function IntegrationsPage() {
       {openModal === "quickbooks" && <QuickBooksModal onClose={handleModalClose("quickbooks")} />}
       {openModal === "xero" && <XeroModal onClose={handleModalClose("xero")} />}
       {openModal === "slack" && <SlackModal onClose={handleModalClose("slack")} />}
-      {openModal === "google_sheets" && <GoogleSheetsModal onClose={handleModalClose("google_sheets")} />}
+      {openModal === "google_sheets" && <GoogleSheetsModal onClose={handleModalClose("google_sheets")} isConnected={connectedIds.has("google_sheets")} onDisconnect={() => handleDisconnect("google_sheets")} />}
       {openModal === "zapier" && <ZapierModal onClose={handleModalClose("zapier")} />}
       {openModal === "teams" && <TeamsModal onClose={handleModalClose("teams")} />}
       {openModal === "google_drive" && <GoogleDriveModal onClose={handleModalClose("google_drive")} />}

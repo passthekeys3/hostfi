@@ -61,19 +61,46 @@ function NewExpenseForm() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setError("You must be logged in."); setLoading(false); return; }
 
+      const propertyId = form.get("property") as string;
+      const amount = parseFloat(form.get("amount") as string);
+      const date = form.get("date") as string;
+      const vendor = form.get("vendor") as string || null;
+      const notes = form.get("notes") as string || null;
+      const description = vendor || (selectedCategory ? selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1) : "Expense");
+
       const { error: insertError } = await supabase.from("expenses").insert({
         user_id: user.id,
-        property_id: form.get("property") as string,
+        property_id: propertyId,
         category: selectedCategory,
-        description: form.get("vendor") as string || (selectedCategory ? selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1) : "Expense"),
-        vendor: form.get("vendor") as string || null,
-        amount: parseFloat(form.get("amount") as string),
-        date: form.get("date") as string,
+        description,
+        vendor,
+        amount,
+        date,
         status: "paid",
-        notes: form.get("notes") as string || null,
+        notes,
       });
 
       if (insertError) { setError(insertError.message); setLoading(false); return; }
+
+      // Fire-and-forget: sync to Google Sheets if connected
+      const selectedProperty = properties.find(p => p.id === propertyId);
+      if (selectedProperty) {
+        fetch("/api/integrations/google/sync-expense", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            expense: {
+              date,
+              property_name: selectedProperty.name,
+              category: selectedCategory || "other",
+              amount,
+              description,
+              notes: notes || "",
+            },
+          }),
+        }).catch(() => {}); // Ignore errors - sync is optional
+      }
+
       router.push("/dashboard/expenses");
     } catch {
       setError("Something went wrong. Please try again.");

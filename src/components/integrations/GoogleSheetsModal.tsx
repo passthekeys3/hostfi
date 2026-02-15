@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useId } from "react";
-import { Check, X, ArrowRight, RefreshCw, ChevronRight, ExternalLink, Shield, Clock, Settings2, AlertCircle, Zap, Link2 } from "lucide-react";
+import { useState, useId, useEffect } from "react";
+import { Check, X, ArrowRight, RefreshCw, ChevronRight, ExternalLink, Shield, Unlink } from "lucide-react";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
-import type { ModalProps } from "./types";
+import type { GoogleSheetsModalProps } from "./types";
 import { cn } from "@/lib/utils";
 
-export function GoogleSheetsModal({ onClose }: ModalProps) {
-  const [step, setStep] = useState<"connect" | "spreadsheet" | "mapping" | "success">("connect");
+export function GoogleSheetsModal({ onClose, isConnected: initialConnected, onDisconnect }: GoogleSheetsModalProps) {
+  const [step, setStep] = useState<"connect" | "spreadsheet" | "mapping" | "success" | "connected">(initialConnected ? "connected" : "connect");
   const [syncing, setSyncing] = useState(false);
   const [selectedSpreadsheet, setSelectedSpreadsheet] = useState("create_new");
   const [columnMappings, setColumnMappings] = useState({
@@ -17,8 +17,119 @@ export function GoogleSheetsModal({ onClose }: ModalProps) {
     amount: "D",
     vendor: "E",
   });
+  const [connectionInfo, setConnectionInfo] = useState<{
+    spreadsheetUrl: string | null;
+    lastSynced: string | null;
+  } | null>(null);
+  const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
   const titleId = useId();
   const modalRef = useFocusTrap<HTMLDivElement>(true, { onEscape: onClose });
+
+  // Load connection info if connected
+  useEffect(() => {
+    if (initialConnected) {
+      fetch("/api/integrations/google/connection")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.sheets?.connected) {
+            setConnectionInfo({
+              spreadsheetUrl: data.sheets.spreadsheetUrl,
+              lastSynced: data.sheets.lastSynced,
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [initialConnected]);
+
+  const handleSyncAll = async () => {
+    setSyncStatus("syncing");
+    try {
+      // Fetch all expenses and sync
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      if (!supabase) {
+        setSyncStatus("error");
+        return;
+      }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setSyncStatus("error");
+        return;
+      }
+
+      // Fetch expenses with property names
+      const { data: expenses } = await supabase
+        .from("expenses")
+        .select("date, amount, category, description, notes, properties(name)")
+        .eq("user_id", user.id)
+        .order("date", { ascending: false })
+        .limit(500);
+
+      if (!expenses || expenses.length === 0) {
+        setSyncStatus("success");
+        return;
+      }
+
+      // Transform to sync format
+      const formatted = expenses.map((e: Record<string, unknown>) => ({
+        date: e.date as string,
+        property_name: (e.properties as { name: string } | null)?.name || "Unknown",
+        category: e.category as string,
+        amount: e.amount as number,
+        description: e.description as string,
+        notes: (e.notes as string) || "",
+      }));
+
+      const res = await fetch("/api/integrations/google/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ expenses: formatted }),
+      });
+
+      if (res.ok) {
+        setSyncStatus("success");
+        // Update last synced
+        setConnectionInfo((prev) => prev ? { ...prev, lastSynced: new Date().toISOString() } : prev);
+      } else {
+        setSyncStatus("error");
+      }
+    } catch {
+      setSyncStatus("error");
+    }
+  };
+
+  const handleDisconnect = async () => {
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      if (!supabase) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase
+        .from("integration_connections")
+        .update({ active: false })
+        .eq("user_id", user.id)
+        .eq("provider", "google_sheets");
+
+      onDisconnect?.();
+      onClose();
+    } catch {}
+  };
+
+  const formatLastSynced = (iso: string | null) => {
+    if (!iso) return "Never";
+    const date = new Date(iso);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? "" : "s"} ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
+    return date.toLocaleDateString();
+  };
 
   const handleFinish = () => {
     setSyncing(true);
@@ -225,6 +336,72 @@ export function GoogleSheetsModal({ onClose }: ModalProps) {
                 <ExternalLink className="w-3.5 h-3.5" /> Open in Google Sheets
               </a>
               <button onClick={onClose} className="w-full py-3 text-sm font-semibold text-white bg-teal-500 hover:bg-teal-600 rounded-xl transition-colors">Done</button>
+            </div>
+          )}
+
+          {step === "connected" && (
+            <div className="space-y-6">
+              {/* Connected status */}
+              <div className="flex items-center gap-3 p-4 bg-teal-50 rounded-xl border border-teal-100">
+                <div className="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center">
+                  <Check className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-teal-900">Connected</p>
+                  <p className="text-xs text-teal-700">Google Sheets integration is active</p>
+                </div>
+              </div>
+
+              {/* Connection details */}
+              <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-500">Last synced</span>
+                  <span className="font-medium text-gray-700">{formatLastSynced(connectionInfo?.lastSynced || null)}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-500">Sync mode</span>
+                  <span className="font-medium text-gray-700">Real-time</span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="space-y-3">
+                {connectionInfo?.spreadsheetUrl && (
+                  <a
+                    href={connectionInfo.spreadsheetUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-3 text-sm font-semibold text-white bg-[#0F9D58] hover:bg-[#0D8C4D] rounded-xl transition-colors flex items-center justify-center gap-2"
+                  >
+                    <ExternalLink className="w-4 h-4" /> Open Spreadsheet
+                  </a>
+                )}
+
+                <button
+                  onClick={handleSyncAll}
+                  disabled={syncStatus === "syncing"}
+                  className="w-full py-3 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-100 disabled:text-gray-400 rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  {syncStatus === "syncing" ? (
+                    <><RefreshCw className="w-4 h-4 animate-spin" /> Syncing...</>
+                  ) : syncStatus === "success" ? (
+                    <><Check className="w-4 h-4 text-teal-500" /> Synced!</>
+                  ) : (
+                    <><RefreshCw className="w-4 h-4" /> Sync All Expenses</>
+                  )}
+                </button>
+
+                <button
+                  onClick={handleDisconnect}
+                  className="w-full py-3 text-sm font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  <Unlink className="w-4 h-4" /> Disconnect
+                </button>
+              </div>
+
+              <button onClick={onClose} className="w-full py-3 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors">
+                Close
+              </button>
             </div>
           )}
         </div>
