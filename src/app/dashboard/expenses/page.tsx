@@ -72,6 +72,7 @@ export default function ExpensesPage() {
       if (refresh) refresh();
     } catch (err) {
       console.error('Failed to update expense:', err);
+      alert('Failed to save. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -210,12 +211,12 @@ export default function ExpensesPage() {
                           </select>
                         </td>
                         <td className="px-6 py-3">
-                          <div className="flex items-center justify-end gap-2">
-                            <button type="button" onClick={() => saveEdit()} disabled={saving} className="px-3 py-1.5 text-xs font-medium text-white bg-teal-500 hover:bg-teal-600 rounded-lg transition-colors disabled:opacity-50 cursor-pointer">
-                              {saving ? '...' : 'Save'}
+                          <div className="flex items-center justify-end gap-1">
+                            <button type="button" onClick={() => saveEdit()} disabled={saving} className="p-2 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors disabled:opacity-50 cursor-pointer" aria-label="Save">
+                              <Check className="w-4 h-4" />
                             </button>
-                            <button type="button" onClick={() => cancelEdit()} className="px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer">
-                              Cancel
+                            <button type="button" onClick={() => cancelEdit()} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer" aria-label="Cancel">
+                              <X className="w-4 h-4" />
                             </button>
                           </div>
                         </td>
@@ -288,9 +289,13 @@ export default function ExpensesPage() {
                         <option value="overdue">Overdue</option>
                       </select>
                     </div>
-                    <div className="flex gap-2">
-                      <button onClick={saveEdit} disabled={saving} className="flex-1 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800">{saving ? 'Saving...' : 'Save'}</button>
-                      <button onClick={cancelEdit} className="px-4 py-2 text-sm font-medium text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+                    <div className="flex items-center justify-end gap-1 pt-1">
+                      <button onClick={saveEdit} disabled={saving} className="p-2.5 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors disabled:opacity-50" aria-label="Save">
+                        <Check className="w-5 h-5" />
+                      </button>
+                      <button onClick={cancelEdit} className="p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Cancel">
+                        <X className="w-5 h-5" />
+                      </button>
                     </div>
                   </div>
                 );
