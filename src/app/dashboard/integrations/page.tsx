@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Link2, Zap } from "lucide-react";
 import { UpgradeGate } from "@/components/upgrade-gate";
 import {
@@ -50,6 +51,17 @@ const grouped = INTEGRATIONS.reduce<{ category: string; items: Integration[] }[]
 
 export default function IntegrationsPage() {
   const [connectedIds, setConnectedIds] = useState<Set<string>>(new Set());
+
+  // Check URL params for OAuth redirect results
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const connected = searchParams.get("connected");
+    if (connected) {
+      setConnectedIds(prev => new Set(prev).add(connected));
+      // Clean URL
+      window.history.replaceState({}, "", "/dashboard/integrations");
+    }
+  }, [searchParams]);
 
   // Load existing connections from Supabase on mount
   useEffect(() => {
