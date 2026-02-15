@@ -45,6 +45,13 @@ export function GoogleSheetsModal({ onClose, isConnected: initialConnected, onDi
           }
         })
         .catch(() => {});
+      // Pre-load access token so Picker opens in one click
+      fetch("/api/integrations/google/access-token")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.access_token) setAccessToken(data.access_token);
+        })
+        .catch(() => {});
     }
   }, [initialConnected]);
 

@@ -22,7 +22,7 @@ export function GoogleDriveModal({ onClose, isConnected: initialConnected, onDis
   const titleId = useId();
   const modalRef = useFocusTrap<HTMLDivElement>(true, { onEscape: onClose });
 
-  // Load connection info if connected
+  // Load connection info and access token if connected
   useEffect(() => {
     if (initialConnected) {
       fetch("/api/integrations/google/connection")
@@ -35,6 +35,13 @@ export function GoogleDriveModal({ onClose, isConnected: initialConnected, onDis
               lastBackup: data.drive.lastBackup || null,
             });
           }
+        })
+        .catch(() => {});
+      // Pre-load access token so Picker opens in one click
+      fetch("/api/integrations/google/access-token")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.access_token) setAccessToken(data.access_token);
         })
         .catch(() => {});
     }
@@ -364,7 +371,10 @@ export function GoogleDriveModal({ onClose, isConnected: initialConnected, onDis
                     />
                   ) : (
                     <button
-                      onClick={fetchAccessToken}
+                      onClick={async () => {
+                        const token = await fetchAccessToken();
+                        if (token) setAccessToken(token);
+                      }}
                       disabled={loadingToken}
                       className="flex-1 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
                     >
