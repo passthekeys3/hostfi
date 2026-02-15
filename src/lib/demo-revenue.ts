@@ -14,6 +14,7 @@ export interface RevenueEntry {
   check_out: string;
   nights: number;
   payout_date: string;
+  date?: string;
   confirmation_code: string | null;
   created_at: string;
   import_source: 'manual' | 'csv_import';

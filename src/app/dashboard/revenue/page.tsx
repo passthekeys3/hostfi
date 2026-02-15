@@ -70,7 +70,7 @@ export default function RevenuePage() {
       if (filterProperty !== 'all' && r.property_id !== filterProperty) return false;
       if (filterSource !== 'all' && r.source !== filterSource) return false;
       return true;
-    }).sort((a, b) => b.payout_date.localeCompare(a.payout_date));
+    }).sort((a, b) => (b.payout_date || b.date || '').localeCompare(a.payout_date || a.date || ''));
   }, [revenue, filterProperty, filterSource]);
 
   // Stats
@@ -418,7 +418,7 @@ export default function RevenuePage() {
                 return (
                   <tr key={r.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-5 py-3 text-gray-600 whitespace-nowrap">
-                      {new Date(r.payout_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      {new Date(r.payout_date || r.date || r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </td>
                     <td className="px-5 py-3">
                       <p className="font-medium text-gray-900 truncate max-w-[150px]">{prop?.name || 'Unmatched'}</p>
