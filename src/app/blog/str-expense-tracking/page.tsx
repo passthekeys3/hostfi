@@ -136,6 +136,13 @@ export default function STRExpenseTrackingPage() {
               Get Started Free <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
+
+          <div className="mt-10 pt-8 border-t border-gray-200">
+            <p className="text-sm font-semibold text-gray-900 mb-3">Related Reading</p>
+            <Link href="/blog/schedule-e-guide" className="text-sm text-teal-600 hover:text-teal-700 font-medium">
+              Schedule E for Rental Properties: The Complete 2026 Guide →
+            </Link>
+          </div>
         </div>
       </article>
 

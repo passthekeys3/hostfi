@@ -167,6 +167,13 @@ export default function ScheduleEGuidePage() {
               Get Started Free <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
+
+          <div className="mt-10 pt-8 border-t border-gray-200">
+            <p className="text-sm font-semibold text-gray-900 mb-3">Related Reading</p>
+            <Link href="/blog/str-expense-tracking" className="text-sm text-teal-600 hover:text-teal-700 font-medium">
+              How to Track STR Expenses for Schedule E →
+            </Link>
+          </div>
         </div>
       </article>
 

@@ -14,6 +14,13 @@ export const metadata: Metadata = {
 
 const posts = [
   {
+    slug: "airbnb-expense-tracker",
+    title: "Best Airbnb Expense Tracker for Hosts in 2026",
+    description: "Compare the best expense tracking tools for Airbnb hosts. Spreadsheets vs QuickBooks vs Stessa vs HostFi, with an honest feature comparison table.",
+    readTime: "10 min read",
+    date: "February 2026",
+  },
+  {
     slug: "schedule-e-guide",
     title: "Schedule E for Rental Properties: The Complete 2026 Guide",
     description: "Line-by-line breakdown of Schedule E for rental property owners and STR operators. Common deductions, audit red flags, and how to make tax time painless.",
