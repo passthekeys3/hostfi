@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Info, AlertCircle } from "lucide-react";
 import { isDemoMode } from "@/lib/data/data-provider";
+import { AddressAutocomplete, type AddressData } from "@/components/address-autocomplete";
 
 const PROPERTY_TYPES = [
   { value: "str", label: "Short-Term Rental" },
@@ -16,6 +17,16 @@ export function AddPropertyForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const demo = isDemoMode();
+
+  const cityRef = useRef<HTMLInputElement>(null);
+  const stateRef = useRef<HTMLInputElement>(null);
+  const zipRef = useRef<HTMLInputElement>(null);
+
+  const handleAddressSelect = (address: AddressData) => {
+    if (cityRef.current) cityRef.current.value = address.city;
+    if (stateRef.current) stateRef.current.value = address.state;
+    if (zipRef.current) zipRef.current.value = address.zip;
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -98,13 +109,28 @@ export function AddPropertyForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2">Address Line 1</label>
-          <input name="address_line1" required placeholder="1234 Main St" className={inputClass} />
+          <label className="block text-sm font-medium mb-2">Address</label>
+          <AddressAutocomplete onSelect={handleAddressSelect} />
         </div>
 
         <div>
           <label className="block text-sm font-medium mb-2">Address Line 2</label>
-          <input name="address_line2" placeholder="Unit A" className={inputClass} />
+          <input name="address_line2" placeholder="Unit A, Apt 3B, etc." className={inputClass} />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">City</label>
+            <input ref={cityRef} name="city" required placeholder="Los Angeles" className={inputClass} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">State</label>
+            <input ref={stateRef} name="state" required placeholder="CA" maxLength={2} className={inputClass} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">ZIP</label>
+            <input ref={zipRef} name="zip" required placeholder="90001" className={inputClass} />
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -121,21 +147,6 @@ export function AddPropertyForm() {
         <div>
           <label className="block text-sm font-medium mb-2">Square Footage</label>
           <input name="sqft" type="number" min={1} placeholder="Optional" className={inputClass} />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">City</label>
-            <input name="city" required placeholder="Los Angeles" className={inputClass} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">State</label>
-            <input name="state" required placeholder="CA" maxLength={2} className={inputClass} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">ZIP</label>
-            <input name="zip" required placeholder="90001" className={inputClass} />
-          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 pt-4">
