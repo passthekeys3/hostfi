@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
+import { authenticateRequest } from "@/lib/auth";
 
 /**
  * POST /api/integrations/google/update-connection
@@ -9,6 +9,8 @@ import { cookies } from "next/headers";
  */
 export async function POST(request: NextRequest) {
   try {
+    const auth = await authenticateRequest();
+
     const body = await request.json();
     const { provider, metadata } = body as {
       provider: "google_sheets" | "google_drive";
@@ -29,35 +31,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user from session
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!supabaseUrl || !supabaseAnonKey || !serviceRoleKey) {
+    if (!supabaseUrl || !serviceRoleKey) {
       return NextResponse.json(
         { error: "Server configuration error" },
         { status: 500 }
       );
     }
 
-    // Create client with user's session to get user ID
-    const cookieStore = await cookies();
-    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          cookie: cookieStore.toString(),
-        },
-      },
-    });
-
-    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const user = { id: auth.userId };
 
     // Use service role to update the connection
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { authenticateRequest } from "@/lib/auth";
 import { createClient } from "@supabase/supabase-js";
 import { refreshGoogleToken } from "@/lib/integrations/google";
 
@@ -10,34 +10,19 @@ import { refreshGoogleToken } from "@/lib/integrations/google";
  */
 export async function GET() {
   try {
+    const auth = await authenticateRequest();
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!supabaseUrl || !supabaseAnonKey || !serviceRoleKey) {
+    if (!supabaseUrl || !serviceRoleKey) {
       return NextResponse.json(
         { error: "Server configuration error" },
         { status: 500 }
       );
     }
 
-    // Get user from session
-    const cookieStore = await cookies();
-    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          cookie: cookieStore.toString(),
-        },
-      },
-    });
-
-    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
+    const user = { id: auth.userId };
 
     // Use service role to get the connection
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
