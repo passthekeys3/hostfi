@@ -40,11 +40,14 @@ export async function POST(request: NextRequest) {
           .limit(1);
 
         if (props?.[0]?.id) {
-          const rows = mapped
-            .filter(t => (t.amount || 0) > 0)
-            .map(t => ({
+          const pid = props[0].id;
+          const expenses = mapped.filter(t => (t.amount || 0) > 0);
+          const income = mapped.filter(t => (t.amount || 0) < 0);
+
+          if (expenses.length > 0) {
+            await supabaseDemo.from('expenses').insert(expenses.map(t => ({
               user_id: auth.userId,
-              property_id: props[0].id,
+              property_id: pid,
               category: t.hostfi_category || 'other',
               description: t.name || t.merchant_name || 'Bank transaction',
               vendor: t.merchant_name || t.name || null,
@@ -52,10 +55,21 @@ export async function POST(request: NextRequest) {
               date: t.date,
               source: 'csv_import' as const,
               status: 'paid' as const,
-              notes: `Imported from Plaid (demo)`,
-            }));
-          if (rows.length > 0) {
-            await supabaseDemo.from('expenses').insert(rows);
+              notes: 'Imported from Plaid (demo)',
+            })));
+          }
+
+          if (income.length > 0) {
+            await supabaseDemo.from('revenue').insert(income.map(t => ({
+              user_id: auth.userId,
+              property_id: pid,
+              platform: 'other' as const,
+              description: t.name || t.merchant_name || 'Bank deposit',
+              amount: Math.abs(t.amount),
+              date: t.date,
+              source: 'csv_import' as const,
+              notes: 'Imported from Plaid (demo)',
+            })));
           }
         }
       }
@@ -116,11 +130,14 @@ export async function POST(request: NextRequest) {
 
     const defaultPropertyId = properties?.[0]?.id;
 
-    // Save new transactions to expenses table
+    // Split transactions: positive = expenses (money out), negative = revenue (money in)
     if (addedWithCategories.length > 0 && defaultPropertyId) {
-      const expenseRows = addedWithCategories
-        .filter(t => (t.amount || 0) > 0) // Only expenses (positive amounts in Plaid = money out)
-        .map(t => ({
+      const expenses = addedWithCategories.filter(t => (t.amount || 0) > 0);
+      const income = addedWithCategories.filter(t => (t.amount || 0) < 0);
+
+      // Save expenses
+      if (expenses.length > 0) {
+        const expenseRows = expenses.map(t => ({
           user_id: auth.userId,
           property_id: defaultPropertyId,
           category: t.hostfi_category || 'other',
@@ -128,13 +145,26 @@ export async function POST(request: NextRequest) {
           vendor: t.merchant_name || t.name || null,
           amount: Math.abs(t.amount),
           date: t.date,
-          source: 'csv_import' as const, // Using csv_import since plaid_import not in constraint
+          source: 'csv_import' as const,
           status: 'paid' as const,
           notes: `Imported from Plaid (${t.transaction_id})`,
         }));
-
-      if (expenseRows.length > 0) {
         await supabase.from('expenses').insert(expenseRows);
+      }
+
+      // Save revenue (negative amounts = incoming money)
+      if (income.length > 0) {
+        const revenueRows = income.map(t => ({
+          user_id: auth.userId,
+          property_id: defaultPropertyId,
+          platform: 'other' as const,
+          description: t.name || t.merchant_name || 'Bank deposit',
+          amount: Math.abs(t.amount),
+          date: t.date,
+          source: 'csv_import' as const,
+          notes: `Imported from Plaid (${t.transaction_id})`,
+        }));
+        await supabase.from('revenue').insert(revenueRows);
       }
     }
 
