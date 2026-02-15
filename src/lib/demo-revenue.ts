@@ -61,7 +61,7 @@ export function getRevenueForProperty(propertyId: string): RevenueEntry[] {
 export function getRevenueByMonth(revenue: RevenueEntry[]): Record<string, { gross: number; net: number; fees: number; bookings: number }> {
   const result: Record<string, { gross: number; net: number; fees: number; bookings: number }> = {};
   for (const r of revenue) {
-    const month = r.payout_date.substring(0, 7);
+    const month = (r.payout_date || r.date || r.created_at || '').substring(0, 7);
     if (!result[month]) result[month] = { gross: 0, net: 0, fees: 0, bookings: 0 };
     result[month].gross += r.amount;
     result[month].net += r.payout_amount;
