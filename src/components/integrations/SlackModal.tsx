@@ -84,16 +84,16 @@ export function SlackConnectModal({ onClose, isConnected: initialConnected, onDi
     try {
       const res = await fetch("/api/integrations/slack/channels");
       const data = await res.json();
-      if (data.channels) {
+      if (data.channels && data.channels.length > 0) {
         setChannels(data.channels);
-        if (!expenseChannel && data.channels.length > 0) {
-          setExpenseChannel(data.channels[0].id);
-        }
-        if (!alertChannel && data.channels.length > 0) {
-          setAlertChannel(data.channels[0].id);
-        }
+        if (!expenseChannel) setExpenseChannel(data.channels[0].id);
+        if (!alertChannel) setAlertChannel(data.channels.length > 1 ? data.channels[1].id : data.channels[0].id);
+      } else {
+        console.error("Slack channels response:", data);
       }
-    } catch {}
+    } catch (err) {
+      console.error("Failed to load Slack channels:", err);
+    }
     setLoadingChannels(false);
   }, [expenseChannel, alertChannel]);
 
@@ -346,7 +346,7 @@ export function SlackConnectModal({ onClose, isConnected: initialConnected, onDi
               </div>
 
               <button
-                onClick={() => { loadChannels(); setStep("channels"); }}
+                onClick={async () => { await loadChannels(); setStep("channels"); }}
                 className="w-full py-3 text-sm font-medium text-[#4A154B] bg-[#4A154B]/5 hover:bg-[#4A154B]/10 rounded-xl transition-colors"
               >
                 Edit Settings

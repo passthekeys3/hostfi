@@ -29,7 +29,7 @@ export async function GET() {
     }
 
     // Fetch channels from Slack API
-    const res = await fetch('https://slack.com/api/conversations.list?types=public_channel,private_channel&limit=200', {
+    const res = await fetch('https://slack.com/api/conversations.list?types=public_channel&limit=200&exclude_archived=true', {
       headers: { Authorization: `Bearer ${connection.access_token}` },
     });
 
