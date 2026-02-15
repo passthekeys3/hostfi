@@ -68,7 +68,7 @@ function NewExpenseForm() {
       const notes = form.get("notes") as string || null;
       const description = vendor || (selectedCategory ? selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1) : "Expense");
 
-      const { error: insertError } = await supabase.from("expenses").insert({
+      const { data: insertedExpense, error: insertError } = await supabase.from("expenses").insert({
         user_id: user.id,
         property_id: propertyId,
         category: selectedCategory,
@@ -78,7 +78,7 @@ function NewExpenseForm() {
         date,
         status: "paid",
         notes,
-      });
+      }).select("id").single();
 
       if (insertError) { setError(insertError.message); setLoading(false); return; }
 
@@ -99,6 +99,18 @@ function NewExpenseForm() {
             },
           }),
         }).catch(() => {}); // Ignore errors - sync is optional
+      }
+
+      // Fire-and-forget: check for anomaly and trigger alert if needed
+      if (insertedExpense?.id) {
+        fetch("/api/alerts/check-expense", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            expense_id: insertedExpense.id,
+            user_id: user.id,
+          }),
+        }).catch(() => {}); // Ignore errors - alerts are optional
       }
 
       router.push("/dashboard/expenses");
