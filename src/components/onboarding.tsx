@@ -6,6 +6,7 @@ import {
   ChevronRight, Sparkles, Home, Zap, Crown, CreditCard,
   MailCheck, Forward, ArrowDown,
 } from "lucide-react";
+import { AddressAutocomplete, type AddressData } from "@/components/address-autocomplete";
 import {
   getOnboardingState,
   setOnboardingState,
@@ -297,8 +298,16 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
                       <input id="onboarding-prop-name" value={propName} onChange={(e) => setPropName(e.target.value)} placeholder="e.g. Venice Beach Unit" className={inputClass} />
                     </div>
                     <div>
-                      <label htmlFor="onboarding-prop-address" className="block text-sm font-medium mb-1.5">Address</label>
-                      <input id="onboarding-prop-address" value={propAddress} onChange={(e) => setPropAddress(e.target.value)} placeholder="Street address" className={inputClass} />
+                      <label className="block text-sm font-medium mb-1.5">Address</label>
+                      <AddressAutocomplete
+                        defaultValue={propAddress}
+                        onSelect={(addr: AddressData) => {
+                          setPropAddress(addr.address_line1);
+                          setPropCity(addr.city);
+                          setPropState(addr.state);
+                          setPropZip(addr.zip);
+                        }}
+                      />
                     </div>
                     <div className="grid grid-cols-4 gap-3">
                       <div className="col-span-2">
