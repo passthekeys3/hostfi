@@ -98,26 +98,11 @@ function SidebarUser({ demo }: { demo: boolean }) {
   );
 }
 
-interface SidebarProps {
-  externalOpen?: boolean;
-  onClose?: () => void;
-}
-
-export function Sidebar({ externalOpen, onClose }: SidebarProps) {
+export function Sidebar() {
   const pathname = usePathname();
-  const [internalOpen, setInternalOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const demo = isDemoMode();
   const mainNav = getMainNav(demo);
-
-  const open = externalOpen ?? internalOpen;
-  const setOpen = (v: boolean) => {
-    setInternalOpen(v);
-    if (!v && onClose) onClose();
-  };
-
-  useEffect(() => {
-    if (externalOpen !== undefined) setInternalOpen(externalOpen);
-  }, [externalOpen]);
 
   // Close sidebar on route change (mobile)
   const prevPathname = useRef(pathname);
@@ -126,7 +111,6 @@ export function Sidebar({ externalOpen, onClose }: SidebarProps) {
       setOpen(false);
       prevPathname.current = pathname;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   const NavLink = ({ item }: { item: typeof mainNav[0] }) => {
