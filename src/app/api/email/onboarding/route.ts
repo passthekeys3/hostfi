@@ -18,16 +18,29 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Verify internal call or service role
+    // Verify: service role key OR authenticated user (can only send to themselves)
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const authHeader = request.headers.get('authorization');
-    if (process.env.NODE_ENV === 'production' && authHeader !== `Bearer ${serviceKey}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const isServiceCall = authHeader === `Bearer ${serviceKey}`;
 
     const { type, userId } = await request.json();
     if (!type || !userId) {
       return NextResponse.json({ error: 'Missing type or userId' }, { status: 400 });
+    }
+
+    // If not a service call, verify the user is requesting their own email
+    if (!isServiceCall && process.env.NODE_ENV === 'production') {
+      const { createClient: createServerClient } = await import('@/lib/supabase/server');
+      const userSupabase = await createServerClient();
+      if (!userSupabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      const { data: { user } } = await userSupabase.auth.getUser();
+      if (!user || user.id !== userId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      // Only allow welcome emails from client-side
+      if (type !== 'welcome') {
+        return NextResponse.json({ error: 'Unauthorized email type' }, { status: 403 });
+      }
     }
 
     // Fetch user data

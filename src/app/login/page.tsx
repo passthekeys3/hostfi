@@ -68,14 +68,22 @@ export default function LoginPage() {
       localStorage.removeItem('hostfi_session_only');
     }
 
-    const { error } = mode === "login"
+    const result = mode === "login"
       ? await supabase.auth.signInWithPassword({ email, password })
       : await supabase.auth.signUp({ email, password });
 
-    if (error) {
-      setError(error.message);
+    if (result.error) {
+      setError(result.error.message);
       setLoading(false);
     } else {
+      // Send welcome email for new signups (non-blocking)
+      if (mode === "signup" && result.data?.user) {
+        fetch('/api/email/onboarding', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'welcome', userId: result.data.user.id }),
+        }).catch(() => {});
+      }
       localStorage.removeItem('hostfi_demo_mode');
       localStorage.removeItem('hostfi_onboarding_complete');
       // Set tab-alive marker for session-only mode detection
