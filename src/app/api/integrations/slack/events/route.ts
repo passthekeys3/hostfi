@@ -22,6 +22,9 @@ export async function POST(request: NextRequest) {
 
     // 2. Verify request signature
     const signingSecret = process.env.SLACK_SIGNING_SECRET;
+    if (!signingSecret && process.env.NODE_ENV === 'production') {
+      return NextResponse.json({ error: 'Signing secret not configured' }, { status: 500 });
+    }
     if (signingSecret) {
       const timestamp = request.headers.get('x-slack-request-timestamp');
       const signature = request.headers.get('x-slack-signature');

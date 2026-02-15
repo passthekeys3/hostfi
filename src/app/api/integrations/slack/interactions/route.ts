@@ -1,5 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { sendSlackMessage } from '@/lib/integrations/slack';
+
+function verifySlackSignature(body: string, timestamp: string | null, signature: string | null): boolean {
+  const signingSecret = process.env.SLACK_SIGNING_SECRET;
+  if (!signingSecret) {
+    // In production, reject if no signing secret configured
+    return process.env.NODE_ENV !== 'production';
+  }
+  if (!timestamp || !signature) return false;
+  
+  // Reject requests older than 5 minutes (replay attack prevention)
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - Number(timestamp)) > 300) return false;
+  
+  const sigBasestring = `v0:${timestamp}:${body}`;
+  const expectedSignature = 'v0=' + crypto
+    .createHmac('sha256', signingSecret)
+    .update(sigBasestring)
+    .digest('hex');
+  
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expectedSignature)
+  );
+}
 
 /**
  * POST /api/integrations/slack/interactions — Slack interactive component handler
@@ -11,9 +36,21 @@ import { sendSlackMessage } from '@/lib/integrations/slack';
  */
 export async function POST(request: NextRequest) {
   try {
+    // Read raw body for signature verification
+    const rawBody = await request.text();
+    
+    // Verify Slack signature
+    const timestamp = request.headers.get('x-slack-request-timestamp');
+    const signature = request.headers.get('x-slack-signature');
+    if (!verifySlackSignature(rawBody, timestamp, signature)) {
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    }
+    
+    // Parse form data from raw body
+    const params = new URLSearchParams(rawBody);
+    const payloadStr = params.get('payload');
     // Slack sends interactions as form-encoded with a "payload" field
-    const formData = await request.formData();
-    const payloadStr = formData.get('payload') as string;
+    // const formData = await request.formData();
     if (!payloadStr) {
       return NextResponse.json({ error: 'Missing payload' }, { status: 400 });
     }

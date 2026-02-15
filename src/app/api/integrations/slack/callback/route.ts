@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const slackData = await exchangeSlackCode(code);
 
     // TODO: Store bot token + team info in Supabase integration_connections table
-    console.log('Slack OAuth complete for user:', stateData.userId, 'team:', slackData.team.name);
+    console.log('Slack OAuth complete');
 
     return NextResponse.redirect(
       new URL(

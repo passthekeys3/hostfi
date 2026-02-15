@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
   const billingEmail = toAddresses.find(email => email.startsWith('expenses-'));
 
   if (!billingEmail) {
-    console.log('[parse-email] No billing email found in recipients:', toAddresses);
+    console.log('[parse-email] No billing email found in recipients');
     return NextResponse.json({ error: 'No matching billing email' }, { status: 404 });
   }
 
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (profileError || !profile) {
-    console.log('[parse-email] No user found for billing email:', billingEmail);
+    console.log('[parse-email] No user found for billing email');
     return NextResponse.json({ error: 'User not found' }, { status: 404 });
   }
 

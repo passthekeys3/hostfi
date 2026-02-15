@@ -85,7 +85,35 @@ async function saveToInbox(
   });
 }
 
+// Postmark's known inbound processing IPs
+// https://postmarkapp.com/support/article/800-ips-for-firewalls
+const POSTMARK_IPS = new Set([
+  '3.134.147.250', '50.31.156.6', '50.31.156.77', '18.217.206.57',
+]);
+
+function verifyPostmarkSource(req: NextRequest): boolean {
+  // In development, skip IP check
+  if (process.env.NODE_ENV !== 'production') return true;
+  
+  // Check for webhook secret if configured
+  const secret = process.env.POSTMARK_WEBHOOK_SECRET;
+  if (secret) {
+    const authHeader = req.headers.get('authorization');
+    if (authHeader === `Bearer ${secret}`) return true;
+  }
+  
+  // Check source IP against Postmark's known IPs
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 
+             req.headers.get('x-real-ip') ?? '';
+  return POSTMARK_IPS.has(ip);
+}
+
 export async function POST(req: NextRequest) {
+  // Verify request comes from Postmark
+  if (!verifyPostmarkSource(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   // Rate limit by IP
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0] ?? 'unknown';
   if (isRateLimited(ip)) {

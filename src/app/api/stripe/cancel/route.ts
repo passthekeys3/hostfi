@@ -39,6 +39,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No active subscription' }, { status: 400 });
     }
 
+    if (!stripe) {
+      return NextResponse.json({ error: 'Stripe not configured', demo: true });
+    }
+
     // Cancel at period end (user keeps access until billing period ends)
     const response = await stripe.subscriptions.update(
       profile.stripe_subscription_id,

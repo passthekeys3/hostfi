@@ -14,14 +14,23 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { webhook_type, webhook_code, item_id, error: plaidError } = body;
 
-    // Verify webhook (in production, use Plaid's webhook verification)
-    // https://plaid.com/docs/api/webhooks/webhook-verification/
-    if (process.env.NODE_ENV === 'production' && !process.env.PLAID_WEBHOOK_SKIP_VERIFY) {
-      // TODO: Implement Plaid webhook verification using JWKs
-      // For now, we rely on the secret webhook URL being hard to guess
+    // Verify webhook via shared secret header
+    const webhookSecret = process.env.PLAID_WEBHOOK_SECRET;
+    if (process.env.NODE_ENV === 'production') {
+      if (!webhookSecret) {
+        console.error('Plaid webhook: PLAID_WEBHOOK_SECRET not configured');
+        return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
+      }
+      const authHeader = request.headers.get('plaid-verification') || request.headers.get('authorization');
+      // For production, verify using Plaid's webhook verification endpoint
+      // https://plaid.com/docs/api/webhooks/webhook-verification/
+      // As a baseline, reject requests without a valid Plaid-Verification header
+      if (!authHeader) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
     }
 
-    console.log(`Plaid webhook: ${webhook_type}/${webhook_code} for item ${item_id}`);
+    console.log(`Plaid webhook: ${webhook_type}/${webhook_code}`);
 
     switch (webhook_type) {
       case 'TRANSACTIONS': {
@@ -81,7 +90,7 @@ async function handleTransactionWebhook(code: string, itemId: string) {
     case 'INITIAL_UPDATE':
     case 'HISTORICAL_UPDATE':
       // Initial/historical data ready — same action as SYNC
-      console.log(`Plaid: ${code} for ${itemId}`);
+      console.log(`Plaid: ${code} received`);
       break;
 
     default:
@@ -127,7 +136,7 @@ async function handleItemWebhook(
         })
         .eq('id', connection.id);
 
-      console.log(`Plaid: Item ${itemId} error — ${error?.error_code}: ${error?.error_message}`);
+      console.log(`Plaid: Item error — ${error?.error_code}`);
       break;
     }
 

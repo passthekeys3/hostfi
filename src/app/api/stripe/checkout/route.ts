@@ -86,6 +86,9 @@ export async function POST(request: NextRequest) {
       sessionConfig.customer_email = customerEmail;
     }
 
+    if (!stripe) {
+      return NextResponse.json({ error: 'Stripe not configured', demo: true });
+    }
     const session = await stripe.checkout.sessions.create(sessionConfig);
 
     return NextResponse.json({ url: session.url });
