@@ -52,6 +52,7 @@ const grouped = INTEGRATIONS.reduce<{ category: string; items: Integration[] }[]
 export default function IntegrationsPage() {
   const [connectedIds, setConnectedIds] = useState<Set<string>>(new Set());
   const [googleSheetsUrl, setGoogleSheetsUrl] = useState<string | null>(null);
+  const [googleDriveFolderUrl, setGoogleDriveFolderUrl] = useState<string | null>(null);
   const [sheetsSyncing, setSheetsSyncing] = useState(false);
   const [sheetsSyncSuccess, setSheetsSyncSuccess] = useState(false);
 
@@ -90,6 +91,12 @@ export default function IntegrationsPage() {
           const sheetsConn = data.find((c: { provider: string }) => c.provider === "google_sheets");
           if (sheetsConn?.metadata?.spreadsheet_id) {
             setGoogleSheetsUrl(`https://docs.google.com/spreadsheets/d/${sheetsConn.metadata.spreadsheet_id}`);
+          }
+          const driveConn = data.find((c: { provider: string }) => c.provider === "google_drive");
+          if (driveConn?.metadata?.folder_url) {
+            setGoogleDriveFolderUrl(driveConn.metadata.folder_url as string);
+          } else if (driveConn?.metadata?.hostfi_folder_id) {
+            setGoogleDriveFolderUrl(`https://drive.google.com/drive/folders/${driveConn.metadata.hostfi_folder_id}`);
           }
         }
       } catch {}
@@ -226,6 +233,17 @@ export default function IntegrationsPage() {
                           <><RefreshCw className="w-3 h-3" /> Sync All</>
                         )}
                       </button>
+                    </>
+                  ) : integration.id === "google_drive" && connectedIds.has("google_drive") ? (
+                    <>
+                      <a
+                        href={googleDriveFolderUrl || "https://drive.google.com"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium text-[#4285F4] bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                      >
+                        <ExternalLink className="w-3 h-3" /> Open in Drive
+                      </a>
                     </>
                   ) : undefined
                 }
