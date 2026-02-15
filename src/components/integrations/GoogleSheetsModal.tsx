@@ -442,28 +442,14 @@ export function GoogleSheetsModal({ onClose, isConnected: initialConnected, onDi
                       <ExternalLink className="w-3 h-3" /> Open
                     </a>
                   )}
-                  {accessToken ? (
-                    <GooglePicker
-                      accessToken={accessToken}
-                      mode="spreadsheet"
-                      onSelect={handleSpreadsheetSelect}
-                      buttonText={changingSpreadsheet ? "Changing..." : "Change"}
-                      className="flex-1 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
-                    />
-                  ) : (
-                    <button
-                      onClick={fetchAccessToken}
-                      disabled={loadingToken}
-                      className="flex-1 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
-                    >
-                      {loadingToken ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                      ) : (
-                        <FileSpreadsheet className="w-3 h-3" />
-                      )}
-                      Change
-                    </button>
-                  )}
+                  <GooglePicker
+                    accessToken={accessToken || "pending"}
+                    mode="spreadsheet"
+                    onSelect={handleSpreadsheetSelect}
+                    autoRefreshToken
+                    buttonText={changingSpreadsheet ? "Changing..." : "Change"}
+                    className="flex-1 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
+                  />
                 </div>
               </div>
 

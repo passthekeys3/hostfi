@@ -361,31 +361,14 @@ export function GoogleDriveModal({ onClose, isConnected: initialConnected, onDis
                       <ExternalLink className="w-3 h-3" /> Open Drive
                     </a>
                   )}
-                  {accessToken ? (
-                    <GooglePicker
-                      accessToken={accessToken}
-                      mode="folder"
-                      onSelect={handleFolderSelect}
-                      buttonText={changingFolder ? "Changing..." : "Change Folder"}
-                      className="flex-1 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
-                    />
-                  ) : (
-                    <button
-                      onClick={async () => {
-                        const token = await fetchAccessToken();
-                        if (token) setAccessToken(token);
-                      }}
-                      disabled={loadingToken}
-                      className="flex-1 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
-                    >
-                      {loadingToken ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                      ) : (
-                        <FolderOpen className="w-3 h-3" />
-                      )}
-                      Change Folder
-                    </button>
-                  )}
+                  <GooglePicker
+                    accessToken={accessToken || "pending"}
+                    mode="folder"
+                    onSelect={handleFolderSelect}
+                    autoRefreshToken
+                    buttonText={changingFolder ? "Changing..." : "Change Folder"}
+                    className="flex-1 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
+                  />
                 </div>
               </div>
 
