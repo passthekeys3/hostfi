@@ -41,10 +41,44 @@ function NewExpenseForm() {
     setReceiptOpen(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => router.push("/dashboard/expenses"), 500);
+    setError(null);
+
+    if (isDemo) {
+      setTimeout(() => router.push("/dashboard/expenses"), 500);
+      return;
+    }
+
+    try {
+      const form = new FormData(e.currentTarget);
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      if (!supabase) { setError("Database not configured."); setLoading(false); return; }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setError("You must be logged in."); setLoading(false); return; }
+
+      const { error: insertError } = await supabase.from("expenses").insert({
+        user_id: user.id,
+        property_id: form.get("property") as string,
+        category: selectedCategory,
+        description: form.get("vendor") as string || (selectedCategory ? selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1) : "Expense"),
+        vendor: form.get("vendor") as string || null,
+        amount: parseFloat(form.get("amount") as string),
+        date: form.get("date") as string,
+        status: "paid",
+        notes: form.get("notes") as string || null,
+      });
+
+      if (insertError) { setError(insertError.message); setLoading(false); return; }
+      router.push("/dashboard/expenses");
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setLoading(false);
+    }
   };
 
   const inputClass = "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 text-sm transition-all";
@@ -56,6 +90,11 @@ function NewExpenseForm() {
         <p className="text-muted-foreground mt-2 leading-relaxed">Record a new expense for one of your properties</p>
       </div>
 
+      {error && (
+        <div className="max-w-2xl mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 flex items-center gap-2">
+          <Info className="w-4 h-4 shrink-0" /> {error}
+        </div>
+      )}
       {isDemo && (
         <div className="max-w-2xl mb-4 px-4 py-3 bg-amber-500/5 border border-amber-500/15 rounded-xl text-sm text-muted-foreground flex items-center gap-2">
           <Info className="w-4 h-4 shrink-0" /> Demo Mode — Data won&apos;t be saved
@@ -157,7 +196,7 @@ function NewExpenseForm() {
         <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
           <div>
             <label className="block text-sm font-medium mb-2">Property</label>
-            <select className={inputClass} required>
+            <select name="property" className={inputClass} required>
               <option value="">Select property...</option>
               {properties.map((p) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
@@ -239,6 +278,7 @@ function NewExpenseForm() {
             <div>
               <label className="block text-sm font-medium mb-2">Notes</label>
               <textarea
+                name="notes"
                 rows={3}
                 placeholder="Any additional details..."
                 className={`${inputClass} resize-none`}
