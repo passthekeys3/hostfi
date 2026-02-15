@@ -85,7 +85,7 @@ function PricingSection({ authTarget = "/login" }: { authTarget?: string }) {
     {
       name: "Free", monthly: 0, yearly: 0, period: "forever",
       desc: "For getting started",
-      features: ["Up to 3 properties", "AI categorization (50/mo)", "Ask AI (10 queries/mo)", "Revenue tracking (CSV)", "Basic analytics"],
+      features: ["Up to 5 properties", "AI categorization (50/mo)", "Ask AI (10 queries/mo)", "Revenue tracking (CSV)", "Basic analytics"],
       highlighted: false,
     },
     {
@@ -215,7 +215,7 @@ export default function LandingPage() {
         "operatingSystem": "Web",
         "description": "AI-powered expense management for rental property operators. Track expenses, scan receipts, auto-categorize for Schedule E tax prep.",
         "offers": [
-          { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD", "description": "Up to 3 properties" },
+          { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD", "description": "Up to 5 properties" },
           { "@type": "Offer", "name": "Pro", "price": "15", "priceCurrency": "USD", "description": "Up to 10 properties + AI features" },
           { "@type": "Offer", "name": "Business", "price": "49", "priceCurrency": "USD", "description": "Up to 25 properties + team access" }
         ],
@@ -288,7 +288,7 @@ export default function LandingPage() {
               Forward your bills. Snap your receipts. HostFi uses AI to automatically track, categorize, and map every expense to the right property — down to the IRS Schedule E line item.
             </p>
             <GetStartedButton size="large" authTarget={authTarget} />
-            <p className="text-xs text-gray-400 mt-3">Free for up to 3 properties. No credit card required.</p>
+            <p className="text-xs text-gray-400 mt-3">Free for up to 5 properties. No credit card required.</p>
           </FadeIn>
 
           {/* Dashboard Preview */}
@@ -737,7 +737,7 @@ export default function LandingPage() {
             Stop Guessing. Start Knowing.
           </h2>
           <p className="text-gray-500 mb-10">
-            Free for up to 3 properties. No credit card required.
+            Free for up to 5 properties. No credit card required.
           </p>
           <GetStartedButton size="large" authTarget={authTarget} />
         </FadeIn>
