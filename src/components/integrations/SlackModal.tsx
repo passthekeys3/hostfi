@@ -27,6 +27,7 @@ export function SlackConnectModal({ onClose, isConnected: initialConnected, onDi
   const [step, setStep] = useState<"intro" | "channels" | "notifications" | "success" | "connected">(
     initialConnected ? "connected" : "intro"
   );
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
   const [saving, setSaving] = useState(false);
   const [channels, setChannels] = useState<SlackChannel[]>([]);
   const [loadingChannels, setLoadingChannels] = useState(false);
@@ -72,8 +73,18 @@ export function SlackConnectModal({ onClose, isConnected: initialConnected, onDi
             if (data.metadata.expense_channel_name) setExpenseChannel(data.metadata.expense_channel_name);
             if (data.metadata.alert_channel_name) setAlertChannel(data.metadata.alert_channel_name);
             if (data.metadata.notifications) setNotifications(data.metadata.notifications);
+
+            // If connected but no channels configured yet, go straight to channel setup
+            if (!data.metadata.expense_channel_id) {
+              setStep("channels");
+              setInitialLoadDone(true);
+              return;
+            }
           }
-        } catch {}
+          setInitialLoadDone(true);
+        } catch {
+          setInitialLoadDone(true);
+        }
       })();
     }
   }, [initialConnected]);
@@ -96,6 +107,13 @@ export function SlackConnectModal({ onClose, isConnected: initialConnected, onDi
     }
     setLoadingChannels(false);
   }, [expenseChannel, alertChannel]);
+
+  // Auto-load channels when entering channels step
+  useEffect(() => {
+    if (step === "channels" && channels.length === 0 && !loadingChannels) {
+      loadChannels();
+    }
+  }, [step, channels.length, loadingChannels, loadChannels]);
 
   const handleSaveConfig = async () => {
     setSaving(true);

@@ -64,6 +64,11 @@ export default function IntegrationsPage() {
         connectedParams.forEach(id => next.add(id));
         return next;
       });
+      // Auto-open modal for freshly connected integrations that need config
+      const needsConfig = connectedParams.find(id => ["slack"].includes(id));
+      if (needsConfig) {
+        setOpenModal(needsConfig);
+      }
       // Clean URL
       window.history.replaceState({}, "", "/dashboard/integrations");
     }

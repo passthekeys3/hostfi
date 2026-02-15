@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { sendSlackMessage, buildWeeklyDigestBlocks, buildAlertBlocks } from '@/lib/integrations/slack';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Supabase = SupabaseClient<any>;
 
 /**
  * Verify Slack request signature
@@ -151,7 +154,7 @@ export async function POST(request: NextRequest) {
  * /hostfi spending — Last 7 days summary
  */
 async function handleSpending(
-  supabase: ReturnType<typeof createClient>,
+  supabase: Supabase,
   connection: { token: string; userId: string },
   channelId: string,
   slackUserId: string
@@ -204,7 +207,7 @@ async function handleSpending(
  * /hostfi properties — List user's properties
  */
 async function handleProperties(
-  supabase: ReturnType<typeof createClient>,
+  supabase: Supabase,
   connection: { token: string; userId: string }
 ) {
   const { data: properties } = await supabase
@@ -271,7 +274,7 @@ async function handleProperties(
  * /hostfi alerts — Recent anomalies
  */
 async function handleAlerts(
-  supabase: ReturnType<typeof createClient>,
+  supabase: Supabase,
   connection: { token: string; userId: string }
 ) {
   // Check for recent expenses with anomaly flags or high amounts
