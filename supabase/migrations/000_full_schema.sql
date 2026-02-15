@@ -17,7 +17,7 @@ create table public.profiles (
   plan text default 'free',
   stripe_customer_id text unique,
   stripe_subscription_id text,
-  properties_limit integer default 5,
+  properties_limit integer default 3,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -52,7 +52,7 @@ create table public.properties (
   city text not null,
   state text not null,
   zip text not null,
-  property_type text default 'str' check (property_type in ('str', 'ltr', 'primary')),
+  property_type text default 'str' check (property_type in ('str', 'ltr', 'arbitrage', 'primary')),
   status text default 'active' check (status in ('active', 'inactive')),
   created_at timestamptz default now(),
   updated_at timestamptz default now()
