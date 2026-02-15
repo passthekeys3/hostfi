@@ -15,7 +15,6 @@ import {
   GoogleDriveModal,
   ZapierModal,
   EmailAlertsModal,
-  SMSAlertsModal,
   PlaidModal,
   IntegrationCard,
   type Integration,
@@ -38,7 +37,6 @@ const INTEGRATIONS: Integration[] = [
   { id: "zapier", name: "Zapier", description: "Connect to 5,000+ apps", category: "Automation", status: "disconnected", logo: "ZP", logoColor: "bg-[#FF4A00]", logoUrl: "/logos/zapier.svg", tier: "business" },
   { id: "make", name: "Make", description: "Visual workflow automation", category: "Automation", status: "disconnected", logo: "MK", logoColor: "bg-[#6D00CC]", logoUrl: "/logos/make.svg", tier: "business" },
   { id: "email_smtp", name: "Email Alerts", description: "Send alerts to your CPA or team", category: "Notifications", status: "disconnected", logo: "EM", logoColor: "bg-[#EA4335]", tier: "pro" },
-  { id: "sms_alerts", name: "SMS Alerts", description: "Text alerts for due bills and anomalies", category: "Notifications", status: "disconnected", logo: "SM", logoColor: "bg-[#F22F46]", tier: "pro" },
 ];
 
 // Group by category, preserving order
@@ -156,7 +154,7 @@ export default function IntegrationsPage() {
   const [openModal, setOpenModal] = useState<string | null>(null);
 
   const handleConnect = (id: string) => {
-    const hasModal = ["quickbooks", "xero", "slack", "google_sheets", "zapier", "teams", "google_drive", "dropbox", "make", "sms_alerts", "email_smtp", "plaid"].includes(id);
+    const hasModal = ["quickbooks", "xero", "slack", "google_sheets", "zapier", "teams", "google_drive", "dropbox", "make", "email_smtp", "plaid"].includes(id);
     if (hasModal) { setOpenModal(id); return; }
     // Toggle for Melio
     setConnectedIds(prev => {
@@ -273,7 +271,6 @@ export default function IntegrationsPage() {
       {openModal === "google_drive" && <GoogleDriveModal onClose={handleModalClose("google_drive")} isConnected={connectedIds.has("google_drive")} onDisconnect={() => handleDisconnect("google_drive")} />}
       {openModal === "dropbox" && <DropboxModal onClose={handleModalClose("dropbox")} />}
       {openModal === "make" && <MakeModal onClose={handleModalClose("make")} />}
-      {openModal === "sms_alerts" && <SMSAlertsModal onClose={handleModalClose("sms_alerts")} />}
       {openModal === "email_smtp" && <EmailAlertsModal onClose={handleModalClose("email_smtp")} />}
       {openModal === "plaid" && <PlaidModal onClose={handleModalClose("plaid")} onConnected={() => setConnectedIds(prev => new Set(prev).add("plaid"))} />}
       {/* Note: modals call onClose() without didConnect=true, so closing a modal
