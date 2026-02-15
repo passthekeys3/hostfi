@@ -14,7 +14,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "HostFi — AI-Powered Expense Management for Rental Properties",
-  description: "Track, categorize, and optimize every expense across your rental portfolio. AI bill parsing, Schedule E tax prep, anomaly detection, and more. Free for up to 5 properties.",
+  description: "Track, categorize, and optimize every expense across your rental portfolio. AI bill parsing, Schedule E tax prep, anomaly detection, and more. Free for up to 3 properties.",
   manifest: "/manifest.json",
   metadataBase: new URL("https://hostfi.ai"),
   openGraph: {
@@ -24,11 +24,13 @@ export const metadata: Metadata = {
     siteName: "HostFi",
     type: "website",
     locale: "en_US",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "HostFi — AI-Powered Expense Management for Rental Properties" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "HostFi — AI-Powered Expense Management for Rental Properties",
     description: "Track, categorize, and optimize every expense across your rental portfolio.",
+    images: ["/og-image.png"],
   },
   robots: {
     index: true,
