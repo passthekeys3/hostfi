@@ -6,6 +6,7 @@ export type ExpenseCategory =
   | 'insurance'
   | 'maintenance'
   | 'mortgage'
+  | 'rent'
   | 'supplies'
   | 'taxes'
   | 'management'
@@ -43,7 +44,8 @@ export const EXPENSE_CATEGORY_CONFIG: Record<ExpenseCategory, ExpenseCategoryCon
   cleaning: { label: 'Cleaning', icon: Sparkles, color: 'violet', description: 'Turnover cleans, deep cleans' },
   insurance: { label: 'Insurance', icon: Shield, color: 'cyan', description: 'Property, liability, umbrella' },
   maintenance: { label: 'Maintenance', icon: Wrench, color: 'orange', description: 'Repairs, fixes, handyman' },
-  mortgage: { label: 'Mortgage/Rent', icon: Home, color: 'slate', description: 'Monthly mortgage or lease payment' },
+  mortgage: { label: 'Mortgage', icon: Home, color: 'slate', description: 'Monthly mortgage payment (owners)' },
+  rent: { label: 'Rent', icon: Home, color: 'emerald', description: 'Lease payment to landlord (arbitrage)' },
   supplies: { label: 'Supplies', icon: Package, color: 'amber', description: 'Toiletries, linens, consumables' },
   taxes: { label: 'Taxes', icon: Landmark, color: 'red', description: 'Property tax, TOT, lodging tax' },
   management: { label: 'Management', icon: ClipboardList, color: 'indigo', description: 'PM fees, co-host fees' },
@@ -53,7 +55,7 @@ export const EXPENSE_CATEGORY_CONFIG: Record<ExpenseCategory, ExpenseCategoryCon
 };
 
 export const ALL_EXPENSE_CATEGORIES: ExpenseCategory[] = [
-  'utility', 'cleaning', 'insurance', 'maintenance', 'mortgage',
+  'utility', 'cleaning', 'insurance', 'maintenance', 'mortgage', 'rent',
   'supplies', 'taxes', 'management', 'subscription', 'improvement', 'other',
 ];
 
@@ -79,6 +81,7 @@ export function getCategoryColorClasses(color: string): { bg: string; text: stri
     indigo: { bg: 'bg-indigo-500/10', text: 'text-indigo-600', border: 'border-indigo-500/20' },
     teal: { bg: 'bg-teal-500/10', text: 'text-teal-600', border: 'border-teal-500/20' },
     pink: { bg: 'bg-pink-500/10', text: 'text-pink-600', border: 'border-pink-500/20' },
+    emerald: { bg: 'bg-emerald-500/10', text: 'text-emerald-600', border: 'border-emerald-500/20' },
     gray: { bg: 'bg-gray-500/10', text: 'text-gray-600', border: 'border-gray-500/20' },
   };
   return map[color] || map.gray;

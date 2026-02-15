@@ -113,7 +113,7 @@ function generateBills(): MonthlyBill[] {
 export const DEMO_ANALYTICS_DATA = generateBills();
 
 export const UTILITY_COLORS: Record<string, string> = {
-  rent: '#14B8A6',    // teal
+  rent: '#10B981',    // emerald
   electric: '#3B82F6', // blue
   gas: '#F59E0B',     // amber
   water: '#8B5CF6',   // violet
@@ -133,7 +133,7 @@ export const UTILITY_COLORS: Record<string, string> = {
 };
 
 export const UTILITY_LABELS: Record<string, string> = {
-  rent: 'Rent/Mortgage',
+  rent: 'Rent',
   electric: 'Electric',
   gas: 'Gas',
   water: 'Water',

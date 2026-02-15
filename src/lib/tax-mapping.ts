@@ -28,7 +28,7 @@ export const OWNER_SCHEDULE_E_LINES: ScheduleELine[] = [
   { line: 16, description: 'Taxes', categories: ['taxes'], ownerOnly: true },
   { line: 17, description: 'Utilities', categories: ['utility'], ownerOnly: true },
   { line: 18, description: 'Depreciation expense or depletion', categories: ['improvement'], consultCPA: true, ownerOnly: true },
-  { line: 19, description: 'Other', categories: ['management', 'subscription', 'other'], ownerOnly: true },
+  { line: 19, description: 'Other', categories: ['rent', 'management', 'subscription', 'other'], ownerOnly: true },
 ];
 
 // Schedule E lines for ARBITRAGE operators (no mortgage, no property tax, no depreciation)
@@ -41,7 +41,8 @@ export const ARBITRAGE_SCHEDULE_E_LINES: ScheduleELine[] = [
   { line: 10, description: 'Legal and professional fees', categories: [], arbitrageOnly: true },
   { line: 15, description: 'Supplies', categories: ['supplies'], arbitrageOnly: true },
   { line: 17, description: 'Utilities', categories: ['utility'], arbitrageOnly: true },
-  { line: 19, description: 'Other (rent to landlord, management, subscriptions)', categories: ['mortgage', 'management', 'subscription', 'taxes', 'other'], arbitrageOnly: true },
+  { line: 14, description: 'Rent paid to landlord', categories: ['rent', 'mortgage'], arbitrageOnly: true },
+  { line: 19, description: 'Other (management, subscriptions)', categories: ['management', 'subscription', 'taxes', 'other'], arbitrageOnly: true },
 ];
 
 export function getScheduleELinesForPropertyType(propertyType: PropertyType): ScheduleELine[] {
