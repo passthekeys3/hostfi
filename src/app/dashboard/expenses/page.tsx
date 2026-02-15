@@ -4,15 +4,96 @@ import { useState, useMemo } from "react";
 import { EXPENSE_CATEGORY_CONFIG, getCategoryColorClasses, ALL_EXPENSE_CATEGORIES, type ExpenseCategory } from "@/lib/expense-categories";
 import { getSourceIcon } from "@/lib/demo-expenses";
 import { formatCurrency, formatDate, cn, getStatusColor } from "@/lib/utils";
-import { Receipt, Plus, StickyNote } from "lucide-react";
+import { Receipt, Plus, StickyNote, Pencil, Trash2, Check, X } from "lucide-react";
 import Link from "next/link";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { isDemoMode } from "@/lib/data/data-provider";
+
+interface EditState {
+  description: string;
+  category: ExpenseCategory;
+  amount: string;
+  date: string;
+  status: string;
+  vendor: string;
+  property_id: string;
+}
 
 export default function ExpensesPage() {
-  const { properties, expenses, loading } = useDashboardData();
+  const { properties, expenses, loading, refresh } = useDashboardData();
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedProperty, setSelectedProperty] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editState, setEditState] = useState<EditState | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const demo = isDemoMode();
+
+  const startEdit = (expense: typeof expenses[0]) => {
+    setEditingId(expense.id);
+    setEditState({
+      description: expense.description || '',
+      category: expense.category as ExpenseCategory,
+      amount: expense.amount.toString(),
+      date: expense.date,
+      status: expense.status,
+      vendor: expense.vendor || '',
+      property_id: expense.property_id,
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditState(null);
+  };
+
+  const saveEdit = async () => {
+    if (!editState || !editingId || demo) return;
+    setSaving(true);
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      if (!supabase) return;
+      const { error } = await supabase
+        .from('expenses')
+        .update({
+          description: editState.description,
+          category: editState.category,
+          amount: parseFloat(editState.amount),
+          date: editState.date,
+          status: editState.status,
+          vendor: editState.vendor,
+          property_id: editState.property_id,
+        })
+        .eq('id', editingId);
+      if (error) throw error;
+      cancelEdit();
+      if (refresh) refresh();
+    } catch (err) {
+      console.error('Failed to update expense:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteExpense = async (id: string) => {
+    if (demo) return;
+    if (!confirm('Delete this expense? This cannot be undone.')) return;
+    setDeleting(id);
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      if (!supabase) return;
+      const { error } = await supabase.from('expenses').delete().eq('id', id);
+      if (error) throw error;
+      if (refresh) refresh();
+    } catch (err) {
+      console.error('Failed to delete expense:', err);
+    } finally {
+      setDeleting(null);
+    }
+  };
 
   const filteredExpenses = useMemo(() => {
     return expenses.filter((exp) => {
@@ -91,6 +172,7 @@ export default function ExpensesPage() {
                   <th className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-6 py-4 bg-gray-50/80">Amount</th>
                   <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-6 py-4 bg-gray-50/80">Date</th>
                   <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-6 py-4 bg-gray-50/80">Status</th>
+                  <th className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-6 py-4 bg-gray-50/80 w-24">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -98,6 +180,49 @@ export default function ExpensesPage() {
                   const catConfig = EXPENSE_CATEGORY_CONFIG[expense.category];
                   const colorClasses = getCategoryColorClasses(catConfig?.color || 'gray');
                   const property = properties.find(p => p.id === expense.property_id);
+                  const isEditing = editingId === expense.id;
+
+                  if (isEditing && editState) {
+                    return (
+                      <tr key={expense.id} className="border-b border-gray-100 bg-gray-50/40">
+                        <td className="px-6 py-3">
+                          <input value={editState.description} onChange={e => setEditState({ ...editState, description: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white" placeholder="Description" />
+                          <select value={editState.category} onChange={e => setEditState({ ...editState, category: e.target.value as ExpenseCategory })} className="mt-2 w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+                            {ALL_EXPENSE_CATEGORIES.map(cat => <option key={cat} value={cat}>{EXPENSE_CATEGORY_CONFIG[cat]?.label || cat}</option>)}
+                          </select>
+                        </td>
+                        <td className="px-6 py-3">
+                          <select value={editState.property_id} onChange={e => setEditState({ ...editState, property_id: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+                            {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                          </select>
+                        </td>
+                        <td className="px-6 py-3">
+                          <input type="number" step="0.01" value={editState.amount} onChange={e => setEditState({ ...editState, amount: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white text-right" />
+                        </td>
+                        <td className="px-6 py-3">
+                          <input type="date" value={editState.date} onChange={e => setEditState({ ...editState, date: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white" />
+                        </td>
+                        <td className="px-6 py-3">
+                          <select value={editState.status} onChange={e => setEditState({ ...editState, status: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+                            <option value="paid">Paid</option>
+                            <option value="pending">Pending</option>
+                            <option value="overdue">Overdue</option>
+                          </select>
+                        </td>
+                        <td className="px-6 py-3">
+                          <div className="flex items-center justify-end gap-1">
+                            <button onClick={saveEdit} disabled={saving} className="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition-colors" aria-label="Save">
+                              <Check className="w-4 h-4" />
+                            </button>
+                            <button onClick={cancelEdit} className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Cancel">
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  }
+
                   return (
                     <tr key={expense.id} className={cn("group transition-colors duration-150 hover:bg-gray-50/60", index !== filteredExpenses.length - 1 && "border-b border-gray-100")}>
                       <td className="px-6 py-4">
@@ -117,6 +242,16 @@ export default function ExpensesPage() {
                       <td className="px-6 py-4">
                         <span className={cn("inline-flex items-center text-[11px] font-medium px-2.5 py-1 rounded-full capitalize", getStatusColor(expense.status))}>{expense.status}</span>
                       </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => startEdit(expense)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Edit">
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button onClick={() => deleteExpense(expense.id)} disabled={deleting === expense.id} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" aria-label="Delete">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
@@ -130,6 +265,37 @@ export default function ExpensesPage() {
               const catConfig = EXPENSE_CATEGORY_CONFIG[expense.category];
               const colorClasses = getCategoryColorClasses(catConfig?.color || 'gray');
               const property = properties.find(p => p.id === expense.property_id);
+              const isEditing = editingId === expense.id;
+
+              if (isEditing && editState) {
+                return (
+                  <div key={expense.id} className="bg-white rounded-xl p-4 border border-teal-200 shadow-sm space-y-3">
+                    <input value={editState.description} onChange={e => setEditState({ ...editState, description: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="Description" />
+                    <div className="grid grid-cols-2 gap-2">
+                      <select value={editState.category} onChange={e => setEditState({ ...editState, category: e.target.value as ExpenseCategory })} className="px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                        {ALL_EXPENSE_CATEGORIES.map(cat => <option key={cat} value={cat}>{EXPENSE_CATEGORY_CONFIG[cat]?.label || cat}</option>)}
+                      </select>
+                      <select value={editState.property_id} onChange={e => setEditState({ ...editState, property_id: e.target.value })} className="px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                        {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <input type="number" step="0.01" value={editState.amount} onChange={e => setEditState({ ...editState, amount: e.target.value })} className="px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="Amount" />
+                      <input type="date" value={editState.date} onChange={e => setEditState({ ...editState, date: e.target.value })} className="px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                      <select value={editState.status} onChange={e => setEditState({ ...editState, status: e.target.value })} className="px-3 py-2 border border-gray-200 rounded-lg text-sm">
+                        <option value="paid">Paid</option>
+                        <option value="pending">Pending</option>
+                        <option value="overdue">Overdue</option>
+                      </select>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={saveEdit} disabled={saving} className="flex-1 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800">{saving ? 'Saving...' : 'Save'}</button>
+                      <button onClick={cancelEdit} className="px-4 py-2 text-sm font-medium text-gray-500 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <div key={expense.id} className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
                   <div className="flex items-center gap-3">
@@ -143,6 +309,14 @@ export default function ExpensesPage() {
                     <div className="text-right shrink-0 pl-2">
                       <p className="font-semibold text-sm tabular-nums">{formatCurrency(expense.amount)}</p>
                       <span className={cn("inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full capitalize mt-1", getStatusColor(expense.status))}>{expense.status}</span>
+                    </div>
+                    <div className="flex flex-col gap-1 shrink-0">
+                      <button onClick={() => startEdit(expense)} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg" aria-label="Edit">
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => deleteExpense(expense.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg" aria-label="Delete">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
                 </div>

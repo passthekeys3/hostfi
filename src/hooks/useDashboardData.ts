@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { isDemoMode } from "@/lib/data/data-provider";
 import {
   DEMO_PROPERTIES,
@@ -27,10 +27,12 @@ interface DashboardData {
   recurringExpenses: RecurringExpense[];
   isDemo: boolean;
   loading: boolean;
+  refresh?: () => void;
 }
 
 export function useDashboardData(): DashboardData {
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [data, setData] = useState<DashboardData>({
     properties: [],
     expenses: [],
@@ -41,6 +43,8 @@ export function useDashboardData(): DashboardData {
     isDemo: false,
     loading: true,
   });
+
+  const refresh = useCallback(() => setRefreshKey(k => k + 1), []);
 
   useEffect(() => {
     const demo = isDemoMode();
@@ -55,6 +59,7 @@ export function useDashboardData(): DashboardData {
         recurringExpenses: DEMO_RECURRING_EXPENSES,
         isDemo: true,
         loading: false,
+        refresh,
       });
       return;
     }
@@ -65,14 +70,13 @@ export function useDashboardData(): DashboardData {
         const { createClient } = await import("@/lib/supabase/client");
         const supabase = createClient();
         if (!supabase) {
-          setData(prev => ({ ...prev, loading: false }));
+          setData(prev => ({ ...prev, loading: false, refresh }));
           return;
         }
 
-        // Check if user is authenticated
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-          setData(prev => ({ ...prev, loading: false }));
+          setData(prev => ({ ...prev, loading: false, refresh }));
           return;
         }
 
@@ -91,15 +95,16 @@ export function useDashboardData(): DashboardData {
           recurringExpenses: [],
           isDemo: false,
           loading: false,
+          refresh,
         });
       } catch (err) {
         console.error("Dashboard data fetch error:", err);
-        setData(prev => ({ ...prev, loading: false }));
+        setData(prev => ({ ...prev, loading: false, refresh }));
       }
     }
 
     fetchData();
-  }, []);
+  }, [refreshKey, refresh]);
 
   return data;
 }
