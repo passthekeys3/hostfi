@@ -1,17 +1,125 @@
 "use client";
 
-import { useState, useId } from "react";
-import { Check, X, ArrowRight, RefreshCw, ChevronRight, ExternalLink, Shield, Clock, Settings2, AlertCircle, Zap, Link2 } from "lucide-react";
+import { useState, useId, useEffect, useCallback } from "react";
+import { Check, X, RefreshCw, ExternalLink, Shield, Unlink, FolderOpen, Loader2 } from "lucide-react";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
-import type { ModalProps } from "./types";
+import type { GoogleDriveModalProps } from "./types";
 import { cn } from "@/lib/utils";
+import { GooglePicker, type GooglePickerFile } from "@/components/google-picker";
 
-export function GoogleDriveModal({ onClose }: ModalProps) {
-  const [step, setStep] = useState<"connect" | "folder" | "config" | "success">("connect");
+export function GoogleDriveModal({ onClose, isConnected: initialConnected, onDisconnect }: GoogleDriveModalProps) {
+  const [step, setStep] = useState<"connect" | "folder" | "config" | "success" | "connected">(initialConnected ? "connected" : "connect");
   const [syncing, setSyncing] = useState(false);
   const [selectedFolder, setSelectedFolder] = useState("create_new");
+  const [connectionInfo, setConnectionInfo] = useState<{
+    folderUrl: string | null;
+    folderName: string | null;
+    lastBackup: string | null;
+  } | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [loadingToken, setLoadingToken] = useState(false);
+  const [changingFolder, setChangingFolder] = useState(false);
   const titleId = useId();
   const modalRef = useFocusTrap<HTMLDivElement>(true, { onEscape: onClose });
+
+  // Load connection info if connected
+  useEffect(() => {
+    if (initialConnected) {
+      fetch("/api/integrations/google/connection")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.drive?.connected) {
+            setConnectionInfo({
+              folderUrl: data.drive.folderUrl || null,
+              folderName: data.drive.folderName || "HostFi",
+              lastBackup: data.drive.lastBackup || null,
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [initialConnected]);
+
+  // Fetch access token when needed for picker
+  const fetchAccessToken = useCallback(async () => {
+    if (accessToken) return accessToken;
+    setLoadingToken(true);
+    try {
+      const res = await fetch("/api/integrations/google/access-token");
+      const data = await res.json();
+      if (data.access_token) {
+        setAccessToken(data.access_token);
+        setLoadingToken(false);
+        return data.access_token;
+      }
+    } catch (err) {
+      console.error("Failed to fetch access token:", err);
+    }
+    setLoadingToken(false);
+    return null;
+  }, [accessToken]);
+
+  const handleFolderSelect = useCallback(async (file: GooglePickerFile) => {
+    setChangingFolder(true);
+    try {
+      const res = await fetch("/api/integrations/google/update-connection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider: "google_drive",
+          metadata: {
+            hostfi_folder_id: file.id,
+            folder_url: file.url,
+            folder_name: file.name,
+          },
+        }),
+      });
+
+      if (res.ok) {
+        setConnectionInfo((prev) => ({
+          ...prev,
+          folderUrl: file.url,
+          folderName: file.name,
+          lastBackup: prev?.lastBackup || null,
+        }));
+      }
+    } catch (err) {
+      console.error("Failed to update folder:", err);
+    }
+    setChangingFolder(false);
+  }, []);
+
+  const handleDisconnect = async () => {
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      if (!supabase) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase
+        .from("integration_connections")
+        .update({ active: false })
+        .eq("user_id", user.id)
+        .eq("provider", "google_drive");
+
+      onDisconnect?.();
+      onClose();
+    } catch {}
+  };
+
+  const formatLastBackup = (iso: string | null) => {
+    if (!iso) return "Never";
+    const date = new Date(iso);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins} minute${diffMins === 1 ? "" : "s"} ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
+    return date.toLocaleDateString();
+  };
 
   const handleFinish = () => {
     setSyncing(true);
@@ -35,30 +143,32 @@ export function GoogleDriveModal({ onClose }: ModalProps) {
           <button onClick={onClose} aria-label="Close modal" className="p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500/40"><X className="w-4 h-4 text-gray-400" aria-hidden="true" /></button>
         </div>
 
-        {/* Step indicator */}
-        <div className="px-6 pt-4">
-          <div className="flex items-center justify-between mb-2">
-            {stepLabels.map((label, i) => {
-              const stepIndex = stepKeys.indexOf(step);
-              const isActive = i <= stepIndex;
-              const isCurrent = i === stepIndex;
-              return (
-                <div key={label} className="flex-1 flex items-center">
-                  <div className={cn(
-                    "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0",
-                    isCurrent ? "bg-[#4285F4] text-white" : isActive ? "bg-teal-500 text-white" : "bg-gray-100 text-gray-400"
-                  )}>
-                    {isActive && i < stepIndex ? <Check className="w-3 h-3" /> : i + 1}
+        {/* Step indicator - only show for non-connected states */}
+        {step !== "connected" && (
+          <div className="px-6 pt-4">
+            <div className="flex items-center justify-between mb-2">
+              {stepLabels.map((label, i) => {
+                const stepIndex = stepKeys.indexOf(step);
+                const isActive = i <= stepIndex;
+                const isCurrent = i === stepIndex;
+                return (
+                  <div key={label} className="flex-1 flex items-center">
+                    <div className={cn(
+                      "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0",
+                      isCurrent ? "bg-[#4285F4] text-white" : isActive ? "bg-teal-500 text-white" : "bg-gray-100 text-gray-400"
+                    )}>
+                      {isActive && i < stepIndex ? <Check className="w-3 h-3" /> : i + 1}
+                    </div>
+                    {i < 3 && <div className={cn("flex-1 h-0.5 mx-2", isActive && i < stepIndex ? "bg-teal-500" : "bg-gray-100")} />}
                   </div>
-                  {i < 3 && <div className={cn("flex-1 h-0.5 mx-2", isActive && i < stepIndex ? "bg-teal-500" : "bg-gray-100")} />}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+            <div className="flex justify-between text-[10px] text-gray-400 px-1">
+              {stepLabels.map(l => <span key={l}>{l}</span>)}
+            </div>
           </div>
-          <div className="flex justify-between text-[10px] text-gray-400 px-1">
-            {stepLabels.map(l => <span key={l}>{l}</span>)}
-          </div>
-        </div>
+        )}
 
         <div className="p-6">
           {step === "connect" && (
@@ -80,10 +190,10 @@ export function GoogleDriveModal({ onClose }: ModalProps) {
                 <Shield className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
                 <p className="text-xs text-blue-700">HostFi uses Google OAuth. We only access the folder you choose.</p>
               </div>
-              <button onClick={() => setStep("folder")} className="w-full py-3 text-sm font-semibold text-white bg-[#4285F4] hover:bg-[#3574D4] rounded-xl transition-colors flex items-center justify-center gap-2">
+              <a href="/api/integrations/google/auth" className="w-full py-3 text-sm font-semibold text-white bg-[#4285F4] hover:bg-[#3574D4] rounded-xl transition-colors flex items-center justify-center gap-2">
                 Connect Google Account <ExternalLink className="w-4 h-4" />
-              </button>
-              <p className="text-center text-[10px] text-gray-400">Demo mode — no actual Google redirect.</p>
+              </a>
+              <p className="text-center text-[10px] text-gray-400">You&apos;ll be redirected to Google to authorize access.</p>
             </div>
           )}
 
@@ -194,9 +304,114 @@ export function GoogleDriveModal({ onClose }: ModalProps) {
               <button onClick={onClose} className="w-full py-3 text-sm font-semibold text-white bg-teal-500 hover:bg-teal-600 rounded-xl transition-colors">Done</button>
             </div>
           )}
+
+          {step === "connected" && (
+            <div className="space-y-6">
+              {/* Connected status */}
+              <div className="flex items-center gap-3 p-4 bg-teal-50 rounded-xl border border-teal-100">
+                <div className="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center">
+                  <Check className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-teal-900">Connected</p>
+                  <p className="text-xs text-teal-700">Google Drive integration is active</p>
+                </div>
+              </div>
+
+              {/* Current folder */}
+              <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-[#4285F4] rounded-lg flex items-center justify-center">
+                      <FolderOpen className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {connectionInfo?.folderName || "HostFi"}
+                      </p>
+                      <p className="text-xs text-gray-500">Backup folder</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  {connectionInfo?.folderUrl ? (
+                    <a
+                      href={connectionInfo.folderUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 py-2 text-xs font-medium text-[#4285F4] bg-white border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <ExternalLink className="w-3 h-3" /> Open in Drive
+                    </a>
+                  ) : (
+                    <a
+                      href="https://drive.google.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 py-2 text-xs font-medium text-[#4285F4] bg-white border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <ExternalLink className="w-3 h-3" /> Open Drive
+                    </a>
+                  )}
+                  {accessToken ? (
+                    <GooglePicker
+                      accessToken={accessToken}
+                      mode="folder"
+                      onSelect={handleFolderSelect}
+                      buttonText={changingFolder ? "Changing..." : "Change Folder"}
+                      className="flex-1 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
+                    />
+                  ) : (
+                    <button
+                      onClick={fetchAccessToken}
+                      disabled={loadingToken}
+                      className="flex-1 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      {loadingToken ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <FolderOpen className="w-3 h-3" />
+                      )}
+                      Change Folder
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Connection details */}
+              <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-500">Last backup</span>
+                  <span className="font-medium text-gray-700">{formatLastBackup(connectionInfo?.lastBackup || null)}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-500">Organization</span>
+                  <span className="font-medium text-gray-700">Property → Month</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-gray-500">File types</span>
+                  <span className="font-medium text-gray-700">Receipts, Reports</span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="space-y-3">
+                <button
+                  onClick={handleDisconnect}
+                  className="w-full py-3 text-sm font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  <Unlink className="w-4 h-4" /> Disconnect
+                </button>
+              </div>
+
+              <button onClick={onClose} className="w-full py-3 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors">
+                Close
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
-

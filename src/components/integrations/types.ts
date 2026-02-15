@@ -22,3 +22,8 @@ export interface GoogleSheetsModalProps extends ModalProps {
   isConnected?: boolean;
   onDisconnect?: () => void;
 }
+
+export interface GoogleDriveModalProps extends ModalProps {
+  isConnected?: boolean;
+  onDisconnect?: () => void;
+}

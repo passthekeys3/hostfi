@@ -12,4 +12,6 @@ export { EmailAlertsModal } from "./EmailAlertsModal";
 export { PlaidModal } from "./PlaidModal";
 export { PlaidLinkButton } from "./PlaidLinkButton";
 export { IntegrationCard } from "./IntegrationCard";
-export type { Integration, ConnectionStatus, ModalProps } from "./types";
+export { GooglePicker } from "@/components/google-picker";
+export type { GooglePickerFile, GooglePickerProps } from "@/components/google-picker";
+export type { Integration, ConnectionStatus, ModalProps, GoogleSheetsModalProps, GoogleDriveModalProps } from "./types";

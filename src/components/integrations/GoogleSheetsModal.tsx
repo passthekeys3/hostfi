@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useId, useEffect } from "react";
-import { Check, X, ArrowRight, RefreshCw, ChevronRight, ExternalLink, Shield, Unlink } from "lucide-react";
+import { useState, useId, useEffect, useCallback } from "react";
+import { Check, X, ArrowRight, RefreshCw, ChevronRight, ExternalLink, Shield, Unlink, FileSpreadsheet, Loader2 } from "lucide-react";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import type { GoogleSheetsModalProps } from "./types";
 import { cn } from "@/lib/utils";
+import { GooglePicker, type GooglePickerFile } from "@/components/google-picker";
 
 export function GoogleSheetsModal({ onClose, isConnected: initialConnected, onDisconnect }: GoogleSheetsModalProps) {
   const [step, setStep] = useState<"connect" | "spreadsheet" | "mapping" | "success" | "connected">(initialConnected ? "connected" : "connect");
@@ -19,9 +20,13 @@ export function GoogleSheetsModal({ onClose, isConnected: initialConnected, onDi
   });
   const [connectionInfo, setConnectionInfo] = useState<{
     spreadsheetUrl: string | null;
+    spreadsheetName: string | null;
     lastSynced: string | null;
   } | null>(null);
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [loadingToken, setLoadingToken] = useState(false);
+  const [changingSpreadsheet, setChangingSpreadsheet] = useState(false);
   const titleId = useId();
   const modalRef = useFocusTrap<HTMLDivElement>(true, { onEscape: onClose });
 
@@ -34,6 +39,7 @@ export function GoogleSheetsModal({ onClose, isConnected: initialConnected, onDi
           if (data.sheets?.connected) {
             setConnectionInfo({
               spreadsheetUrl: data.sheets.spreadsheetUrl,
+              spreadsheetName: data.sheets.spreadsheetName || "HostFi Expenses",
               lastSynced: data.sheets.lastSynced,
             });
           }
@@ -41,6 +47,54 @@ export function GoogleSheetsModal({ onClose, isConnected: initialConnected, onDi
         .catch(() => {});
     }
   }, [initialConnected]);
+
+  // Fetch access token when needed for picker
+  const fetchAccessToken = useCallback(async () => {
+    if (accessToken) return accessToken;
+    setLoadingToken(true);
+    try {
+      const res = await fetch("/api/integrations/google/access-token");
+      const data = await res.json();
+      if (data.access_token) {
+        setAccessToken(data.access_token);
+        return data.access_token;
+      }
+    } catch (err) {
+      console.error("Failed to fetch access token:", err);
+    }
+    setLoadingToken(false);
+    return null;
+  }, [accessToken]);
+
+  const handleSpreadsheetSelect = useCallback(async (file: GooglePickerFile) => {
+    setChangingSpreadsheet(true);
+    try {
+      const res = await fetch("/api/integrations/google/update-connection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          provider: "google_sheets",
+          metadata: {
+            spreadsheet_id: file.id,
+            spreadsheet_url: file.url,
+            spreadsheet_name: file.name,
+          },
+        }),
+      });
+
+      if (res.ok) {
+        setConnectionInfo((prev) => ({
+          ...prev,
+          spreadsheetUrl: file.url,
+          spreadsheetName: file.name,
+          lastSynced: prev?.lastSynced || null,
+        }));
+      }
+    } catch (err) {
+      console.error("Failed to update spreadsheet:", err);
+    }
+    setChangingSpreadsheet(false);
+  }, []);
 
   const handleSyncAll = async () => {
     setSyncStatus("syncing");
@@ -153,30 +207,32 @@ export function GoogleSheetsModal({ onClose, isConnected: initialConnected, onDi
           <button onClick={onClose} aria-label="Close modal" className="p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500/40"><X className="w-4 h-4 text-gray-400" aria-hidden="true" /></button>
         </div>
 
-        {/* Step indicator */}
-        <div className="px-6 pt-4">
-          <div className="flex items-center justify-between mb-2">
-            {stepLabels.map((label, i) => {
-              const stepIndex = stepKeys.indexOf(step);
-              const isActive = i <= stepIndex;
-              const isCurrent = i === stepIndex;
-              return (
-                <div key={label} className="flex-1 flex items-center">
-                  <div className={cn(
-                    "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0",
-                    isCurrent ? "bg-[#0F9D58] text-white" : isActive ? "bg-teal-500 text-white" : "bg-gray-100 text-gray-400"
-                  )}>
-                    {isActive && i < stepIndex ? <Check className="w-3 h-3" /> : i + 1}
+        {/* Step indicator - only show for non-connected states */}
+        {step !== "connected" && (
+          <div className="px-6 pt-4">
+            <div className="flex items-center justify-between mb-2">
+              {stepLabels.map((label, i) => {
+                const stepIndex = stepKeys.indexOf(step);
+                const isActive = i <= stepIndex;
+                const isCurrent = i === stepIndex;
+                return (
+                  <div key={label} className="flex-1 flex items-center">
+                    <div className={cn(
+                      "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0",
+                      isCurrent ? "bg-[#0F9D58] text-white" : isActive ? "bg-teal-500 text-white" : "bg-gray-100 text-gray-400"
+                    )}>
+                      {isActive && i < stepIndex ? <Check className="w-3 h-3" /> : i + 1}
+                    </div>
+                    {i < 3 && <div className={cn("flex-1 h-0.5 mx-2", isActive && i < stepIndex ? "bg-teal-500" : "bg-gray-100")} />}
                   </div>
-                  {i < 3 && <div className={cn("flex-1 h-0.5 mx-2", isActive && i < stepIndex ? "bg-teal-500" : "bg-gray-100")} />}
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+            <div className="flex justify-between text-[10px] text-gray-400 px-1">
+              {stepLabels.map(l => <span key={l}>{l}</span>)}
+            </div>
           </div>
-          <div className="flex justify-between text-[10px] text-gray-400 px-1">
-            {stepLabels.map(l => <span key={l}>{l}</span>)}
-          </div>
-        </div>
+        )}
 
         <div className="p-6">
           {step === "connect" && (
@@ -352,6 +408,58 @@ export function GoogleSheetsModal({ onClose, isConnected: initialConnected, onDi
                 </div>
               </div>
 
+              {/* Current spreadsheet */}
+              <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-[#0F9D58] rounded-lg flex items-center justify-center">
+                      <FileSpreadsheet className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {connectionInfo?.spreadsheetName || "HostFi Expenses"}
+                      </p>
+                      <p className="text-xs text-gray-500">Current spreadsheet</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  {connectionInfo?.spreadsheetUrl && (
+                    <a
+                      href={connectionInfo.spreadsheetUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 py-2 text-xs font-medium text-[#0F9D58] bg-white border border-green-200 rounded-lg hover:bg-green-50 transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <ExternalLink className="w-3 h-3" /> Open
+                    </a>
+                  )}
+                  {accessToken ? (
+                    <GooglePicker
+                      accessToken={accessToken}
+                      mode="spreadsheet"
+                      onSelect={handleSpreadsheetSelect}
+                      buttonText={changingSpreadsheet ? "Changing..." : "Change"}
+                      className="flex-1 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
+                    />
+                  ) : (
+                    <button
+                      onClick={fetchAccessToken}
+                      disabled={loadingToken}
+                      className="flex-1 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      {loadingToken ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <FileSpreadsheet className="w-3 h-3" />
+                      )}
+                      Change
+                    </button>
+                  )}
+                </div>
+              </div>
+
               {/* Connection details */}
               <div className="bg-gray-50 rounded-xl p-4 space-y-2">
                 <div className="flex justify-between text-xs">
@@ -366,26 +474,15 @@ export function GoogleSheetsModal({ onClose, isConnected: initialConnected, onDi
 
               {/* Actions */}
               <div className="space-y-3">
-                {connectionInfo?.spreadsheetUrl && (
-                  <a
-                    href={connectionInfo.spreadsheetUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full py-3 text-sm font-semibold text-white bg-[#0F9D58] hover:bg-[#0D8C4D] rounded-xl transition-colors flex items-center justify-center gap-2"
-                  >
-                    <ExternalLink className="w-4 h-4" /> Open Spreadsheet
-                  </a>
-                )}
-
                 <button
                   onClick={handleSyncAll}
                   disabled={syncStatus === "syncing"}
-                  className="w-full py-3 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-100 disabled:text-gray-400 rounded-xl transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-3 text-sm font-semibold text-white bg-[#0F9D58] hover:bg-[#0D8C4D] disabled:bg-gray-200 disabled:text-gray-400 rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
                   {syncStatus === "syncing" ? (
                     <><RefreshCw className="w-4 h-4 animate-spin" /> Syncing...</>
                   ) : syncStatus === "success" ? (
-                    <><Check className="w-4 h-4 text-teal-500" /> Synced!</>
+                    <><Check className="w-4 h-4" /> Synced!</>
                   ) : (
                     <><RefreshCw className="w-4 h-4" /> Sync All Expenses</>
                   )}
@@ -409,4 +506,3 @@ export function GoogleSheetsModal({ onClose, isConnected: initialConnected, onDi
     </div>
   );
 }
-

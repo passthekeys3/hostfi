@@ -252,7 +252,7 @@ export default function IntegrationsPage() {
       {openModal === "google_sheets" && <GoogleSheetsModal onClose={handleModalClose("google_sheets")} isConnected={connectedIds.has("google_sheets")} onDisconnect={() => handleDisconnect("google_sheets")} />}
       {openModal === "zapier" && <ZapierModal onClose={handleModalClose("zapier")} />}
       {openModal === "teams" && <TeamsModal onClose={handleModalClose("teams")} />}
-      {openModal === "google_drive" && <GoogleDriveModal onClose={handleModalClose("google_drive")} />}
+      {openModal === "google_drive" && <GoogleDriveModal onClose={handleModalClose("google_drive")} isConnected={connectedIds.has("google_drive")} onDisconnect={() => handleDisconnect("google_drive")} />}
       {openModal === "dropbox" && <DropboxModal onClose={handleModalClose("dropbox")} />}
       {openModal === "make" && <MakeModal onClose={handleModalClose("make")} />}
       {openModal === "sms_alerts" && <SMSAlertsModal onClose={handleModalClose("sms_alerts")} />}
