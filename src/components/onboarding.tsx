@@ -158,12 +158,34 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
     onComplete();
   };
 
-  const handleAddProperty = () => {
+  const handleAddProperty = async () => {
     if (!propName.trim()) return;
     const p: AddedProperty = {
       name: propName, address: propAddress, city: propCity,
       state: propState, zip: propZip, type: propType,
     };
+
+    // Save to Supabase
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      if (supabase) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from("properties").insert({
+            user_id: user.id,
+            name: propName,
+            address_line1: propAddress || "TBD",
+            city: propCity || "TBD",
+            state: propState || "TBD",
+            zip: propZip || "00000",
+            property_type: propType,
+            status: "active",
+          });
+        }
+      }
+    } catch {}
+
     setProperties((prev) => [...prev, p]);
     setPropName(""); setPropAddress(""); setPropCity("");
     setPropState(""); setPropZip(""); setPropType("str");

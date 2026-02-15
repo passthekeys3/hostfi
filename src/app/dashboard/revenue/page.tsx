@@ -79,7 +79,7 @@ export default function RevenuePage() {
   const bySource = useMemo(() => getRevenueBySource(revenue), [revenue]);
   const byMonth = useMemo(() => getRevenueByMonth(revenue), [revenue]);
 
-  const handleAddManual = useCallback(() => {
+  const handleAddManual = useCallback(async () => {
     const amount = parseFloat(form.amount) || 0;
     const fee = parseFloat(form.platform_fee) || 0;
     const checkIn = form.check_in;
@@ -105,10 +105,39 @@ export default function RevenuePage() {
       import_source: 'manual',
     };
 
+    if (!demo) {
+      try {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        if (supabase) {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { error } = await supabase.from("revenue").insert({
+              user_id: user.id,
+              property_id: form.property_id,
+              source: form.source,
+              description: 'Manual entry',
+              guest_name: form.guest_name || null,
+              amount,
+              payout_amount: amount - fee,
+              platform_fee: fee,
+              check_in: checkIn,
+              check_out: checkOut,
+              nights,
+              payout_date: form.payout_date || checkOut,
+              confirmation_code: form.confirmation_code || null,
+              import_source: 'manual',
+            });
+            if (error) { console.error("Revenue insert error:", error.message); }
+          }
+        }
+      } catch {}
+    }
+
     setRevenue(prev => [...prev, entry]);
     setModal(null);
     setForm({ property_id: '', source: 'airbnb', guest_name: '', amount: '', platform_fee: '', check_in: '', check_out: '', confirmation_code: '', payout_date: '' });
-  }, [form]);
+  }, [form, demo]);
 
   const handleCSVParse = useCallback(() => {
     const result = parseRevenueCSV(csvText);

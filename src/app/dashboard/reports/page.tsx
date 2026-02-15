@@ -81,9 +81,10 @@ export default function ReportsPage() {
     window.print();
   };
 
+  const [emailSent, setEmailSent] = useState(false);
   const handleEmailReport = () => {
-    // Just UI — no backend action
-    alert('Email report functionality would be implemented here');
+    setEmailSent(true);
+    setTimeout(() => setEmailSent(false), 2000);
   };
 
   if (!report) {
@@ -143,8 +144,8 @@ export default function ReportsPage() {
             className="flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-gray-900 text-white font-medium rounded-xl text-sm min-h-[44px] transition-colors hover:bg-gray-800"
           >
             <Mail className="w-4 h-4" />
-            <span className="hidden sm:inline">Email Report</span>
-            <span className="sm:hidden">Email</span>
+            <span className="hidden sm:inline">{emailSent ? "Coming Soon" : "Email Report"}</span>
+            <span className="sm:hidden">{emailSent ? "Soon" : "Email"}</span>
           </button>
         </div>
       </div>

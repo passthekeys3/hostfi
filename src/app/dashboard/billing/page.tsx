@@ -143,16 +143,15 @@ export default function BillingPage() {
       const data = await res.json();
 
       if (data.demo) {
-        // Demo mode — Stripe not configured
         setUserPlan((prev) => ({ ...prev, stripeConfigured: false }));
-        alert(`Demo mode: In production, you'd be redirected to Stripe Checkout for the ${planId} plan at $${billing === "annual" ? PLANS.find((p) => p.id === planId)?.annualPrice : PLANS.find((p) => p.id === planId)?.monthlyPrice}/mo (${billing}).`);
+        setSuccessMessage("Stripe is not configured yet. Billing will be available once Stripe is set up.");
       } else if (data.url) {
         window.location.href = data.url;
       } else {
-        alert(data.error || "Something went wrong");
+        setSuccessMessage(data.error || "Something went wrong. Please try again.");
       }
     } catch {
-      alert("Failed to start checkout. Please try again.");
+      setSuccessMessage("Failed to start checkout. Please try again.");
     } finally {
       setUpgrading(null);
     }
@@ -175,15 +174,15 @@ export default function BillingPage() {
       const data = await res.json();
 
       if (data.demo) {
-        alert("Demo mode: In production, your subscription would be cancelled at the end of the billing period.");
+        setSuccessMessage("Stripe is not configured yet. Cancellation will be available once billing is set up.");
       } else if (data.success) {
         setSuccessMessage("Your subscription has been cancelled. You'll keep access until the end of your billing period.");
         setUserPlan((prev) => ({ ...prev, subscriptionStatus: "canceled" }));
       } else {
-        alert(data.error || "Failed to cancel subscription");
+        setSuccessMessage(data.error || "Failed to cancel subscription.");
       }
     } catch {
-      alert("Failed to cancel subscription. Please try again.");
+      setSuccessMessage("Failed to cancel subscription. Please try again.");
     } finally {
       setCancelling(false);
     }
@@ -469,7 +468,7 @@ export default function BillingPage() {
               href="#"
               onClick={(e) => {
                 e.preventDefault();
-                alert("Demo: In production, this would open your Stripe billing portal.");
+                setSuccessMessage("Stripe billing portal will be available once billing is configured.");
               }}
               className="text-sm text-teal-600 hover:text-teal-700 font-medium"
             >
