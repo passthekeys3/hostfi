@@ -102,11 +102,38 @@ export default function BillingPage() {
   const [userPlan, setUserPlan] = useState<UserPlan>({
     plan: "free",
     subscriptionStatus: null,
-    stripeConfigured: true, // Assume configured until proven otherwise
+    stripeConfigured: true,
   });
   const [upgrading, setUpgrading] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load real plan from Supabase
+  useEffect(() => {
+    (async () => {
+      try {
+        const { isDemoMode } = await import("@/lib/data/data-provider");
+        if (isDemoMode()) {
+          setUserPlan({ plan: "business", subscriptionStatus: "active", stripeConfigured: true });
+          setLoading(false);
+          return;
+        }
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        if (!supabase) { setLoading(false); return; }
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) { setLoading(false); return; }
+        const { data: profile } = await supabase.from('profiles').select('plan, subscription_status').eq('id', user.id).single();
+        setUserPlan({
+          plan: (profile?.plan as PlanId) || "free",
+          subscriptionStatus: (profile?.subscription_status as SubscriptionStatus) || null,
+          stripeConfigured: true,
+        });
+      } catch {}
+      setLoading(false);
+    })();
+  }, []);
 
   // Check for upgrade success/cancel from URL params
   useEffect(() => {
@@ -117,10 +144,8 @@ export default function BillingPage() {
     if (upgrade === "success" && plan) {
       setSuccessMessage(`Successfully upgraded to ${plan}! Your new plan is now active.`);
       setUserPlan((prev) => ({ ...prev, plan: plan as PlanId, subscriptionStatus: "active" }));
-      // Clean up URL
       window.history.replaceState({}, "", "/dashboard/billing");
     } else if (upgrade === "cancelled") {
-      // User cancelled checkout — no action needed
       window.history.replaceState({}, "", "/dashboard/billing");
     }
   }, []);

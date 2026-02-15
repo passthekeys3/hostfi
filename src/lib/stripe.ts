@@ -7,7 +7,7 @@ if (!stripeKey && process.env.NODE_ENV === 'production') {
 }
 
 export const stripe = new Stripe(stripeKey || 'sk_test_placeholder_not_configured', {
-  apiVersion: '2026-01-28.clover',
+  apiVersion: '2025-12-18.acacia' as Stripe.LatestApiVersion,
 });
 
 // Plan configuration
