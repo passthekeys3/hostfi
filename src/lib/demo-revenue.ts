@@ -63,9 +63,9 @@ export function getRevenueByMonth(revenue: RevenueEntry[]): Record<string, { gro
   for (const r of revenue) {
     const month = (r.payout_date || r.date || r.created_at || '').substring(0, 7);
     if (!result[month]) result[month] = { gross: 0, net: 0, fees: 0, bookings: 0 };
-    result[month].gross += r.amount;
-    result[month].net += r.payout_amount;
-    result[month].fees += r.platform_fee;
+    result[month].gross += r.amount ?? 0;
+    result[month].net += r.payout_amount ?? r.amount ?? 0;
+    result[month].fees += r.platform_fee ?? 0;
     result[month].bookings++;
   }
   return result;
@@ -74,7 +74,7 @@ export function getRevenueByMonth(revenue: RevenueEntry[]): Record<string, { gro
 export function getRevenueBySource(revenue: RevenueEntry[]): Record<RevenueSource, number> {
   const result = { airbnb: 0, vrbo: 0, booking: 0, direct: 0, other: 0 };
   for (const r of revenue) {
-    result[r.source] += r.payout_amount;
+    result[r.source ?? 'other'] += r.payout_amount ?? r.amount ?? 0;
   }
   return result;
 }
