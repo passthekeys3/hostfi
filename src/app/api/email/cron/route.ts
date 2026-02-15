@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendEmail } from '@/lib/email';
-import { tipsEmail, checkInEmail, weeklyDigestEmail } from '@/lib/email-templates';
+import { tipsEmail, checkInEmail, weeklyDigestEmail, monthlyReportEmail } from '@/lib/email-templates';
 
 /**
  * POST /api/email/cron
@@ -194,6 +194,126 @@ async function handleCron(type: string) {
             subject: template.subject,
             html: template.htmlBody,
             tag: 'weekly-digest',
+          });
+          sent++;
+        }
+        break;
+      }
+
+      case 'monthly-report': {
+        // Find all users with at least 1 property
+        const { data: monthlyProfiles } = await supabase
+          .from('profiles')
+          .select('id, full_name, email')
+          .not('email', 'is', null);
+
+        if (!monthlyProfiles) break;
+
+        // Previous month date range
+        const now = new Date();
+        const firstOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const firstOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const monthName = firstOfLastMonth.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+        const monthStart = firstOfLastMonth.toISOString().split('T')[0];
+        const monthEnd = new Date(firstOfThisMonth.getTime() - 1).toISOString().split('T')[0];
+
+        // Also get the month before for MoM comparison
+        const firstOfTwoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+        const prevMonthStart = firstOfTwoMonthsAgo.toISOString().split('T')[0];
+        const prevMonthEnd = new Date(firstOfLastMonth.getTime() - 1).toISOString().split('T')[0];
+
+        for (const profile of monthlyProfiles) {
+          // Get properties
+          const { data: userProps } = await supabase
+            .from('properties')
+            .select('id, name')
+            .eq('user_id', profile.id);
+
+          if (!userProps || userProps.length === 0) { skipped++; continue; }
+
+          // Get this month's expenses
+          const { data: monthExpenses } = await supabase
+            .from('expenses')
+            .select('amount, category, description, property_id')
+            .eq('user_id', profile.id)
+            .gte('date', monthStart)
+            .lte('date', monthEnd);
+
+          // Get this month's revenue
+          const { data: monthRevenue } = await supabase
+            .from('revenue')
+            .select('amount, property_id')
+            .eq('user_id', profile.id)
+            .gte('check_in', monthStart)
+            .lte('check_in', monthEnd);
+
+          // Get previous month's expenses for MoM
+          const { data: prevExpenses } = await supabase
+            .from('expenses')
+            .select('amount')
+            .eq('user_id', profile.id)
+            .gte('date', prevMonthStart)
+            .lte('date', prevMonthEnd);
+
+          if ((!monthExpenses || monthExpenses.length === 0) && (!monthRevenue || monthRevenue.length === 0)) {
+            skipped++;
+            continue;
+          }
+
+          const totalSpend = (monthExpenses || []).reduce((s, e) => s + Number(e.amount), 0);
+          const totalRevenue = (monthRevenue || []).reduce((s, r) => s + Number(r.amount), 0);
+          const prevTotalSpend = (prevExpenses || []).reduce((s, e) => s + Number(e.amount), 0);
+
+          // Category breakdown
+          const catTotals: Record<string, number> = {};
+          for (const e of (monthExpenses || [])) {
+            catTotals[e.category] = (catTotals[e.category] || 0) + Number(e.amount);
+          }
+          const categoryBreakdown = Object.entries(catTotals)
+            .sort((a, b) => b[1] - a[1])
+            .map(([category, amount]) => ({
+              category,
+              amount,
+              percent: totalSpend > 0 ? (amount / totalSpend) * 100 : 0,
+            }));
+
+          // Property breakdown
+          const propertyBreakdown = userProps.map(p => {
+            const pExpenses = (monthExpenses || []).filter(e => e.property_id === p.id).reduce((s, e) => s + Number(e.amount), 0);
+            const pRevenue = (monthRevenue || []).filter(r => r.property_id === p.id).reduce((s, r) => s + Number(r.amount), 0);
+            return { name: p.name, expenses: pExpenses, revenue: pRevenue, net: pRevenue - pExpenses };
+          });
+
+          // Top expense
+          const sorted = [...(monthExpenses || [])].sort((a, b) => Number(b.amount) - Number(a.amount));
+          const topExpense = sorted[0] ? {
+            description: sorted[0].description || sorted[0].category,
+            amount: Number(sorted[0].amount),
+            property: userProps.find(p => p.id === sorted[0].property_id)?.name || 'Unknown',
+          } : null;
+
+          // MoM change
+          const momChange = prevTotalSpend > 0 ? ((totalSpend - prevTotalSpend) / prevTotalSpend) * 100 : null;
+
+          const template = monthlyReportEmail(profile.full_name || '', {
+            month: monthName,
+            totalSpend,
+            totalRevenue,
+            netIncome: totalRevenue - totalSpend,
+            expenseCount: (monthExpenses || []).length,
+            propertyCount: userProps.length,
+            categoryBreakdown,
+            propertyBreakdown,
+            momChange,
+            anomalies: [],
+            topExpense,
+          });
+
+          await sendEmail({
+            to: profile.email,
+            subject: template.subject,
+            html: template.htmlBody,
+            tag: 'monthly-report',
           });
           sent++;
         }

@@ -83,8 +83,24 @@ export default function ReportsPage() {
   };
 
   const [emailSent, setEmailSent] = useState(false);
-  const handleEmailReport = () => {
-    alert('Email reports are coming soon. For now, use the PDF download button.');
+  const handleEmailReport = async () => {
+    if (demo) {
+      alert('Email reports are available for signed-in users.');
+      return;
+    }
+    setEmailSent(true);
+    try {
+      const res = await fetch('/api/email/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      alert(res.ok ? 'Report sent to your email.' : 'Failed to send. Please try again.');
+    } catch {
+      alert('Failed to send report.');
+    } finally {
+      setTimeout(() => setEmailSent(false), 2000);
+    }
   };
 
   if (!report) {

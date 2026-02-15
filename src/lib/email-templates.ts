@@ -247,3 +247,133 @@ ${data.anomalies.length > 0 ? `\nAnomalies:\n${data.anomalies.map(a => `- ${a}`)
 View dashboard: https://hostfi.ai/dashboard`,
   };
 }
+
+export function monthlyReportEmail(
+  name: string,
+  data: {
+    month: string; // e.g. "January 2026"
+    totalSpend: number;
+    totalRevenue: number;
+    netIncome: number;
+    expenseCount: number;
+    propertyCount: number;
+    categoryBreakdown: { category: string; amount: number; percent: number }[];
+    propertyBreakdown: { name: string; expenses: number; revenue: number; net: number }[];
+    momChange: number | null; // percentage change vs last month
+    anomalies: string[];
+    topExpense: { description: string; amount: number; property: string } | null;
+  }
+): EmailTemplate {
+  const firstName = name?.split(' ')[0] || 'there';
+  const momText = data.momChange !== null 
+    ? `${data.momChange >= 0 ? '+' : ''}${data.momChange.toFixed(1)}% vs last month`
+    : 'First month tracked';
+  const netColor = data.netIncome >= 0 ? '#059669' : '#dc2626';
+
+  const categoryRows = data.categoryBreakdown.slice(0, 6).map(c => `
+    <tr>
+      <td style="padding:8px 0;font-size:13px;color:#374151;border-bottom:1px solid #f3f4f6;">${c.category}</td>
+      <td style="padding:8px 0;font-size:13px;color:#111827;font-weight:600;text-align:right;border-bottom:1px solid #f3f4f6;">$${c.amount.toLocaleString()}</td>
+      <td style="padding:8px 0;font-size:12px;color:#6b7280;text-align:right;border-bottom:1px solid #f3f4f6;">${c.percent.toFixed(0)}%</td>
+    </tr>
+  `).join('');
+
+  const propertyRows = data.propertyBreakdown.map(p => `
+    <tr>
+      <td style="padding:8px 0;font-size:13px;color:#374151;border-bottom:1px solid #f3f4f6;">${p.name}</td>
+      <td style="padding:8px 0;font-size:13px;color:#111827;text-align:right;border-bottom:1px solid #f3f4f6;">$${p.expenses.toLocaleString()}</td>
+      <td style="padding:8px 0;font-size:13px;color:#111827;text-align:right;border-bottom:1px solid #f3f4f6;">$${p.revenue.toLocaleString()}</td>
+      <td style="padding:8px 0;font-size:13px;font-weight:600;text-align:right;border-bottom:1px solid #f3f4f6;color:${p.net >= 0 ? '#059669' : '#dc2626'};">$${p.net.toLocaleString()}</td>
+    </tr>
+  `).join('');
+
+  return {
+    subject: `${data.month} Property Report: $${data.totalSpend.toLocaleString()} spent across ${data.propertyCount} ${data.propertyCount === 1 ? 'property' : 'properties'}`,
+    htmlBody: `${HEADER}
+      <h1 style="font-size:22px;font-weight:700;margin:0 0 8px;">${data.month} Report</h1>
+      <p style="font-size:13px;color:#6b7280;margin:0 0 24px;">${momText}</p>
+
+      <!-- Summary Cards -->
+      <div style="display:flex;gap:12px;margin:0 0 24px;">
+        <div style="flex:1;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
+          <p style="font-size:11px;color:#6b7280;margin:0 0 4px;text-transform:uppercase;letter-spacing:0.5px;">Total Expenses</p>
+          <p style="font-size:24px;font-weight:700;color:#111827;margin:0;">$${data.totalSpend.toLocaleString()}</p>
+        </div>
+        <div style="flex:1;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
+          <p style="font-size:11px;color:#6b7280;margin:0 0 4px;text-transform:uppercase;letter-spacing:0.5px;">Total Revenue</p>
+          <p style="font-size:24px;font-weight:700;color:#111827;margin:0;">$${data.totalRevenue.toLocaleString()}</p>
+        </div>
+        <div style="flex:1;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
+          <p style="font-size:11px;color:#6b7280;margin:0 0 4px;text-transform:uppercase;letter-spacing:0.5px;">Net Income</p>
+          <p style="font-size:24px;font-weight:700;margin:0;color:${netColor};">$${data.netIncome.toLocaleString()}</p>
+        </div>
+      </div>
+
+      <!-- Expense Breakdown -->
+      <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;margin:0 0 20px;">
+        <p style="font-size:14px;font-weight:600;color:#111827;margin:0 0 12px;">Expense Breakdown</p>
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th style="padding:0 0 8px;font-size:11px;color:#9ca3af;text-align:left;text-transform:uppercase;letter-spacing:0.5px;">Category</th>
+              <th style="padding:0 0 8px;font-size:11px;color:#9ca3af;text-align:right;text-transform:uppercase;letter-spacing:0.5px;">Amount</th>
+              <th style="padding:0 0 8px;font-size:11px;color:#9ca3af;text-align:right;text-transform:uppercase;letter-spacing:0.5px;">%</th>
+            </tr>
+          </thead>
+          <tbody>${categoryRows}</tbody>
+        </table>
+      </div>
+
+      ${data.propertyBreakdown.length > 0 ? `
+      <!-- Property Breakdown -->
+      <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;margin:0 0 20px;">
+        <p style="font-size:14px;font-weight:600;color:#111827;margin:0 0 12px;">By Property</p>
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th style="padding:0 0 8px;font-size:11px;color:#9ca3af;text-align:left;text-transform:uppercase;letter-spacing:0.5px;">Property</th>
+              <th style="padding:0 0 8px;font-size:11px;color:#9ca3af;text-align:right;text-transform:uppercase;letter-spacing:0.5px;">Expenses</th>
+              <th style="padding:0 0 8px;font-size:11px;color:#9ca3af;text-align:right;text-transform:uppercase;letter-spacing:0.5px;">Revenue</th>
+              <th style="padding:0 0 8px;font-size:11px;color:#9ca3af;text-align:right;text-transform:uppercase;letter-spacing:0.5px;">Net</th>
+            </tr>
+          </thead>
+          <tbody>${propertyRows}</tbody>
+        </table>
+      </div>
+      ` : ''}
+
+      ${data.anomalies.length > 0 ? `
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:16px;margin:0 0 20px;">
+        <p style="font-size:14px;font-weight:600;color:#991b1b;margin:0 0 8px;">Anomalies Detected</p>
+        ${data.anomalies.map(a => `<p style="font-size:13px;color:#7f1d1d;margin:4px 0;">&bull; ${a}</p>`).join('')}
+      </div>
+      ` : ''}
+
+      ${data.topExpense ? `
+      <div style="background:#f0fdfa;border:1px solid #ccfbf1;border-radius:12px;padding:16px;margin:0 0 20px;">
+        <p style="font-size:14px;font-weight:600;color:#0f766e;margin:0 0 4px;">Largest Expense</p>
+        <p style="font-size:13px;color:#115e59;margin:0;">${data.topExpense.description} — $${data.topExpense.amount.toLocaleString()} (${data.topExpense.property})</p>
+      </div>
+      ` : ''}
+
+      ${BUTTON('View Full Report', 'https://hostfi.ai/dashboard/reports')}
+      ${BUTTON('Download Tax Summary', 'https://hostfi.ai/dashboard/tax')}
+    ${FOOTER}`,
+    textBody: `${data.month} Property Report
+
+Total Expenses: $${data.totalSpend.toLocaleString()}
+Total Revenue: $${data.totalRevenue.toLocaleString()}
+Net Income: $${data.netIncome.toLocaleString()}
+${momText}
+
+Expense Breakdown:
+${data.categoryBreakdown.map(c => `- ${c.category}: $${c.amount.toLocaleString()} (${c.percent.toFixed(0)}%)`).join('\n')}
+
+${data.propertyBreakdown.length > 0 ? `By Property:\n${data.propertyBreakdown.map(p => `- ${p.name}: Expenses $${p.expenses.toLocaleString()} | Revenue $${p.revenue.toLocaleString()} | Net $${p.net.toLocaleString()}`).join('\n')}` : ''}
+
+${data.anomalies.length > 0 ? `Anomalies:\n${data.anomalies.map(a => `- ${a}`).join('\n')}` : ''}
+
+View full report: https://hostfi.ai/dashboard/reports
+Tax summary: https://hostfi.ai/dashboard/tax`,
+  };
+}
