@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { DEMO_INBOX_ITEMS, getPropertyName, type InboxItem } from "@/lib/demo-inbox";
 import { DEMO_PROPERTIES } from "@/lib/data";
+import { isDemoMode } from "@/lib/data/data-provider";
+
+const _properties = isDemoMode() ? DEMO_PROPERTIES : [];
 import { formatCurrency } from "@/lib/utils";
 import {
   Flame, Droplets, Zap, Wifi, Trash2, Home, Shield, HelpCircle,
@@ -132,7 +135,7 @@ function InboxCard({ item, onConfirm, onReject, onUpdate }: { item: InboxItem; o
                     className="text-xs bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                   >
                     <option value="">Assign property...</option>
-                    {DEMO_PROPERTIES.map((p) => (
+                    {_properties.map((p) => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
                   </select>
@@ -200,7 +203,7 @@ function InboxCard({ item, onConfirm, onReject, onUpdate }: { item: InboxItem; o
                   className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                 >
                   <option value="">Unassigned</option>
-                  {DEMO_PROPERTIES.map((p) => (
+                  {_properties.map((p) => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
@@ -312,7 +315,8 @@ function InboxCard({ item, onConfirm, onReject, onUpdate }: { item: InboxItem; o
 }
 
 export default function InboxPage() {
-  const [items, setItems] = useState(DEMO_INBOX_ITEMS);
+  const demo = isDemoMode();
+  const [items, setItems] = useState(demo ? DEMO_INBOX_ITEMS : []);
   const pendingItems = items.filter((i) => i.status === "pending_review");
   const processedItems = items.filter((i) => i.status !== "pending_review");
 

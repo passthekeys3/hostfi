@@ -4,11 +4,15 @@ import Link from "next/link";
 import { DEMO_RECURRING_EXPENSES } from "@/lib/demo-expenses";
 import { EXPENSE_CATEGORY_CONFIG, FREQUENCY_LABELS, getCategoryColorClasses } from "@/lib/expense-categories";
 import { DEMO_PROPERTIES } from "@/lib/data";
+import { isDemoMode } from "@/lib/data/data-provider";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { Plus, Pause, Pencil, ArrowLeft } from "lucide-react";
 
 export default function RecurringExpensesPage() {
-  const activeExpenses = DEMO_RECURRING_EXPENSES.filter(e => e.is_active);
+  const demo = isDemoMode();
+  const recurringExpenses = demo ? DEMO_RECURRING_EXPENSES : [];
+  const properties = demo ? DEMO_PROPERTIES : [];
+  const activeExpenses = recurringExpenses.filter(e => e.is_active);
   const totalMonthly = activeExpenses.reduce((sum, e) => {
     switch (e.frequency) {
       case 'monthly': return sum + e.amount;
@@ -40,10 +44,10 @@ export default function RecurringExpensesPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-5">
-        {DEMO_RECURRING_EXPENSES.map((expense) => {
+        {recurringExpenses.map((expense) => {
           const catConfig = EXPENSE_CATEGORY_CONFIG[expense.category];
           const colors = getCategoryColorClasses(catConfig.color);
-          const property = DEMO_PROPERTIES.find(p => p.id === expense.property_id);
+          const property = properties.find(p => p.id === expense.property_id);
 
           return (
             <div key={expense.id} className={cn("bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-4 sm:p-6 flex gap-3 sm:gap-4 hover:shadow-md hover:translate-y-[-1px] transition-all duration-200", !expense.is_active && "opacity-50")}>

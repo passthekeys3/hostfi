@@ -3,7 +3,7 @@
 import { useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { EXPENSE_CATEGORY_CONFIG, ALL_EXPENSE_CATEGORIES, FREQUENCY_LABELS, getCategoryColorClasses, type ExpenseCategory, type ExpenseFrequency } from "@/lib/expense-categories";
-import { DEMO_PROPERTIES } from "@/lib/data";
+import { useDashboardData } from "@/hooks/useDashboardData";
 import { cn } from "@/lib/utils";
 import { Check, ChevronDown, ChevronUp, Camera, Info } from "lucide-react";
 import ReceiptUpload from "@/components/receipt-upload";
@@ -11,6 +11,7 @@ import ReceiptUpload from "@/components/receipt-upload";
 function NewExpenseForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { properties, isDemo } = useDashboardData();
   const preselectedCategory = searchParams.get("category") as ExpenseCategory | null;
 
   const [selectedCategory, setSelectedCategory] = useState<ExpenseCategory | null>(preselectedCategory);
@@ -55,9 +56,11 @@ function NewExpenseForm() {
         <p className="text-muted-foreground mt-2 leading-relaxed">Record a new expense for one of your properties</p>
       </div>
 
-      <div className="max-w-2xl mb-4 px-4 py-3 bg-amber-500/5 border border-amber-500/15 rounded-xl text-sm text-muted-foreground flex items-center gap-2">
-        <Info className="w-4 h-4 shrink-0" /> Demo Mode — Data won&apos;t be saved
-      </div>
+      {isDemo && (
+        <div className="max-w-2xl mb-4 px-4 py-3 bg-amber-500/5 border border-amber-500/15 rounded-xl text-sm text-muted-foreground flex items-center gap-2">
+          <Info className="w-4 h-4 shrink-0" /> Demo Mode — Data won&apos;t be saved
+        </div>
+      )}
 
       {/* Receipt Scanner Section */}
       <div className="max-w-2xl">
@@ -156,7 +159,7 @@ function NewExpenseForm() {
             <label className="block text-sm font-medium mb-2">Property</label>
             <select className={inputClass} required>
               <option value="">Select property...</option>
-              {DEMO_PROPERTIES.map((p) => (
+              {properties.map((p) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </select>

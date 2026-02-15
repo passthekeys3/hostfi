@@ -10,6 +10,7 @@ import {
   DEMO_INSIGHTS, DEMO_PORTFOLIO_SUMMARY,
   DEMO_MONTHLY_TRENDS, DEMO_HEATMAP, DEMO_UTILITY_COMPARISON,
 } from "@/lib/demo-benchmarks";
+import { isDemoMode } from "@/lib/data/data-provider";
 import { UTILITY_LABELS, type UtilityType } from "@/lib/demo-analytics";
 import { cn } from "@/lib/utils";
 import { Trophy, AlertTriangle, Lightbulb, TrendingUp, DollarSign, Target, Crown, PiggyBank, Coins, Bed } from "lucide-react";
@@ -38,6 +39,15 @@ const INSIGHT_COLORS = {
 };
 
 export default function BenchmarkingContent() {
+  const demo = isDemoMode();
+  if (!demo) {
+    return (
+      <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+        <Target className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+        <p className="text-gray-500 text-sm">Add at least 2 properties with expenses to see benchmarking data.</p>
+      </div>
+    );
+  }
   const summary = DEMO_PORTFOLIO_SUMMARY;
   const benchmarks = DEMO_BENCHMARKS;
   const insights = DEMO_INSIGHTS;

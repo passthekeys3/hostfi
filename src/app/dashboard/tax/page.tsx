@@ -14,6 +14,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import { DEMO_PROPERTIES, DEMO_EXPENSES } from "@/lib/data";
+import { isDemoMode } from "@/lib/data/data-provider";
 import { type Property } from "@/lib/types";
 import { EXPENSE_CATEGORY_CONFIG, getCategoryColorClasses } from "@/lib/expense-categories";
 import { 
@@ -231,13 +232,16 @@ function PropertyTaxCard({ summary }: { summary: PropertyTaxSummary }) {
 }
 
 export default function TaxPage() {
+  const demo = isDemoMode();
   const [selectedYear, setSelectedYear] = useState(AVAILABLE_TAX_YEARS[0].key);
   
   // Filter expenses by year
-  const yearExpenses = DEMO_EXPENSES.filter(exp => exp.date.startsWith(selectedYear));
+  const allExpenses = demo ? DEMO_EXPENSES : [];
+  const yearExpenses = allExpenses.filter(exp => exp.date.startsWith(selectedYear));
   
   // Generate summaries for each property (excluding primary residence)
-  const propertySummaries = DEMO_PROPERTIES
+  const allProperties = demo ? DEMO_PROPERTIES : [];
+  const propertySummaries = allProperties
     .filter(p => p.property_type !== 'primary')
     .map(property => generatePropertyTaxSummary(property, yearExpenses))
     .filter(summary => summary.totalDeductions > 0 || summary.lineItems.some(l => l.expenses.length > 0));

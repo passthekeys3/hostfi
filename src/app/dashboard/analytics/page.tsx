@@ -12,6 +12,7 @@ const UtilityBreakdownChart = dynamic(() => import("@/components/analytics-chart
 const MoMComparisonChart = dynamic(() => import("@/components/analytics-charts").then(m => m.MoMComparisonChart), { ssr: false, loading: () => <div className="h-64 bg-gray-100 rounded-xl animate-pulse" /> });
 const PropertyCostTable = dynamic(() => import("@/components/analytics-charts").then(m => m.PropertyCostTable), { ssr: false, loading: () => <div className="h-48 bg-gray-100 rounded-xl animate-pulse" /> });
 import { DEMO_ANALYTICS_DATA, DEMO_PROPERTIES } from "@/lib/data";
+import { isDemoMode } from "@/lib/data/data-provider";
 import { ALL_EXPENSE_TYPES, UTILITY_LABELS, type UtilityType } from "@/lib/demo-analytics";
 import { DollarSign, TrendingUp, Receipt, Building2 } from "lucide-react";
 
@@ -24,15 +25,17 @@ export default function AnalyticsPage() {
   const [propertyFilter, setPropertyFilter] = useState("all");
   const [utilityFilter, setUtilityFilter] = useState("all");
 
+  const demo = isDemoMode();
+
   const filteredData = useMemo(() => {
-    let data = DEMO_ANALYTICS_DATA;
+    let data = demo ? DEMO_ANALYTICS_DATA : [];
     const months = [...new Set(data.map(b => b.month))].sort();
     const rangeMonths = months.slice(-parseInt(dateRange));
     data = data.filter(b => rangeMonths.includes(b.month));
     if (propertyFilter !== "all") data = data.filter(b => b.property_id === propertyFilter);
     if (utilityFilter !== "all") data = data.filter(b => b.utility_type === (utilityFilter as UtilityType));
     return data;
-  }, [dateRange, propertyFilter, utilityFilter]);
+  }, [demo, dateRange, propertyFilter, utilityFilter]);
 
   const stats = useMemo(() => {
     const totalSpend = filteredData.reduce((s, b) => s + b.amount, 0);
@@ -49,7 +52,7 @@ export default function AnalyticsPage() {
     return { totalSpend, avgMonthly, highestBill, mostExpensive };
   }, [filteredData]);
 
-  const properties = DEMO_PROPERTIES.map(p => ({ id: p.id, name: p.name }));
+  const properties = demo ? DEMO_PROPERTIES.map(p => ({ id: p.id, name: p.name })) : [];
 
   return (
     <div className="space-y-6 sm:space-y-10">

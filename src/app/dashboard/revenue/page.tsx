@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DEMO_REVENUE, DEMO_PROPERTIES, DEMO_EXPENSES } from "@/lib/data";
+import { isDemoMode } from "@/lib/data/data-provider";
 import { REVENUE_SOURCES, getRevenueByMonth, getRevenueBySource, type RevenueEntry, type RevenueSource } from "@/lib/demo-revenue";
 import { parseRevenueCSV, SAMPLE_CSV } from "@/lib/revenue-csv-parser";
 import { StatCard } from "@/components/stat-card";
@@ -21,7 +22,8 @@ interface ImportApiResult {
 }
 
 export default function RevenuePage() {
-  const [revenue, setRevenue] = useState<RevenueEntry[]>(DEMO_REVENUE);
+  const demo = isDemoMode();
+  const [revenue, setRevenue] = useState<RevenueEntry[]>(demo ? DEMO_REVENUE : []);
   const [modal, setModal] = useState<ModalView>(null);
   const [filterProperty, setFilterProperty] = useState<string>('all');
   const [filterSource, setFilterSource] = useState<string>('all');
@@ -56,15 +58,17 @@ export default function RevenuePage() {
   const totalGross = useMemo(() => revenue.reduce((s, r) => s + r.amount, 0), [revenue]);
   const totalNet = useMemo(() => revenue.reduce((s, r) => s + r.payout_amount, 0), [revenue]);
   const totalFees = useMemo(() => revenue.reduce((s, r) => s + r.platform_fee, 0), [revenue]);
-  const totalExpenses = useMemo(() => DEMO_EXPENSES.reduce((s, e) => s + e.amount, 0), []);
+  const allExpenses = demo ? DEMO_EXPENSES : [];
+  const totalExpenses = useMemo(() => allExpenses.reduce((s, e) => s + e.amount, 0), [allExpenses]);
   const netProfit = totalNet - totalExpenses;
   const totalBookings = revenue.length;
 
   // P&L per property
   const propertyPnL = useMemo(() => {
-    return DEMO_PROPERTIES.map(prop => {
+    const allProperties = demo ? DEMO_PROPERTIES : [];
+    return allProperties.map(prop => {
       const propRevenue = revenue.filter(r => r.property_id === prop.id);
-      const propExpenses = DEMO_EXPENSES.filter(e => e.property_id === prop.id);
+      const propExpenses = allExpenses.filter(e => e.property_id === prop.id);
       const gross = propRevenue.reduce((s, r) => s + r.amount, 0);
       const net = propRevenue.reduce((s, r) => s + r.payout_amount, 0);
       const expenses = propExpenses.reduce((s, e) => s + e.amount, 0);

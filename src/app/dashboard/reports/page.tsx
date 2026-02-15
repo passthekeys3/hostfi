@@ -16,6 +16,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { DEMO_PROPERTIES, AVAILABLE_MONTHS } from "@/lib/data";
+import { isDemoMode } from "@/lib/data/data-provider";
 import { EXPENSE_CATEGORY_CONFIG } from "@/lib/expense-categories";
 import { getMonthlyReport, type MonthlyReportData } from "@/lib/demo-reports";
 import { cn } from "@/lib/utils";
@@ -71,8 +72,10 @@ function InsightCard({ insight }: { insight: { type: 'positive' | 'warning' | 'n
 }
 
 export default function ReportsPage() {
-  const [selectedMonth, setSelectedMonth] = useState(AVAILABLE_MONTHS[0].key);
-  const report = getMonthlyReport(selectedMonth);
+  const demo = isDemoMode();
+  const months = demo ? AVAILABLE_MONTHS : [];
+  const [selectedMonth, setSelectedMonth] = useState(months[0]?.key || '');
+  const report = demo ? getMonthlyReport(selectedMonth) : null;
 
   const handlePrint = () => {
     window.print();
@@ -82,6 +85,21 @@ export default function ReportsPage() {
     // Just UI — no backend action
     alert('Email report functionality would be implemented here');
   };
+
+  if (!report) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Monthly Reports</h1>
+          <p className="text-gray-500 mt-1.5 sm:mt-2 text-sm leading-relaxed">AI-Generated Financial Summaries for Your Portfolio</p>
+        </div>
+        <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+          <FileText className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-500 text-sm">No reports yet. Add properties and expenses to generate reports.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 sm:space-y-10 print:space-y-6">
@@ -102,7 +120,7 @@ export default function ReportsPage() {
               className="appearance-none w-full sm:w-auto px-4 py-2.5 pr-10 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 min-h-[44px] transition-all duration-200"
               style={{ boxShadow: '0 1px 2px rgba(0, 0, 0, 0.03)' }}
             >
-              {AVAILABLE_MONTHS.map((month) => (
+              {months.map((month) => (
                 <option key={month.key} value={month.key}>{month.label}</option>
               ))}
             </select>

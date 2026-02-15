@@ -6,6 +6,7 @@ import { Upload, FileText, Check, AlertCircle, ChevronRight, Download, ArrowLeft
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/utils";
 import { DEMO_PROPERTIES } from "@/lib/data";
+import { isDemoMode } from "@/lib/data/data-provider";
 import { EXPENSE_CATEGORY_CONFIG, type ExpenseCategory } from "@/lib/expense-categories";
 import {
   parseCSV,
@@ -46,7 +47,8 @@ export default function ImportPage() {
   const [importError, setImportError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const propertyNames = DEMO_PROPERTIES.map(p => p.name);
+  const demo = isDemoMode();
+  const propertyNames = demo ? DEMO_PROPERTIES.map(p => p.name) : [];
 
   const handleFile = useCallback((file: File) => {
     setFileName(file.name);
@@ -107,7 +109,8 @@ export default function ImportPage() {
     
     // Match property names to IDs
     const expensesWithPropertyIds = expenses.map(expense => {
-      const matchedProperty = DEMO_PROPERTIES.find(p => 
+      const allProperties = demo ? DEMO_PROPERTIES : [];
+      const matchedProperty = allProperties.find(p => 
         p.name.toLowerCase() === expense.property.toLowerCase() ||
         p.city.toLowerCase() === expense.property.toLowerCase() ||
         expense.property.toLowerCase().includes(p.name.toLowerCase()) ||

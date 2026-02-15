@@ -1,28 +1,45 @@
+"use client";
+
+import { use } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BillTable } from "@/components/bill-table";
-import { DEMO_PROPERTIES, DEMO_EXPENSES } from "@/lib/data";
 import { DEMO_UTILITY_ACCOUNTS, DEMO_BILLS } from "@/lib/types";
-import { getExpensesForProperty, getExpensesByCategory } from "@/lib/demo-expenses";
+import { getExpensesByCategory } from "@/lib/demo-expenses";
 import { EXPENSE_CATEGORY_CONFIG } from "@/lib/expense-categories";
-import { cn, getStatusColor, getPropertyTypeLabel, getUtilityIcon, formatCurrency } from "@/lib/utils";
-import { ArrowLeft, MapPin, Plus, Bed, Bath, Ruler, Download, FileText, Share2 } from "lucide-react";
+import { cn, getPropertyTypeLabel, getUtilityIcon, formatCurrency } from "@/lib/utils";
+import { ArrowLeft, MapPin, Plus, Bed, Bath, Ruler, Building2 } from "lucide-react";
 import { PropertyExportBar } from "@/components/property-export-bar";
+import { useDashboardData } from "@/hooks/useDashboardData";
 
-export default async function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const property = DEMO_PROPERTIES.find((p) => p.id === id);
+export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const { properties, expenses, isDemo, loading } = useDashboardData();
 
+  if (loading) {
+    return (
+      <div className="space-y-10 animate-pulse">
+        <div className="h-8 w-64 bg-gray-200 rounded-lg" />
+        <div className="h-40 bg-gray-100 rounded-2xl" />
+        <div className="grid grid-cols-3 gap-5">
+          {[1,2,3].map(i => <div key={i} className="h-24 bg-gray-100 rounded-2xl" />)}
+        </div>
+      </div>
+    );
+  }
+
+  const property = properties.find((p) => p.id === id);
   if (!property) return notFound();
 
-  const utilityAccounts = DEMO_UTILITY_ACCOUNTS.filter((ua) => ua.property_id === property.id);
-  const propertyBills = DEMO_BILLS.filter((b) => b.utility_account?.property?.id === property.id);
-  const propertyExpenses = getExpensesForProperty(property.id);
+  const propertyExpenses = expenses.filter(e => e.property_id === id);
   const expensesByCategory = getExpensesByCategory(propertyExpenses);
   const totalExpenses = propertyExpenses.reduce((sum, e) => sum + e.amount, 0);
 
+  const utilityAccounts = isDemo ? DEMO_UTILITY_ACCOUNTS.filter((ua) => ua.property_id === property.id) : [];
+  const propertyBills = isDemo ? DEMO_BILLS.filter((b) => b.utility_account?.property?.id === property.id) : [];
+
   const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb'];
-  const spendData = [320, 285, 410, 345, totalExpenses > 0 ? Math.round(totalExpenses / 3) : 0];
+  const spendData = isDemo ? [320, 285, 410, 345, totalExpenses > 0 ? Math.round(totalExpenses / 3) : 0] : [0, 0, 0, 0, 0];
   const maxSpend = Math.max(...spendData, 1);
 
   const topCategories = Object.entries(expensesByCategory)
@@ -123,43 +140,29 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
       )}
 
       {/* Monthly spend chart */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400">Monthly Spend</h2>
-          <span className="text-[11px] text-gray-400">Last 5 Months</span>
+      {spendData.some(v => v > 0) && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400">Monthly Spend</h2>
+            <span className="text-[11px] text-gray-400">Last 5 Months</span>
+          </div>
+          <div className="flex items-end gap-4" style={{ height: 200 }}>
+            {months.map((month, i) => {
+              const isCurrent = i === months.length - 1;
+              const barHeight = Math.max(Math.round((spendData[i] / maxSpend) * 140), 24);
+              return (
+                <div key={month} className="flex-1 flex flex-col items-center justify-end h-full">
+                  <span className={cn("text-xs font-semibold tabular-nums mb-2", isCurrent ? "text-gray-900" : "text-gray-500")}>
+                    {formatCurrency(spendData[i])}
+                  </span>
+                  <div className={cn("w-full max-w-[52px] rounded-t-lg", isCurrent ? "bg-teal-500" : "bg-teal-200")} style={{ height: barHeight }} />
+                  <span className={cn("text-xs font-medium mt-3", isCurrent ? "text-teal-600" : "text-gray-400")}>{month}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
-        
-        <div className="flex items-end gap-4" style={{ height: 200 }}>
-          {months.map((month, i) => {
-            const isCurrent = i === months.length - 1;
-            // Use a minimum bar height so small values are still visible
-            const barHeight = Math.max(Math.round((spendData[i] / maxSpend) * 140), 24);
-            return (
-              <div key={month} className="flex-1 flex flex-col items-center justify-end h-full">
-                <span className={cn(
-                  "text-xs font-semibold tabular-nums mb-2",
-                  isCurrent ? "text-gray-900" : "text-gray-500"
-                )}>
-                  {formatCurrency(spendData[i])}
-                </span>
-                <div
-                  className={cn(
-                    "w-full max-w-[52px] rounded-t-lg",
-                    isCurrent ? "bg-teal-500" : "bg-teal-200"
-                  )}
-                  style={{ height: barHeight }}
-                />
-                <span className={cn(
-                  "text-xs font-medium mt-3",
-                  isCurrent ? "text-teal-600" : "text-gray-400"
-                )}>
-                  {month}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      )}
 
       {/* Utility Accounts */}
       <div>
@@ -196,13 +199,15 @@ export default async function PropertyDetailPage({ params }: { params: Promise<{
       </div>
 
       {/* Bills */}
-      <div>
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-base font-semibold uppercase tracking-wide text-muted-foreground">Utility Bills</h2>
-          <Link href="/dashboard/expenses/new?category=utility" className="text-sm text-accent hover:underline font-medium">Add bill →</Link>
+      {propertyBills.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-base font-semibold uppercase tracking-wide text-muted-foreground">Utility Bills</h2>
+            <Link href="/dashboard/expenses/new?category=utility" className="text-sm text-accent hover:underline font-medium">Add bill →</Link>
+          </div>
+          <BillTable bills={propertyBills} showProperty={false} />
         </div>
-        <BillTable bills={propertyBills} showProperty={false} />
-      </div>
+      )}
     </div>
   );
 }

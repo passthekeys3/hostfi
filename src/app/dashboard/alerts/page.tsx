@@ -3,6 +3,7 @@
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { DEMO_ALERTS, DEMO_ANOMALIES } from "@/lib/data";
+import { isDemoMode } from "@/lib/data/data-provider";
 import { ALERT_TYPE_CONFIG, filterAlerts, type AlertFilter } from "@/lib/demo-alerts";
 import { ANOMALY_TYPE_CONFIG, SEVERITY_CONFIG, type AnomalyResult } from "@/lib/anomaly-detection";
 import { cn } from "@/lib/utils";
@@ -49,8 +50,9 @@ export default function AlertsPage() {
 
 function AlertsPageContent() {
   const searchParams = useSearchParams();
-  const [alerts, setAlerts] = useState(DEMO_ALERTS);
-  const [anomalies, setAnomalies] = useState(DEMO_ANOMALIES);
+  const demo = isDemoMode();
+  const [alerts, setAlerts] = useState(demo ? DEMO_ALERTS : []);
+  const [anomalies, setAnomalies] = useState(demo ? DEMO_ANOMALIES : []);
   const initialFilter = (searchParams.get('filter') as ExtendedFilter) || 'all';
   const [filter, setFilter] = useState<ExtendedFilter>(
     FILTER_TABS.some(t => t.key === initialFilter) ? initialFilter : 'all'
