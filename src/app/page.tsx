@@ -78,72 +78,17 @@ function AnimatedNumber({ value, prefix = "", suffix = "", visible }: { value: n
   return <>{prefix}{count.toLocaleString()}{suffix}</>;
 }
 
-/* ─── Waitlist Form ─── */
-function WaitlistForm({ className = "", compact = false }: { className?: string; compact?: boolean }) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [errorMsg, setErrorMsg] = useState("");
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim() || !email.trim()) return;
-    setStatus("loading");
-    try {
-      const res = await fetch("/api/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), email: email.trim() }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Something went wrong");
-      }
-      setStatus("success");
-    } catch (err) {
-      setErrorMsg(err instanceof Error ? err.message : "Something went wrong");
-      setStatus("error");
-    }
-  };
-
-  if (status === "success") {
-    return (
-      <div className={`flex items-center gap-3 px-5 py-4 bg-teal-50 border border-teal-200 rounded-xl ${className}`}>
-        <CheckCircle2 className="w-5 h-5 text-teal-600 shrink-0" />
-        <p className="text-sm text-teal-700 font-medium">You&apos;re on the list! We&apos;ll reach out soon with your invite.</p>
-      </div>
-    );
-  }
-
+/* ─── Get Started CTA ─── */
+function GetStartedButton({ className = "", size = "default" }: { className?: string; size?: "default" | "large" }) {
   return (
-    <form onSubmit={submit} className={`${className}`}>
-      <div className={`flex ${compact ? "flex-row" : "flex-col sm:flex-row"} gap-2.5`}>
-        <input
-          type="text"
-          placeholder="Your name"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          required
-          className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300 transition-all"
-        />
-        <input
-          type="email"
-          placeholder="you@email.com"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          required
-          className="flex-1 px-4 py-3 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-300 transition-all"
-        />
-        <button
-          type="submit"
-          disabled={status === "loading"}
-          className="px-6 py-3 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-60 whitespace-nowrap flex items-center justify-center gap-2"
-        >
-          {status === "loading" ? "Joining..." : <>Join Waitlist <ArrowRight className="w-4 h-4" /></>}
-        </button>
-      </div>
-      {status === "error" && <p className="text-sm text-red-500 mt-2">{errorMsg}</p>}
-    </form>
+    <Link
+      href="/login"
+      className={`inline-flex items-center justify-center gap-2 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 transition-colors ${
+        size === "large" ? "px-8 py-4 text-base" : "px-6 py-3 text-sm"
+      } ${className}`}
+    >
+      Get Started Free <ArrowRight className="w-4 h-4" />
+    </Link>
   );
 }
 
@@ -184,7 +129,7 @@ export default function LandingPage() {
           </div>
           <div className="hidden md:flex items-center gap-3">
             <Link href="/login" className="px-4 py-2 text-[13px] font-medium text-gray-600 hover:text-gray-900 transition-colors">Log in</Link>
-            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="px-4 py-2 text-[13px] font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer">Join Waitlist</button>
+            <Link href="/login" className="px-4 py-2 text-[13px] font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer">Get Started</Link>
           </div>
           <button onClick={() => setMobileMenu(!mobileMenu)} className="md:hidden p-2 cursor-pointer">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d={mobileMenu ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} /></svg>
@@ -197,7 +142,7 @@ export default function LandingPage() {
             ))}
             <div className="pt-3 flex gap-2">
               <Link href="/login" className="flex-1 text-center py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg">Log in</Link>
-              <button onClick={() => { setMobileMenu(false); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="flex-1 text-center py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg cursor-pointer">Join Waitlist</button>
+              <Link href="/login" onClick={() => setMobileMenu(false)} className="flex-1 text-center py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg cursor-pointer">Get Started</Link>
             </div>
           </div>
         )}
@@ -218,8 +163,8 @@ export default function LandingPage() {
             <p className="text-lg sm:text-xl text-gray-500 leading-relaxed max-w-2xl mb-10">
               Forward your bills. Snap your receipts. HostFi uses AI to automatically track, categorize, and map every expense to the right property — down to the IRS Schedule E line item.
             </p>
-            <WaitlistForm className="max-w-xl" />
-            <p className="text-xs text-gray-400 mt-3">Join the waitlist for early access. No spam, just your invite.</p>
+            <GetStartedButton size="large" />
+            <p className="text-xs text-gray-400 mt-3">Free for up to 3 properties. No credit card required.</p>
           </FadeIn>
 
           {/* Dashboard Preview */}
@@ -647,12 +592,12 @@ export default function LandingPage() {
                       </li>
                     ))}
                   </ul>
-                  <button
-                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  <Link
+                    href="/login"
                     className={`block w-full text-center py-3 px-6 rounded-xl text-sm font-semibold transition-colors cursor-pointer ${tier.highlighted ? "bg-white text-gray-900 hover:bg-gray-100" : "bg-gray-900 text-white hover:bg-gray-800"}`}
                   >
-                    Join Waitlist
-                  </button>
+                    Get Started
+                  </Link>
                 </div>
               </FadeIn>
             ))}
@@ -688,9 +633,9 @@ export default function LandingPage() {
             Stop Guessing. Start Knowing.
           </h2>
           <p className="text-gray-500 mb-10">
-            Free for up to 3 properties. Join the waitlist for early access.
+            Free for up to 3 properties. No credit card required.
           </p>
-          <WaitlistForm className="max-w-xl mx-auto" />
+          <GetStartedButton size="large" />
         </FadeIn>
       </section>
 

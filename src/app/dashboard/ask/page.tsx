@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Send, MessageSquare, Sparkles, Loader2, User, Bot, AlertCircle } from "lucide-react";
 import { EXAMPLE_QUESTIONS } from "@/lib/demo-query-context";
+import { UpgradeGate } from "@/components/upgrade-gate";
 
 interface Message {
   id: string;
@@ -83,6 +84,7 @@ export default function AskPage() {
   };
 
   return (
+    <UpgradeGate feature="ask-ai">
     <div className="flex flex-col h-[calc(100vh-8rem)] lg:h-[calc(100vh-5rem)]">
       {/* Header */}
       <div className="shrink-0 mb-4">
@@ -232,5 +234,6 @@ export default function AskPage() {
         </p>
       </div>
     </div>
+    </UpgradeGate>
   );
 }

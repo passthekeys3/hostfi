@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Link2, Zap } from "lucide-react";
+import { UpgradeGate } from "@/components/upgrade-gate";
 import {
   QuickBooksModal,
   XeroModal,
@@ -85,6 +86,7 @@ export default function IntegrationsPage() {
   };
 
   return (
+    <UpgradeGate feature="integrations">
     <div className="space-y-8 pb-24 lg:pb-6">
       {/* Header */}
       <div>
@@ -137,5 +139,6 @@ export default function IntegrationsPage() {
           does NOT mark the integration as connected. In production, the OAuth
           callback or API verification will call onClose with didConnect=true. */}
     </div>
+    </UpgradeGate>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { UpgradeGate } from "@/components/upgrade-gate";
 import { 
   FileText, 
   Mail, 
@@ -103,6 +104,7 @@ export default function ReportsPage() {
   }
 
   return (
+    <UpgradeGate feature="reports">
     <div className="space-y-8 sm:space-y-10 print:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 print:hidden">
@@ -353,5 +355,6 @@ export default function ReportsPage() {
         }
       `}</style>
     </div>
+    </UpgradeGate>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { UpgradeGate } from "@/components/upgrade-gate";
 
 const BenchmarkingContent = dynamic(
   () => import("@/components/benchmarking-content"),
@@ -21,5 +22,5 @@ const BenchmarkingContent = dynamic(
 );
 
 export default function BenchmarkingPage() {
-  return <BenchmarkingContent />;
+  return <UpgradeGate feature="benchmarking"><BenchmarkingContent /></UpgradeGate>;
 }

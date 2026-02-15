@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Building2, Receipt, Settings, Menu, X, Inbox, BarChart3, Bell, GitCompareArrows, FileText, Calculator, Upload, MessageSquare, DollarSign, Link2, CreditCard, LogOut } from "lucide-react";
+import { LayoutDashboard, Building2, Receipt, Settings, Menu, X, Inbox, BarChart3, Bell, GitCompareArrows, FileText, Calculator, Upload, MessageSquare, DollarSign, Link2, CreditCard, LogOut, Lock } from "lucide-react";
+import { usePlan } from "@/hooks/usePlan";
+import { canAccessFeature } from "@/lib/feature-gates";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { DEMO_ALERTS } from "@/lib/data";
 import { DEMO_INBOX_ITEMS } from "@/lib/demo-inbox";
@@ -19,16 +21,16 @@ function getMainNav(demo: boolean) {
     { href: "/dashboard/expenses", label: "Expenses", icon: Receipt, badge: 0 },
     { href: "/dashboard/revenue", label: "Revenue", icon: DollarSign, badge: 0 },
     { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3, badge: 0 },
-    { href: "/dashboard/tax", label: "Tax Prep", icon: Calculator, badge: 0 },
-    { href: "/dashboard/ask", label: "Ask AI", icon: MessageSquare, badge: 0 },
+    { href: "/dashboard/tax", label: "Tax Prep", icon: Calculator, badge: 0, feature: 'tax-prep' },
+    { href: "/dashboard/ask", label: "Ask AI", icon: MessageSquare, badge: 0, feature: 'ask-ai' },
     { href: "/dashboard/alerts", label: "Alerts", icon: Bell, badge: unreadAlertCount, badgeColor: 'red' as const },
   ];
 }
 
 const bottomNav = [
-  { href: "/dashboard/reports", label: "Reports", icon: FileText, badge: 0 },
-  { href: "/dashboard/benchmarking", label: "Benchmarking", icon: GitCompareArrows, badge: 0 },
-  { href: "/dashboard/integrations", label: "Integrations", icon: Link2, badge: 0 },
+  { href: "/dashboard/reports", label: "Reports", icon: FileText, badge: 0, feature: 'reports' },
+  { href: "/dashboard/benchmarking", label: "Benchmarking", icon: GitCompareArrows, badge: 0, feature: 'benchmarking' },
+  { href: "/dashboard/integrations", label: "Integrations", icon: Link2, badge: 0, feature: 'integrations' },
   { href: "/dashboard/import", label: "Import", icon: Upload, badge: 0 },
   { href: "/dashboard/billing", label: "Billing", icon: CreditCard, badge: 0 },
   { href: "/dashboard/settings", label: "Settings", icon: Settings, badge: 0 },
@@ -103,6 +105,7 @@ export function Sidebar() {
   const [open, setOpen] = useState(false);
   const demo = isDemoMode();
   const mainNav = getMainNav(demo);
+  const { plan } = usePlan();
 
   // Close sidebar on route change (mobile)
   const prevPathname = useRef(pathname);
@@ -117,6 +120,7 @@ export function Sidebar() {
     const isActive = item.href === "/dashboard"
       ? pathname === "/dashboard"
       : pathname.startsWith(item.href);
+    const locked = item.feature ? !canAccessFeature(plan, item.feature) : false;
     return (
       <Link
         href={item.href}
@@ -135,7 +139,10 @@ export function Sidebar() {
         )}
         <item.icon className={cn("w-[18px] h-[18px]", isActive ? "text-teal-600" : "")} aria-hidden="true" />
         {item.label}
-        {item.badge > 0 && (
+        {locked && (
+          <Lock className="w-3.5 h-3.5 text-gray-300 ml-auto" aria-hidden="true" />
+        )}
+        {!locked && item.badge > 0 && (
           <span className={cn(
             "ml-auto min-w-[20px] h-[20px] flex items-center justify-center text-[10px] font-bold rounded-full leading-none",
             'badgeColor' in item && item.badgeColor === 'red'

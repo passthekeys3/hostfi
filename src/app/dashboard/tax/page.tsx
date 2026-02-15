@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { UpgradeGate } from "@/components/upgrade-gate";
 import { 
   Calculator, 
   ChevronDown, 
@@ -305,6 +306,7 @@ export default function TaxPage() {
   };
 
   return (
+    <UpgradeGate feature="tax-prep">
     <div className="space-y-8 sm:space-y-10">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -527,5 +529,6 @@ export default function TaxPage() {
         </div>
       )}
     </div>
+    </UpgradeGate>
   );
 }
