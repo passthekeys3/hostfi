@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { getDemoDuplicates, type DuplicateGroup } from "@/lib/duplicate-detection";
 import { DEMO_PROPERTIES } from "@/lib/data";
+import { useDashboardData } from "@/hooks/useDashboardData";
 
 interface DuplicateAlertProps {
   className?: string;
@@ -15,8 +16,9 @@ export function DuplicateAlert({ className }: DuplicateAlertProps) {
   const [dismissed, setDismissed] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [resolvedGroups, setResolvedGroups] = useState<Set<string>>(new Set());
+  const { isDemo, properties } = useDashboardData();
 
-  const allDuplicates = getDemoDuplicates();
+  const allDuplicates = isDemo ? getDemoDuplicates() : [];
   const duplicates = allDuplicates.filter(g => !resolvedGroups.has(g.id));
 
   if (dismissed || duplicates.length === 0) {

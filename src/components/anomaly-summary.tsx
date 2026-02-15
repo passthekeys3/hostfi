@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { DEMO_ANOMALIES } from "@/lib/data";
 import { ANOMALY_TYPE_CONFIG, SEVERITY_CONFIG } from "@/lib/anomaly-detection";
 import { cn } from "@/lib/utils";
 import { ArrowRight, Search } from "lucide-react";
+import { useDashboardData } from "@/hooks/useDashboardData";
 
 export function AnomalySummary() {
-  const active = DEMO_ANOMALIES.filter(a => a.status === 'new').slice(0, 3);
+  const { anomalies } = useDashboardData();
+  const active = anomalies.filter(a => a.status === 'new').slice(0, 3);
 
   if (active.length === 0) return null;
 

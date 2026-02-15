@@ -75,7 +75,7 @@ export default function DashboardPage() {
           value={formatCurrency(totalSpend)}
           icon={DollarSign}
           accent="teal"
-          trend={{ value: "12% from last month", positive: false }}
+          trend={isDemo ? { value: "12% from last month", positive: false } : undefined}
         />
         <StatCard
           title="Properties"
