@@ -210,6 +210,7 @@ function NewExpenseForm() {
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-lg">$</span>
               <input
                 ref={amountRef}
+                name="amount"
                 type="number"
                 step="0.01"
                 min="0"
@@ -223,11 +224,11 @@ function NewExpenseForm() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2">Date</label>
-              <input ref={dateRef} type="date" defaultValue={new Date().toISOString().split('T')[0]} required className={inputClass} />
+              <input ref={dateRef} name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required className={inputClass} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">Vendor / Description</label>
-              <input ref={vendorRef} type="text" placeholder="e.g. CleanBnB, Home Depot..." className={inputClass} />
+              <input ref={vendorRef} name="vendor" type="text" placeholder="e.g. CleanBnB, Home Depot..." className={inputClass} />
             </div>
           </div>
 
