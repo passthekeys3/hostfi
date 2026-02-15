@@ -112,7 +112,7 @@ function generateBills(): MonthlyBill[] {
 
 export const DEMO_ANALYTICS_DATA = generateBills();
 
-export const UTILITY_COLORS: Record<UtilityType, string> = {
+export const UTILITY_COLORS: Record<string, string> = {
   rent: '#14B8A6',    // teal
   electric: '#3B82F6', // blue
   gas: '#F59E0B',     // amber
@@ -126,9 +126,13 @@ export const UTILITY_COLORS: Record<UtilityType, string> = {
   taxes: '#DC2626',   // red-600
   management: '#4F46E5', // indigo-600
   subscription: '#0D9488', // teal-600
+  mortgage: '#6366F1', // indigo-500
+  improvement: '#0EA5E9', // sky-500
+  other: '#78716C',   // stone-500
+  utility: '#2563EB', // blue-600
 };
 
-export const UTILITY_LABELS: Record<UtilityType, string> = {
+export const UTILITY_LABELS: Record<string, string> = {
   rent: 'Rent/Mortgage',
   electric: 'Electric',
   gas: 'Gas',
@@ -142,6 +146,10 @@ export const UTILITY_LABELS: Record<UtilityType, string> = {
   taxes: 'Taxes',
   management: 'Management',
   subscription: 'Subscriptions',
+  mortgage: 'Mortgage',
+  improvement: 'Improvements',
+  other: 'Other',
+  utility: 'Utilities',
 };
 
 export const ALL_UTILITY_TYPES: UtilityType[] = ['rent', 'electric', 'gas', 'water', 'internet', 'trash'];
@@ -177,32 +185,40 @@ export function getSpendByProperty(data: MonthlyBill[]) {
   return Array.from(map.values()).map(p => ({ ...p, avgMonthly: p.total / numMonths })).sort((a, b) => b.total - a.total);
 }
 
+const FALLBACK_COLORS = ['#6B7280', '#9CA3AF', '#D1D5DB', '#374151', '#4B5563'];
+
 export function getUtilityBreakdown(data: MonthlyBill[]) {
-  const map = new Map<UtilityType, number>();
+  const map = new Map<string, number>();
   for (const b of data) {
-    map.set(b.utility_type, (map.get(b.utility_type) || 0) + b.amount);
+    const key = b.utility_type || 'other';
+    map.set(key, (map.get(key) || 0) + b.amount);
   }
+  let fallbackIdx = 0;
   return Array.from(map.entries()).map(([type, total]) => ({
-    name: UTILITY_LABELS[type],
+    name: UTILITY_LABELS[type] || type.charAt(0).toUpperCase() + type.slice(1),
     type,
     value: Math.round(total * 100) / 100,
-    color: UTILITY_COLORS[type],
+    color: UTILITY_COLORS[type] || FALLBACK_COLORS[fallbackIdx++ % FALLBACK_COLORS.length],
   })).sort((a, b) => b.value - a.value);
 }
 
 export function getMoMComparison(data: MonthlyBill[]) {
   const months = [...new Set(data.map(b => b.month))].sort();
+  if (months.length < 2) return []; // Need at least 2 months
   const current = months[months.length - 1];
   const previous = months[months.length - 2];
 
-  const result: { utility: string; type: UtilityType; current: number; previous: number; change: number }[] = [];
-  for (const ut of ALL_EXPENSE_TYPES) {
+  // Use all categories actually present in the data, not just predefined list
+  const allTypes = [...new Set(data.map(b => b.utility_type))];
+
+  const result: { utility: string; type: string; current: number; previous: number; change: number }[] = [];
+  for (const ut of allTypes) {
     const curr = data.filter(b => b.month === current && b.utility_type === ut).reduce((s, b) => s + b.amount, 0);
     const prev = data.filter(b => b.month === previous && b.utility_type === ut).reduce((s, b) => s + b.amount, 0);
-    // Only include categories that have data in either month
     if (curr > 0 || prev > 0) {
       const change = prev > 0 ? Math.round(((curr - prev) / prev) * 1000) / 10 : (curr > 0 ? 100 : 0);
-      result.push({ utility: UTILITY_LABELS[ut], type: ut, current: Math.round(curr * 100) / 100, previous: Math.round(prev * 100) / 100, change });
+      const label = UTILITY_LABELS[ut] || ut.charAt(0).toUpperCase() + ut.slice(1);
+      result.push({ utility: label, type: ut, current: Math.round(curr * 100) / 100, previous: Math.round(prev * 100) / 100, change });
     }
   }
   return result;

@@ -224,6 +224,12 @@ export function MoMComparisonChart({ data }: { data: MonthlyBill[] }) {
       }}
     >
       <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-6">Month-over-Month Comparison</h3>
+      {chartData.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <p className="text-gray-400 text-sm">Need at least 2 months of data</p>
+          <p className="text-gray-300 text-xs mt-1">Add expenses across multiple months to see comparisons.</p>
+        </div>
+      ) : null}
       <div className="space-y-3">
         {chartData.map((row) => {
           const max = Math.max(row.current, row.previous, 1);

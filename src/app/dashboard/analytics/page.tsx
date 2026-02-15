@@ -26,20 +26,7 @@ function formatMonthLabel(ym: string): string {
   return `${months[parseInt(m) - 1]} ${y.slice(2)}`;
 }
 
-// Map expense categories to utility types for chart compatibility
-const CATEGORY_TO_UTILITY: Record<string, UtilityType> = {
-  utility: 'electric',
-  cleaning: 'cleaning' as UtilityType,
-  insurance: 'insurance' as UtilityType,
-  maintenance: 'maintenance' as UtilityType,
-  mortgage: 'mortgage' as UtilityType,
-  supplies: 'supplies' as UtilityType,
-  taxes: 'taxes' as UtilityType,
-  management: 'management' as UtilityType,
-  subscription: 'internet',
-  improvement: 'maintenance' as UtilityType,
-  other: 'other' as UtilityType,
-};
+// Pass expense categories through directly — labels/colors handle all types now
 
 export default function AnalyticsPage() {
   const [dateRange, setDateRange] = useState("12");
@@ -60,7 +47,7 @@ export default function AnalyticsPage() {
         monthLabel: formatMonthLabel(month),
         property_id: exp.property_id,
         property_name: property?.name || 'Unknown',
-        utility_type: CATEGORY_TO_UTILITY[exp.category] || ('other' as UtilityType),
+        utility_type: (exp.category || 'other') as UtilityType,
         amount: exp.amount,
       };
     });
