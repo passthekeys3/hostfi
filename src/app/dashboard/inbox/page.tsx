@@ -70,7 +70,7 @@ function MatchBadge({ type }: { type: string }) {
   );
 }
 
-function InboxCard({ item, onConfirm, onReject, onUpdate, properties }: { item: InboxItem; onConfirm: () => void; onReject: () => void; onUpdate: (updates: Partial<InboxItem['parsed']> & { property_id?: string | null }) => void; properties: { id: string; name: string }[] }) {
+function InboxCard({ item, onConfirm, onReject, onUpdate, properties }: { item: InboxItem; onConfirm: (propertyOverride?: string | null) => void; onReject: () => void; onUpdate: (updates: Partial<InboxItem['parsed']> & { property_id?: string | null }) => void; properties: { id: string; name: string }[] }) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [assignedProperty, setAssignedProperty] = useState(item.match.property_id);
@@ -246,8 +246,13 @@ function InboxCard({ item, onConfirm, onReject, onUpdate, properties }: { item: 
         {!editing && (
           <div className="flex items-center gap-2 mt-4 sm:mt-5 ml-0 sm:ml-14 flex-wrap">
             <button
-              onClick={onConfirm}
+              onClick={() => {
+                // Pass the locally-selected property directly to avoid state timing issues
+                onConfirm(assignedProperty);
+              }}
               className="flex items-center gap-1.5 px-4 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-all duration-200 text-xs font-medium shadow-sm"
+              disabled={!assignedProperty && item.match.match_type === 'none'}
+              title={!assignedProperty && item.match.match_type === 'none' ? 'Assign a property first' : ''}
             >
               <Check className="w-3.5 h-3.5" /> Confirm
             </button>
@@ -433,7 +438,7 @@ export default function InboxPage() {
             gas: "utility", water: "utility", electric: "utility", internet: "utility",
             trash: "utility", rent: "mortgage", insurance: "insurance", other: "other",
           };
-          await supabase.from("expenses").insert({
+          const { error: insertError } = await supabase.from("expenses").insert({
             user_id: (await supabase.auth.getUser()).data.user?.id,
             property_id: propId,
             vendor: item.parsed.provider_name,
@@ -444,6 +449,11 @@ export default function InboxPage() {
             status: "paid",
             description: `Parsed from email: ${item.subject}`,
           });
+          if (insertError) {
+            console.error("Failed to create expense from confirmed bill:", insertError);
+          }
+        } else {
+          console.warn("Bill confirmed without property assignment — no expense created for:", id);
         }
       }
     } catch (err) {
@@ -451,10 +461,11 @@ export default function InboxPage() {
     }
   };
 
-  const handleConfirm = (id: string) => {
+  const handleConfirm = (id: string, propertyOverride?: string | null) => {
     const item = items.find((i) => i.id === id);
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, status: "confirmed" as const } : i)));
-    persistStatus(id, "approved", item);
+    // Use propertyOverride from the InboxCard's local state (most up-to-date)
+    persistStatus(id, "approved", item, propertyOverride ?? item?.match.property_id);
   };
 
   const handleReject = (id: string) => {
@@ -519,7 +530,7 @@ export default function InboxPage() {
               key={item.id}
               item={item}
               properties={allProperties}
-              onConfirm={() => handleConfirm(item.id)}
+              onConfirm={(propertyOverride) => handleConfirm(item.id, propertyOverride)}
               onReject={() => handleReject(item.id)}
               onUpdate={(updates) => handleUpdate(item.id, updates)}
             />
