@@ -64,6 +64,9 @@ export async function POST(request: Request) {
         status: 'connected',
         credentials: { client_id, client_secret },
         connected_at: new Date().toISOString(),
+        access_token: 'guesty_client_credentials',
+        metadata: {},
+        active: true,
       }, {
         onConflict: 'user_id,provider',
       });
@@ -99,13 +102,14 @@ export async function GET() {
 
     const { data } = await supabase
       .from('integration_connections')
-      .select('status, connected_at')
+      .select('status, connected_at, active')
       .eq('user_id', auth.userId)
       .eq('provider', 'guesty')
       .single();
 
+    const isConnected = data?.status === 'connected' || data?.active === true;
     return NextResponse.json({
-      connected: data?.status === 'connected',
+      connected: isConnected && !!data,
       connectedAt: data?.connected_at || null,
     });
   } catch (error) {
@@ -132,7 +136,7 @@ export async function DELETE() {
 
     await supabase
       .from('integration_connections')
-      .update({ status: 'disconnected', credentials: null })
+      .update({ status: 'disconnected', credentials: null, active: false })
       .eq('user_id', auth.userId)
       .eq('provider', 'guesty');
 

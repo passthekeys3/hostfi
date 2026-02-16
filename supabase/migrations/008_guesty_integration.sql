@@ -11,5 +11,15 @@ CREATE INDEX IF NOT EXISTS idx_revenue_guesty_reservation_id ON public.revenue(g
 -- Integration connections: track last sync time
 ALTER TABLE public.integration_connections ADD COLUMN IF NOT EXISTS last_synced_at timestamptz;
 
--- Integration connections: store encrypted credentials
+-- Integration connections: store credentials (for API key based integrations)
 ALTER TABLE public.integration_connections ADD COLUMN IF NOT EXISTS credentials jsonb;
+
+-- Integration connections: add status column
+ALTER TABLE public.integration_connections ADD COLUMN IF NOT EXISTS status text DEFAULT 'connected';
+
+-- Integration connections: add connected_at column
+ALTER TABLE public.integration_connections ADD COLUMN IF NOT EXISTS connected_at timestamptz;
+
+-- Allow 'guesty' (and future providers) in the provider check constraint
+ALTER TABLE public.integration_connections DROP CONSTRAINT IF EXISTS integration_connections_provider_check;
+ALTER TABLE public.integration_connections ALTER COLUMN access_token DROP NOT NULL;
