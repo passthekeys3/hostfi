@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink, ChevronRight, Building2, Shield, Percent, Video, Star, Handshake } from "lucide-react";
+import { ExternalLink, ChevronRight, Building2, Shield, Percent, Video, Star, Handshake, ShieldCheck, TrendingUp, Sparkles, Landmark } from "lucide-react";
 import Link from "next/link";
 
 interface Partner {
@@ -14,6 +14,7 @@ interface Partner {
   cta: { label: string; url: string };
   stats?: string;
   featured?: boolean;
+  comingSoon?: boolean;
 }
 
 const partners: Partner[] = [
@@ -34,11 +35,84 @@ const partners: Partner[] = [
     stats: "10,000+ properties · $1B+ saved on taxes",
     featured: true,
   },
+  {
+    id: "proper-insurance",
+    name: "Proper Insurance",
+    logo: <ShieldCheck className="w-6 h-6 text-blue-600" />,
+    category: "STR Insurance",
+    headline: "Insurance Built for Short-Term Rentals",
+    description:
+      "Standard homeowner's policies don't cover STR activity — one claim can be denied entirely. Proper Insurance is purpose-built for Airbnb and VRBO hosts with comprehensive liability, property damage, and lost income coverage.",
+    perks: [
+      { icon: <Shield className="w-3.5 h-3.5" />, text: "Covers STR-specific risks standard policies exclude" },
+      { icon: <Building2 className="w-3.5 h-3.5" />, text: "Works for arbitrage, owned, and co-hosted properties" },
+      { icon: <Percent className="w-3.5 h-3.5" />, text: "Exclusive rate for HostFi users" },
+    ],
+    cta: { label: "Get a Quote", url: "#" },
+    stats: "#1 rated STR insurance provider",
+    comingSoon: true,
+  },
+  {
+    id: "pricelabs",
+    name: "PriceLabs",
+    logo: <TrendingUp className="w-6 h-6 text-violet-600" />,
+    category: "Revenue Optimization",
+    headline: "Maximize Revenue with Dynamic Pricing",
+    description:
+      "HostFi tracks your expenses — PriceLabs optimizes the other side. AI-powered dynamic pricing adjusts your nightly rates based on demand, seasonality, events, and competitor data to maximize your revenue per property.",
+    perks: [
+      { icon: <TrendingUp className="w-3.5 h-3.5" />, text: "Avg 10-40% revenue increase for new users" },
+      { icon: <Sparkles className="w-3.5 h-3.5" />, text: "AI-powered rates updated daily" },
+      { icon: <Percent className="w-3.5 h-3.5" />, text: "Discount for HostFi users" },
+    ],
+    cta: { label: "Try PriceLabs", url: "#" },
+    stats: "Used by 100K+ listings worldwide",
+    comingSoon: true,
+  },
+  {
+    id: "turno",
+    name: "Turno",
+    logo: <Sparkles className="w-6 h-6 text-emerald-600" />,
+    category: "Cleaning & Turnover",
+    headline: "Automate Turnovers, Track Cleaning Costs",
+    description:
+      "Cleaning is one of the biggest recurring STR expenses. Turno connects you with vetted local cleaners, auto-schedules turnovers from your booking calendar, and tracks every cleaning cost — which flows right into HostFi.",
+    perks: [
+      { icon: <Sparkles className="w-3.5 h-3.5" />, text: "Auto-schedule cleanings from iCal/API" },
+      { icon: <Shield className="w-3.5 h-3.5" />, text: "Vetted, reviewed cleaners in your area" },
+      { icon: <Percent className="w-3.5 h-3.5" />, text: "Free for hosts — cleaners pay the fee" },
+    ],
+    cta: { label: "Find Cleaners", url: "#" },
+    stats: "Formerly TurnoverBnB · 35,000+ cleaners",
+    comingSoon: true,
+  },
+  {
+    id: "dscr-lending",
+    name: "Kiavi",
+    logo: <Landmark className="w-6 h-6 text-amber-600" />,
+    category: "Investment Lending",
+    headline: "DSCR Loans to Grow Your Portfolio",
+    description:
+      "Ready for your next property? DSCR loans qualify based on the property's rental income — not your personal W-2. Ideal for STR investors looking to scale. Your HostFi P&L data makes the application process faster.",
+    perks: [
+      { icon: <Landmark className="w-3.5 h-3.5" />, text: "Qualify on rental income, not personal income" },
+      { icon: <TrendingUp className="w-3.5 h-3.5" />, text: "Close in as fast as 15 days" },
+      { icon: <Percent className="w-3.5 h-3.5" />, text: "Competitive rates for HostFi users" },
+    ],
+    cta: { label: "Check Rates", url: "#" },
+    stats: "$12B+ funded for real estate investors",
+    comingSoon: true,
+  },
 ];
 
 function PartnerCard({ partner }: { partner: Partner }) {
   return (
     <div className={`bg-white rounded-2xl border shadow-[0_2px_8px_rgba(0,0,0,0.06)] overflow-hidden transition-all duration-200 hover:shadow-md ${partner.featured ? "border-teal-200/80" : "border-gray-200/60"}`}>
+      {partner.comingSoon && (
+        <div className="bg-gray-50 px-5 py-2 flex items-center gap-2 border-b border-gray-100">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Partnership Coming Soon</span>
+        </div>
+      )}
       {partner.featured && (
         <div className="bg-gradient-to-r from-teal-500 to-emerald-500 px-5 py-2 flex items-center gap-2">
           <Star className="w-3.5 h-3.5 text-white fill-white" />
@@ -78,15 +152,21 @@ function PartnerCard({ partner }: { partner: Partner }) {
         </div>
 
         <div className="mt-6 flex items-center gap-4 flex-wrap">
-          <a
-            href={partner.cta.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors shadow-sm"
-          >
-            {partner.cta.label}
-            <ExternalLink className="w-4 h-4" />
-          </a>
+          {partner.comingSoon ? (
+            <span className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-400 text-sm font-semibold rounded-xl cursor-default">
+              Coming Soon
+            </span>
+          ) : (
+            <a
+              href={partner.cta.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors shadow-sm"
+            >
+              {partner.cta.label}
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          )}
         </div>
       </div>
     </div>
