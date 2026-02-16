@@ -438,16 +438,17 @@ export default function InboxPage() {
             gas: "utility", water: "utility", electric: "utility", internet: "utility",
             trash: "utility", rent: "mortgage", insurance: "insurance", other: "other",
           };
+          const vendorName = item.parsed.provider_name || "Unknown";
           const { error: insertError } = await supabase.from("expenses").insert({
             user_id: (await supabase.auth.getUser()).data.user?.id,
             property_id: propId,
-            vendor: item.parsed.provider_name,
+            vendor: vendorName,
             amount: item.parsed.amount,
-            category: categoryMap[item.parsed.utility_type] || "other",
+            category: categoryMap[item.parsed.utility_type] || "utility",
             date: item.parsed.due_date || new Date().toISOString().split("T")[0],
             source: "email_parse",
             status: "paid",
-            description: `Parsed from email: ${item.subject}`,
+            description: vendorName,
           });
           if (insertError) {
             console.error("Failed to create expense from confirmed bill:", insertError);

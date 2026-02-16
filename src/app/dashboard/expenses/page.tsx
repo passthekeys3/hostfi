@@ -242,7 +242,7 @@ export default function ExpensesPage() {
                             {catConfig?.icon && <catConfig.icon className="w-4 h-4" />}
                           </span>
                           <div>
-                            <p className="font-medium text-sm">{expense.description}</p>
+                            <p className="font-medium text-sm">{expense.vendor || expense.description}</p>
                             <p className="text-xs text-muted-foreground mt-0.5">{catConfig?.label || expense.category}</p>
                           </div>
                         </div>
@@ -318,7 +318,7 @@ export default function ExpensesPage() {
                       {catConfig?.icon && <catConfig.icon className="w-4 h-4" />}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{expense.description}</p>
+                      <p className="font-medium text-sm truncate">{expense.vendor || expense.description}</p>
                       <p className="text-xs text-muted-foreground truncate mt-0.5">{property?.name} · {formatDate(expense.date)}</p>
                     </div>
                     <div className="text-right shrink-0 pl-2">
