@@ -54,7 +54,7 @@ export default function PropertiesPage() {
                 key={property.id}
                 property={property}
                 monthlySpend={monthlySpend}
-                billCount={0}
+                billCount={propertyExpenses.length}
               />
             );
           })}
