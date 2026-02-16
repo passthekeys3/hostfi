@@ -403,26 +403,6 @@ export default function DashboardPage() {
         )}
       </section>
 
-      {/* Partner Offer — Cost Segregation */}
-      {properties.length > 0 && (
-        <section className="bg-gradient-to-r from-teal-50 to-emerald-50 rounded-2xl border border-teal-200/40 p-5 flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-gray-900">💰 Accelerate your tax deductions</span>
-              <span className="text-[9px] font-semibold uppercase tracking-wider text-teal-700 bg-teal-100 px-1.5 py-0.5 rounded-full">Partner</span>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">Cost segregation can save property owners $20K–$100K+ in taxes. HostFi users get 10% off.</p>
-          </div>
-          <a
-            href="https://www.recostseg.com/free-proposal?ref=hostfi"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-gray-900 text-white text-xs font-semibold rounded-xl hover:bg-gray-800 transition-colors shrink-0"
-          >
-            Get Free Proposal <ArrowRight className="w-3.5 h-3.5" />
-          </a>
-        </section>
-      )}
     </div>
     </OnboardingGate>
   );

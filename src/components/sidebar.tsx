@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Building2, Receipt, Settings, Menu, X, Inbox, BarChart3, Bell, GitCompareArrows, FileText, Calculator, Upload, MessageSquare, DollarSign, Link2, CreditCard, LogOut, Lock } from "lucide-react";
+import { LayoutDashboard, Building2, Receipt, Settings, Menu, X, Inbox, BarChart3, Bell, GitCompareArrows, FileText, Calculator, Upload, MessageSquare, DollarSign, Link2, CreditCard, LogOut, Lock, Handshake } from "lucide-react";
 import { usePlan } from "@/hooks/usePlan";
 import { canAccessFeature } from "@/lib/feature-gates";
 import { useState, useEffect, useMemo, useRef } from "react";
@@ -31,6 +31,7 @@ const bottomNav = [
   { href: "/dashboard/reports", label: "Reports", icon: FileText, badge: 0, feature: 'reports' },
   { href: "/dashboard/benchmarking", label: "Benchmarking", icon: GitCompareArrows, badge: 0, feature: 'benchmarking' },
   { href: "/dashboard/integrations", label: "Integrations", icon: Link2, badge: 0, feature: 'integrations' },
+  { href: "/dashboard/partners", label: "Partners", icon: Handshake, badge: 0 },
   { href: "/dashboard/import", label: "Import", icon: Upload, badge: 0 },
   { href: "/dashboard/billing", label: "Billing", icon: CreditCard, badge: 0 },
   { href: "/dashboard/settings", label: "Settings", icon: Settings, badge: 0 },
