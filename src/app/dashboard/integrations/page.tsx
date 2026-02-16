@@ -22,6 +22,7 @@ import {
 } from "@/components/integrations";
 
 const INTEGRATIONS: Integration[] = [
+  { id: "quickbooks", name: "QuickBooks Online", description: "Sync expenses and revenue to your ledger", category: "Accounting", status: "coming_soon", logo: "QB", logoColor: "bg-[#2CA01C]", logoUrl: "/logos/quickbooks.svg", tier: "business" },
   { id: "xero", name: "Xero", description: "Two-way sync with expenses and revenue", category: "Accounting", status: "coming_soon", logo: "XO", logoColor: "bg-[#13B5EA]", logoUrl: "/logos/xero.svg", tier: "business" },
   { id: "plaid", name: "Bank Accounts (Plaid)", description: "Auto-import and categorize transactions", category: "Banking", status: "coming_soon", logo: "PL", logoColor: "bg-[#111111]", logoUrl: "/logos/plaid.svg", tier: "pro" },
   { id: "melio", name: "Melio", description: "Bill pay integration — coming soon", category: "Payments", status: "coming_soon", logo: "ML", logoColor: "bg-[#00C2FF]", logoUrl: "/logos/melio.svg", tier: "free" },
