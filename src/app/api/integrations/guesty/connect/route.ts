@@ -46,7 +46,13 @@ export async function POST(request: Request) {
     });
 
     if (!tokenRes.ok) {
-      return NextResponse.json({ error: 'Invalid Guesty credentials' }, { status: 400 });
+      const errBody = await tokenRes.text();
+      if (tokenRes.status === 429 || errBody.includes('TOO_MANY_REQUESTS')) {
+        // Rate limited — credentials are likely fine, just save them
+        console.log('[Guesty] Rate limited on token verify, saving credentials anyway');
+      } else {
+        return NextResponse.json({ error: 'Invalid Guesty credentials' }, { status: 400 });
+      }
     }
 
     // Store the connection
