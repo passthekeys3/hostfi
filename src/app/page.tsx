@@ -10,6 +10,90 @@ import {
   DollarSign, Home, Layers, Clock, ChevronDown
 } from "lucide-react";
 
+/* ─── CSS Keyframes ─── */
+const animationStyles = `
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+`;
+
+/* ─── Typing Effect Hook ─── */
+function useTypingEffect(text: string, startDelay = 500, speed = 50) {
+  const [displayedText, setDisplayedText] = useState("");
+  const [isComplete, setIsComplete] = useState(false);
+  
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    let interval: NodeJS.Timeout;
+    let index = 0;
+    
+    timeout = setTimeout(() => {
+      interval = setInterval(() => {
+        if (index < text.length) {
+          setDisplayedText(text.slice(0, index + 1));
+          index++;
+        } else {
+          clearInterval(interval);
+          setIsComplete(true);
+        }
+      }, speed);
+    }, startDelay);
+    
+    return () => {
+      clearTimeout(timeout);
+      clearInterval(interval);
+    };
+  }, [text, startDelay, speed]);
+  
+  return { displayedText, isComplete };
+}
+
+/* ─── Scroll Progress Bar ─── */
+function ScrollProgressBar() {
+  const [progress, setProgress] = useState(0);
+  
+  useEffect(() => {
+    let rafId: number;
+    const updateProgress = () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+      setProgress(scrollPercent);
+    };
+    
+    const handleScroll = () => {
+      rafId = requestAnimationFrame(updateProgress);
+    };
+    
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    updateProgress();
+    
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      cancelAnimationFrame(rafId);
+    };
+  }, []);
+  
+  return (
+    <div className="fixed top-0 left-0 right-0 h-[3px] z-[60] pointer-events-none">
+      <div 
+        className="h-full bg-teal-500 rounded-r-full transition-[width] duration-75"
+        style={{ width: `${progress}%` }}
+      />
+    </div>
+  );
+}
+
 /* ─── Intersection Observer ─── */
 function useInView(threshold = 0.1) {
   const ref = useRef<HTMLDivElement>(null);
@@ -26,12 +110,12 @@ function useInView(threshold = 0.1) {
   return { ref, visible };
 }
 
-function FadeIn({ children, className = "", delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+function FadeIn({ children, className = "", delay = 0, withScale = false }: { children: React.ReactNode; className?: string; delay?: number; withScale?: boolean }) {
   const { ref, visible } = useInView();
   return (
     <div
       ref={ref}
-      className={`${className} transition-all duration-700 ease-out ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+      className={`${className} transition-all duration-700 ease-out ${visible ? `opacity-100 translate-y-0 ${withScale ? "scale-100" : ""}` : `opacity-0 translate-y-8 ${withScale ? "scale-95" : ""}`}`}
       style={{ transitionDelay: `${delay}ms` }}
     >
       {children}
@@ -58,7 +142,7 @@ function FAQItem({ q, a }: { q: string; a: string }) {
   );
 }
 
-/* ─── Animated Number ─── */
+/* ─── Animated Number with Elastic Overshoot ─── */
 function AnimatedNumber({ value, prefix = "", suffix = "", visible }: { value: number; prefix?: string; suffix?: string; visible: boolean }) {
   const [count, setCount] = useState(0);
   const started = useRef(false);
@@ -67,10 +151,18 @@ function AnimatedNumber({ value, prefix = "", suffix = "", visible }: { value: n
     started.current = true;
     const start = performance.now();
     const duration = 1500;
+    
+    // Elastic ease-out with overshoot
+    const elasticOut = (t: number): number => {
+      const c4 = (2 * Math.PI) / 3;
+      return t === 0 ? 0 : t === 1 ? 1 : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1;
+    };
+    
     const step = (now: number) => {
       const p = Math.min((now - start) / duration, 1);
-      const ease = 1 - Math.pow(1 - p, 3);
-      setCount(Math.round(value * ease));
+      const ease = elasticOut(p);
+      // Clamp to prevent negative values during oscillation
+      setCount(Math.round(Math.max(0, value * ease)));
       if (p < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
@@ -191,6 +283,10 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const statsSection = useInView(0.3);
   const authTarget = useAuthTarget();
+  
+  // Typing effect for hero headline
+  const heroText = "Every Property. Every Bill.";
+  const { displayedText, isComplete } = useTypingEffect(heroText, 500, 60);
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 20);
@@ -205,6 +301,11 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white text-gray-900 antialiased">
+      {/* CSS Keyframes */}
+      <style dangerouslySetInnerHTML={{ __html: animationStyles }} />
+      
+      {/* Scroll Progress Bar */}
+      <ScrollProgressBar />
       {/* JSON-LD Structured Data */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
         "@context": "https://schema.org",
@@ -275,13 +376,28 @@ export default function LandingPage() {
       <section className="pt-32 sm:pt-40 pb-20 sm:pb-28 px-5">
         <div className="max-w-6xl mx-auto">
           <FadeIn className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-teal-50 text-teal-700 rounded-full text-xs font-medium mb-8">
+            <div 
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-8 text-white"
+              style={{
+                background: "linear-gradient(90deg, #0d9488, #14b8a6, #2dd4bf, #14b8a6, #0d9488)",
+                backgroundSize: "300% 100%",
+                animation: "gradientShift 4s ease infinite"
+              }}
+            >
               <Sparkles className="w-3 h-3" />
               AI-Powered Expense Management for Rental Properties
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6">
               Know Exactly Where Your Money Goes.{" "}
-              <span className="text-teal-500">Every Property. Every Bill.</span>
+              <span className="text-teal-500">
+                {displayedText}
+                {!isComplete && (
+                  <span 
+                    className="inline-block w-[3px] h-[0.9em] bg-teal-500 ml-1 align-middle"
+                    style={{ animation: "blink 1s infinite" }}
+                  />
+                )}
+              </span>
             </h1>
             <p className="text-lg sm:text-xl text-gray-500 leading-relaxed max-w-2xl mb-10">
               Forward your bills. Snap your receipts. HostFi uses AI to automatically track, categorize, and map every expense to the right property — down to the IRS Schedule E line item.
@@ -292,7 +408,10 @@ export default function LandingPage() {
 
           {/* Dashboard Preview */}
           <FadeIn className="mt-16 sm:mt-20" delay={200}>
-            <div className="relative">
+            <div 
+              className="relative"
+              style={{ animation: "float 6s ease-in-out infinite" }}
+            >
               <div className="absolute inset-0 bg-gradient-to-b from-teal-500/5 via-transparent to-transparent rounded-3xl -m-4" />
               <div className="relative bg-white rounded-2xl border border-gray-200 shadow-xl shadow-gray-200/50 overflow-hidden">
                 {/* Browser bar */}
@@ -496,7 +615,7 @@ export default function LandingPage() {
               { icon: MessageSquare, title: "Ask AI", desc: "Ask questions about your expenses in plain English. \"What did I spend on utilities last quarter?\"" },
               { icon: Layers, title: "Integrations", desc: "Connect QuickBooks, Xero, Slack, and your property management software. More added monthly." },
             ].map((f, i) => (
-              <FadeIn key={i} delay={i * 50}>
+              <FadeIn key={i} delay={i * 50} withScale>
                 <div className="bg-white rounded-xl p-6 h-full border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all group">
                   <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center mb-4 group-hover:bg-teal-50 transition-colors">
                     <f.icon className="w-5 h-5 text-gray-400 group-hover:text-teal-500 transition-colors" />
@@ -795,7 +914,7 @@ export default function LandingPage() {
                 name: "ChatGPT",
                 url: "https://chatgpt.com/?q=",
                 icon: (
-                  <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+                  <svg className="w-8 h-8 transition-all duration-200 ease-out hover:scale-[1.2]" style={{ filter: "drop-shadow(0 0 0px transparent)" }} onMouseEnter={(e) => { e.currentTarget.style.filter = "drop-shadow(0 0 8px rgba(20, 184, 166, 0.5))"; }} onMouseLeave={(e) => { e.currentTarget.style.filter = "drop-shadow(0 0 0px transparent)"; }} viewBox="0 0 24 24" fill="currentColor">
                     <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z" />
                   </svg>
                 ),
@@ -804,7 +923,7 @@ export default function LandingPage() {
                 name: "Claude",
                 url: "https://claude.ai/new?q=",
                 icon: (
-                  <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+                  <svg className="w-8 h-8 transition-all duration-200 ease-out hover:scale-[1.2]" style={{ filter: "drop-shadow(0 0 0px transparent)" }} onMouseEnter={(e) => { e.currentTarget.style.filter = "drop-shadow(0 0 8px rgba(20, 184, 166, 0.5))"; }} onMouseLeave={(e) => { e.currentTarget.style.filter = "drop-shadow(0 0 0px transparent)"; }} viewBox="0 0 24 24" fill="currentColor">
                     <path d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z" />
                   </svg>
                 ),
@@ -813,7 +932,7 @@ export default function LandingPage() {
                 name: "Gemini",
                 url: "https://gemini.google.com/app?q=",
                 icon: (
-                  <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+                  <svg className="w-8 h-8 transition-all duration-200 ease-out hover:scale-[1.2]" style={{ filter: "drop-shadow(0 0 0px transparent)" }} onMouseEnter={(e) => { e.currentTarget.style.filter = "drop-shadow(0 0 8px rgba(20, 184, 166, 0.5))"; }} onMouseLeave={(e) => { e.currentTarget.style.filter = "drop-shadow(0 0 0px transparent)"; }} viewBox="0 0 24 24" fill="currentColor">
                     <path d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81" />
                   </svg>
                 ),
@@ -822,7 +941,7 @@ export default function LandingPage() {
                 name: "Perplexity",
                 url: "https://www.perplexity.ai/search?q=",
                 icon: (
-                  <svg className="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+                  <svg className="w-8 h-8 transition-all duration-200 ease-out hover:scale-[1.2]" style={{ filter: "drop-shadow(0 0 0px transparent)" }} onMouseEnter={(e) => { e.currentTarget.style.filter = "drop-shadow(0 0 8px rgba(20, 184, 166, 0.5))"; }} onMouseLeave={(e) => { e.currentTarget.style.filter = "drop-shadow(0 0 0px transparent)"; }} viewBox="0 0 24 24" fill="currentColor">
                     <path d="M22.3977 7.0896h-2.3106V.0676l-7.5094 6.3542V.1577h-1.1554v6.1966L4.4904 0v7.0896H1.6023v10.3976h2.8882V24l6.932-6.3591v6.2005h1.1554v-6.0469l6.9318 6.1807v-6.4879h2.8882V7.0896zm-3.4657-4.531v4.531h-5.355l5.355-4.531zm-13.2862.0676 4.8691 4.4634H5.6458V2.6262zM2.7576 16.332V8.245h7.8476l-6.1149 6.1147v1.9723H2.7576zm2.8882 5.0404v-3.8852h.0001v-2.6488l5.7763-5.7764v7.0111l-5.7764 5.2993zm12.7086.0248-5.7766-5.1509V9.0618l5.7766 5.7766v6.5588zm2.8882-5.0652h-1.733v-1.9723L13.3948 8.245h7.8478v8.087z" />
                   </svg>
                 ),
@@ -831,7 +950,7 @@ export default function LandingPage() {
                 name: "Grok",
                 url: "https://grok.com/?q=",
                 icon: (
-                  <svg className="w-8 h-8" viewBox="0 0 512 492" fill="currentColor">
+                  <svg className="w-8 h-8 transition-all duration-200 ease-out hover:scale-[1.2]" style={{ filter: "drop-shadow(0 0 0px transparent)" }} onMouseEnter={(e) => { e.currentTarget.style.filter = "drop-shadow(0 0 8px rgba(20, 184, 166, 0.5))"; }} onMouseLeave={(e) => { e.currentTarget.style.filter = "drop-shadow(0 0 0px transparent)"; }} viewBox="0 0 512 492" fill="currentColor">
                     <path fillRule="evenodd" clipRule="evenodd" d="M197.76 315.52l170.197-125.803c8.342-6.186 20.267-3.776 24.256 5.803 20.907 50.539 11.563 111.253-30.08 152.939-41.621 41.685-99.562 50.816-152.512 29.994l-57.834 26.816c82.965 56.768 183.701 42.731 246.656-20.33 49.941-50.006 65.408-118.166 50.944-179.627l.128.149c-20.971-90.282 5.162-126.378 58.666-200.17 1.28-1.75 2.56-3.499 3.819-5.291l-70.421 70.507v-.214l-243.883 245.27m-35.072 30.528c-59.563-56.96-49.28-145.088 1.515-195.926 37.568-37.61 99.136-52.97 152.874-30.4l57.707-26.666a166.554 166.554 0 00-39.019-21.334 191.467 191.467 0 00-208.042 41.942c-54.038 54.101-71.04 137.301-41.856 208.298 21.802 53.056-13.931 90.582-49.92 128.47C23.104 463.915 10.304 477.333 0 491.541l162.56-145.386" />
                   </svg>
                 ),
