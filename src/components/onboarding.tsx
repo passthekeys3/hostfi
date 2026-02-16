@@ -50,7 +50,7 @@ const PLANS: {
     name: "Free",
     price: 0,
     icon: Building2,
-    description: "Up to 5 properties",
+    description: "Up to 3 properties",
     features: ["AI categorization (50/mo)", "Receipt scanning (10/mo)", "Basic analytics"],
   },
   {

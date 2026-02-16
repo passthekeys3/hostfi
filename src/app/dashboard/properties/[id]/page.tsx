@@ -33,8 +33,20 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   const expensesByCategory = getExpensesByCategory(propertyExpenses);
   const totalExpenses = propertyExpenses.reduce((sum, e) => sum + e.amount, 0);
 
-  const months = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb'];
-  const spendData = isDemo ? [320, 285, 410, 345, totalExpenses > 0 ? Math.round(totalExpenses / 3) : 0] : [0, 0, 0, 0, 0];
+  // Build last 5 months of spend data from real expenses
+  const now = new Date();
+  const monthLabels: string[] = [];
+  const spendData: number[] = [];
+  for (let i = 4; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    monthLabels.push(d.toLocaleString('en-US', { month: 'short' }));
+    const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const monthTotal = propertyExpenses
+      .filter(e => e.date?.startsWith(monthStr))
+      .reduce((sum, e) => sum + e.amount, 0);
+    spendData.push(Math.round(monthTotal * 100) / 100);
+  }
+  const months = monthLabels;
   const maxSpend = Math.max(...spendData, 1);
 
   const topCategories = Object.entries(expensesByCategory)

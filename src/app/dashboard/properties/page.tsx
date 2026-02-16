@@ -25,7 +25,7 @@ export default function PropertiesPage() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Properties</h1>
           <p className="text-gray-500 mt-1.5 sm:mt-2 text-sm leading-relaxed">
-            <span className="tabular-nums">{properties.length}</span> properties managed
+            <span className="tabular-nums">{properties.length}</span> {properties.length === 1 ? 'property' : 'properties'} managed
           </p>
         </div>
         <Link 
