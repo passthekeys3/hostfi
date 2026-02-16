@@ -331,33 +331,82 @@ export default function InboxPage() {
         if (!supabase) return;
         const { data } = await supabase.from("parsed_emails").select("*").order("received_at", { ascending: false });
         if (data && data.length > 0) {
-          const mapped: InboxItem[] = data.map((row: Record<string, unknown>) => ({
-            id: row.id as string,
-            sender_email: row.source_from as string || "Unknown",
-            subject: row.source_subject as string || "Parsed Bill",
-            body_preview: "",
-            received_at: row.received_at as string || new Date().toISOString(),
-            status: (row.status as string) === "approved" ? "confirmed" as const : (row.status as string) === "dismissed" ? "rejected" as const : "pending_review" as const,
-            parsed: {
-              provider_name: row.vendor_name as string || "Unknown",
-              utility_type: row.category as string || "other",
-              amount: row.amount as number || 0,
-              due_date: row.due_date as string || null,
-              billing_period_start: null,
-              billing_period_end: null,
-              account_number: null,
-              service_address: null,
-              confidence: row.confidence as number || 0.8,
-              raw_extraction: {},
-            },
-            match: {
-              property_id: row.property_id as string || null,
-              utility_account_id: null,
-              match_type: row.property_id ? "exact_mapping" as const : "none" as const,
-              confidence: row.confidence as number || 0,
-              candidates: [],
-            },
-          }));
+          // Build address lookup from real properties for auto-matching
+          const propList = allProperties.map((p) => ({
+            id: p.id,
+            address: [p.address_line1, p.city, p.state, p.zip].filter(Boolean).join(" ").toLowerCase().trim(),
+          })).filter((p) => p.address.length > 0);
+
+          const findPropertyByAddress = (serviceAddress: string | null): { id: string; confidence: number } | null => {
+            if (!serviceAddress) return null;
+            const addr = serviceAddress.toLowerCase().trim();
+            // Exact or strong substring match
+            for (const prop of propList) {
+              if (addr.includes(prop.address) || prop.address.includes(addr)) {
+                return { id: prop.id, confidence: 0.95 };
+              }
+            }
+            // Fuzzy: check if major parts match (street number + street name)
+            const addrParts = addr.split(/[\s,]+/).filter(Boolean);
+            for (const prop of propList) {
+              const propParts = prop.address.split(/[\s,]+/).filter(Boolean);
+              const matchingParts = addrParts.filter((part) => propParts.includes(part));
+              const score = matchingParts.length / Math.max(propParts.length, 1);
+              if (score > 0.5) {
+                return { id: prop.id, confidence: score };
+              }
+            }
+            return null;
+          };
+
+          const mapped: InboxItem[] = data.map((row: Record<string, unknown>) => {
+            const existingPropertyId = row.property_id as string | null;
+            const serviceAddress = row.service_address as string | null;
+
+            // Auto-match by address if no property assigned yet
+            let matchedPropertyId = existingPropertyId;
+            let matchType: "exact_mapping" | "address" | "account_number" | "none" = existingPropertyId ? "exact_mapping" : "none";
+            let matchConfidence = existingPropertyId ? 1 : 0;
+
+            if (!existingPropertyId && serviceAddress) {
+              const addressMatch = findPropertyByAddress(serviceAddress);
+              if (addressMatch) {
+                matchedPropertyId = addressMatch.id;
+                matchType = "address";
+                matchConfidence = addressMatch.confidence;
+                // Persist the auto-match to Supabase
+                supabase.from("parsed_emails").update({ property_id: addressMatch.id }).eq("id", row.id as string).then();
+              }
+            }
+
+            return {
+              id: row.id as string,
+              sender_email: row.source_from as string || "Unknown",
+              subject: row.source_subject as string || "Parsed Bill",
+              body_preview: "",
+              received_at: row.received_at as string || new Date().toISOString(),
+              status: (row.status as string) === "approved" ? "confirmed" as const : (row.status as string) === "dismissed" ? "rejected" as const : "pending_review" as const,
+              parsed: {
+                provider_name: row.vendor_name as string || "Unknown",
+                utility_type: row.category as string || "other",
+                amount: row.amount as number || 0,
+                due_date: row.due_date as string || null,
+                billing_period_start: null,
+                billing_period_end: null,
+                account_number: row.account_number as string || null,
+                service_address: serviceAddress,
+                confidence: row.confidence as number || 0.8,
+                raw_extraction: {},
+              },
+              match: {
+                property_id: matchedPropertyId,
+                utility_account_id: null,
+                match_type: matchType,
+                confidence: matchConfidence,
+                candidates: [],
+              },
+            };
+          });
           setItems(mapped);
         }
       } catch {}
@@ -366,12 +415,51 @@ export default function InboxPage() {
   const pendingItems = items.filter((i) => i.status === "pending_review");
   const processedItems = items.filter((i) => i.status !== "pending_review");
 
+  const persistStatus = async (id: string, status: "approved" | "dismissed", item?: InboxItem, propertyId?: string | null) => {
+    if (demo) return;
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      if (!supabase) return;
+
+      // Update parsed_emails status
+      await supabase.from("parsed_emails").update({ status }).eq("id", id);
+
+      // If confirming, create an expense
+      if (status === "approved" && item) {
+        const propId = propertyId ?? item.match.property_id;
+        if (propId) {
+          const categoryMap: Record<string, string> = {
+            gas: "utility", water: "utility", electric: "utility", internet: "utility",
+            trash: "utility", rent: "mortgage", insurance: "insurance", other: "other",
+          };
+          await supabase.from("expenses").insert({
+            user_id: (await supabase.auth.getUser()).data.user?.id,
+            property_id: propId,
+            vendor: item.parsed.provider_name,
+            amount: item.parsed.amount,
+            category: categoryMap[item.parsed.utility_type] || "other",
+            date: item.parsed.due_date || new Date().toISOString().split("T")[0],
+            source: "email_parse",
+            status: "paid",
+            description: `Parsed from email: ${item.subject}`,
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Failed to persist status:", err);
+    }
+  };
+
   const handleConfirm = (id: string) => {
+    const item = items.find((i) => i.id === id);
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, status: "confirmed" as const } : i)));
+    persistStatus(id, "approved", item);
   };
 
   const handleReject = (id: string) => {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, status: "rejected" as const } : i)));
+    persistStatus(id, "dismissed");
   };
 
   const handleUpdate = (id: string, updates: Partial<InboxItem['parsed']> & { property_id?: string | null }) => {
@@ -386,6 +474,18 @@ export default function InboxPage() {
           : i.match,
       };
     }));
+
+    // Persist property assignment to Supabase
+    if (!demo && updates.property_id !== undefined) {
+      (async () => {
+        try {
+          const { createClient } = await import("@/lib/supabase/client");
+          const supabase = createClient();
+          if (!supabase) return;
+          await supabase.from("parsed_emails").update({ property_id: updates.property_id }).eq("id", id);
+        } catch {}
+      })();
+    }
   };
 
   return (
