@@ -187,10 +187,10 @@ export function mapListingToProperty(listing: GuestyListing) {
 
   return {
     name: listing.nickname || listing.title || 'Unnamed Property',
-    address_line1: street,
-    city: addr.city || '',
-    state: abbreviateState(addr.state || ''),
-    zip: addr.zipcode?.replace(/-\d+$/, '') || '', // strip +4 zip
+    address_line1: street || 'Address pending',
+    city: addr.city || 'Unknown',
+    state: abbreviateState(addr.state || 'NA'),
+    zip: addr.zipcode?.replace(/-\d+$/, '') || '00000', // strip +4 zip
     property_type: mapPropertyType(listing.propertyType, listing.roomType),
     bedrooms: listing.bedrooms || 1,
     bathrooms: listing.bathrooms || 1,
@@ -206,7 +206,8 @@ export function mapReservationToRevenue(reservation: GuestyReservation, property
   const money = reservation.money || {};
   return {
     property_id: propertyId,
-    source: mapSource(reservation.source),
+    platform: mapSource(reservation.source),
+    source: 'api_sync',
     guest_name: reservation.guest?.fullName || 'Guest',
     amount: money.hostPayout || money.fareAccommodation || 0,
     platform_fee: money.hostServiceFee || 0,
@@ -230,7 +231,7 @@ function mapSource(source?: string): string {
   const s = source.toLowerCase();
   if (s.includes('airbnb')) return 'airbnb';
   if (s.includes('vrbo') || s.includes('homeaway')) return 'vrbo';
-  if (s.includes('booking')) return 'booking';
+  if (s.includes('booking')) return 'booking_com';
   if (s.includes('direct')) return 'direct';
   return 'other';
 }

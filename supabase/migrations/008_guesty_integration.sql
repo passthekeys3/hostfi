@@ -23,3 +23,11 @@ ALTER TABLE public.integration_connections ADD COLUMN IF NOT EXISTS connected_at
 -- Allow 'guesty' (and future providers) in the provider check constraint
 ALTER TABLE public.integration_connections DROP CONSTRAINT IF EXISTS integration_connections_provider_check;
 ALTER TABLE public.integration_connections ALTER COLUMN access_token DROP NOT NULL;
+
+-- Hostaway columns
+ALTER TABLE public.properties ADD COLUMN IF NOT EXISTS hostaway_listing_id text;
+ALTER TABLE public.revenue ADD COLUMN IF NOT EXISTS hostaway_reservation_id text;
+
+-- OwnerRez columns
+ALTER TABLE public.properties ADD COLUMN IF NOT EXISTS ownerrez_property_id text;
+ALTER TABLE public.revenue ADD COLUMN IF NOT EXISTS ownerrez_booking_id text;

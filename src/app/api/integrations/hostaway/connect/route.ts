@@ -1,0 +1,86 @@
+import { NextResponse } from 'next/server';
+import { authenticateRequest } from '@/lib/auth';
+import { createClient } from '@supabase/supabase-js';
+import { getHostawayToken } from '@/lib/integrations/hostaway';
+
+function getServiceClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key);
+}
+
+export async function POST(request: Request) {
+  try {
+    const auth = await authenticateRequest();
+    if (!auth.authenticated) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const supabase = getServiceClient();
+    if (!supabase) return NextResponse.json({ error: 'Not configured' }, { status: 500 });
+
+    const { account_id, api_key } = await request.json();
+    if (!account_id || !api_key) return NextResponse.json({ error: 'Account ID and API Key required' }, { status: 400 });
+
+    // Verify credentials
+    try {
+      await getHostawayToken(account_id, api_key);
+    } catch (err) {
+      const msg = String(err);
+      if (msg.includes('429') || msg.includes('TOO_MANY')) {
+        console.log('[Hostaway] Rate limited on verify, saving anyway');
+      } else {
+        return NextResponse.json({ error: 'Invalid Hostaway credentials' }, { status: 400 });
+      }
+    }
+
+    const { error } = await supabase.from('integration_connections').upsert({
+      user_id: auth.userId,
+      provider: 'hostaway',
+      status: 'connected',
+      credentials: { account_id, api_key },
+      connected_at: new Date().toISOString(),
+      access_token: 'hostaway_client_credentials',
+      metadata: {},
+      active: true,
+    }, { onConflict: 'user_id,provider' });
+
+    if (error) return NextResponse.json({ error: 'Failed to save connection' }, { status: 500 });
+    return NextResponse.json({ success: true, connected: true });
+  } catch (error) {
+    if (error instanceof NextResponse) return error;
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
+}
+
+export async function GET() {
+  try {
+    const auth = await authenticateRequest();
+    if (!auth.authenticated) return NextResponse.json({ connected: false });
+    const supabase = getServiceClient();
+    if (!supabase) return NextResponse.json({ connected: false });
+
+    const { data } = await supabase.from('integration_connections')
+      .select('status, connected_at, active').eq('user_id', auth.userId).eq('provider', 'hostaway').single();
+
+    return NextResponse.json({ connected: (data?.status === 'connected' || data?.active === true) && !!data, connectedAt: data?.connected_at || null });
+  } catch (error) {
+    if (error instanceof NextResponse) return error;
+    return NextResponse.json({ connected: false });
+  }
+}
+
+export async function DELETE() {
+  try {
+    const auth = await authenticateRequest();
+    if (!auth.authenticated) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const supabase = getServiceClient();
+    if (!supabase) return NextResponse.json({ error: 'Not configured' }, { status: 500 });
+
+    await supabase.from('integration_connections').update({ status: 'disconnected', credentials: null, active: false })
+      .eq('user_id', auth.userId).eq('provider', 'hostaway');
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    if (error instanceof NextResponse) return error;
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
+}
