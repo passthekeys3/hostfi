@@ -189,7 +189,7 @@ function PricingSection({ authTarget = "/login" }: { authTarget?: string }) {
     {
       name: "Business", monthly: 49, yearly: 39, period: "/mo",
       desc: "For teams and PMs",
-      features: ["Up to 25 properties", "+$2/property beyond 25", "Everything in Pro", "Cross-property benchmarking", "Team access (up to 5)", "QuickBooks / Xero sync", "Accountant portal", "Priority support"],
+      features: ["Up to 25 properties", "+$2/property beyond 25", "Everything in Pro", "Cross-property benchmarking", "Team access (up to 5)", "Accountant portal", "Priority support"],
       highlighted: false,
     },
   ];
@@ -330,8 +330,8 @@ export default function LandingPage() {
           { "@type": "Question", "name": "How does the AI bill parsing work?", "acceptedAnswer": { "@type": "Answer", "text": "Forward bills to your unique HostFi email address. Our AI reads the document, extracts amount, due date, vendor, and category, then matches it to the correct property based on your account details." }},
           { "@type": "Question", "name": "What's the difference between Owner and Arbitrage mappings?", "acceptedAnswer": { "@type": "Answer", "text": "Owners and arbitrage operators have different tax situations. For example, an owner deducts mortgage interest on Line 12, while an arbitrage operator deducts rent on Line 14. HostFi handles both automatically." }},
           { "@type": "Question", "name": "Is my financial data secure?", "acceptedAnswer": { "@type": "Answer", "text": "We use bank-level encryption and never store banking credentials. Your data is encrypted at rest and in transit. Bill payments are processed through licensed third-party providers — we never touch your funds." }},
-          { "@type": "Question", "name": "Can I import existing expense data?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Import from CSV or Excel — our import wizard auto-maps your columns and flags duplicates. QuickBooks and Xero sync available on Business plan." }},
-          { "@type": "Question", "name": "Do you integrate with property management software?", "acceptedAnswer": { "@type": "Answer", "text": "Today we integrate with Slack, Google Sheets, Google Drive, Zapier, and Make — with QuickBooks, Xero, and PMS integrations (Hostaway, Guesty, OwnerRez) on the roadmap. New integrations added regularly." }},
+          { "@type": "Question", "name": "Can I import existing expense data?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Import from CSV or Excel — our import wizard auto-maps your columns and flags duplicates. Xero sync coming soon on Business plan." }},
+          { "@type": "Question", "name": "Do you integrate with property management software?", "acceptedAnswer": { "@type": "Answer", "text": "Today we integrate with Slack, Google Sheets, Google Drive, Zapier, and Make — with Xero and PMS integrations (Hostaway, Guesty, OwnerRez) on the roadmap. New integrations added regularly." }},
           { "@type": "Question", "name": "What is the cancellation policy?", "acceptedAnswer": { "@type": "Answer", "text": "Cancel anytime from your settings — no contracts, no fees. Your data stays accessible for 30 days after cancellation." }}
         ]
       })}} />
@@ -613,7 +613,7 @@ export default function LandingPage() {
               { icon: BarChart3, title: "Revenue + P&L Tracking", desc: "Import revenue from Airbnb, VRBO, or direct bookings. See true profit per property." },
               { icon: Bell, title: "Smart Alerts", desc: "Due soon, overdue, unusual amounts, missing bills — never miss a payment again." },
               { icon: MessageSquare, title: "Ask AI", desc: "Ask questions about your expenses in plain English. \"What did I spend on utilities last quarter?\"" },
-              { icon: Layers, title: "Integrations", desc: "Connect QuickBooks, Xero, Slack, and your property management software. More added monthly." },
+              { icon: Layers, title: "Integrations", desc: "Connect Slack, Google Sheets, Zapier, and more. New integrations added monthly." },
             ].map((f, i) => (
               <FadeIn key={i} delay={i * 50} withScale>
                 <div className="bg-white rounded-xl p-6 h-full border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all group">
@@ -896,8 +896,8 @@ export default function LandingPage() {
               <FAQItem q="How does the AI bill parsing work?" a="Forward bills to your unique HostFi email address. Our AI reads the document, extracts amount, due date, vendor, and category, then matches it to the correct property based on your account details." />
               <FAQItem q="What's the difference between Owner and Arbitrage mappings?" a="Owners and arbitrage operators have different tax situations. For example, an owner deducts mortgage interest on Line 12, while an arbitrage operator deducts rent on Line 19 (Other). HostFi handles both automatically." />
               <FAQItem q="Is my financial data secure?" a="We use bank-level encryption and never store banking credentials. Your data is encrypted at rest and in transit. Bill payments are processed through licensed third-party providers — we never touch your funds." />
-              <FAQItem q="Can I import existing expense data?" a="Yes. Import from CSV or Excel — our import wizard auto-maps your columns and flags duplicates. QuickBooks and Xero sync available on Business plan." />
-              <FAQItem q="Do you integrate with property management software?" a="Today we integrate with Slack, Google Sheets, Google Drive, Zapier, and Make — with QuickBooks, Xero, and PMS integrations (Hostaway, Guesty, OwnerRez) on the roadmap. New integrations added regularly." />
+              <FAQItem q="Can I import existing expense data?" a="Yes. Import from CSV or Excel — our import wizard auto-maps your columns and flags duplicates. Xero sync coming soon on Business plan." />
+              <FAQItem q="Do you integrate with property management software?" a="Today we integrate with Slack, Google Sheets, Google Drive, Zapier, and Make — with Xero and PMS integrations (Hostaway, Guesty, OwnerRez) on the roadmap. New integrations added regularly." />
               <FAQItem q="What's the cancellation policy?" a="Cancel anytime from your settings — no contracts, no fees. Your data stays accessible for 30 days after cancellation." />
             </div>
           </FadeIn>

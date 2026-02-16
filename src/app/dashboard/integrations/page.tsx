@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Zap, ExternalLink, RefreshCw, Check } from "lucide-react";
 import { UpgradeGate } from "@/components/upgrade-gate";
 import {
-  QuickBooksModal,
+
   XeroModal,
   SlackModal,
   DropboxModal,
@@ -22,10 +22,9 @@ import {
 } from "@/components/integrations";
 
 const INTEGRATIONS: Integration[] = [
-  { id: "quickbooks", name: "QuickBooks Online", description: "Sync expenses and revenue to your ledger", category: "Accounting", status: "coming_soon", logo: "QB", logoColor: "bg-[#2CA01C]", logoUrl: "/logos/quickbooks.svg", tier: "business" },
   { id: "xero", name: "Xero", description: "Two-way sync with expenses and revenue", category: "Accounting", status: "coming_soon", logo: "XO", logoColor: "bg-[#13B5EA]", logoUrl: "/logos/xero.svg", tier: "business" },
   { id: "plaid", name: "Bank Accounts (Plaid)", description: "Auto-import and categorize transactions", category: "Banking", status: "coming_soon", logo: "PL", logoColor: "bg-[#111111]", logoUrl: "/logos/plaid.svg", tier: "pro" },
-  { id: "melio", name: "Melio", description: "Pay bills directly — ACH free on paid plans", category: "Payments", status: "coming_soon", logo: "ML", logoColor: "bg-[#00C2FF]", logoUrl: "/logos/melio.svg", tier: "free" },
+  { id: "melio", name: "Melio", description: "Bill pay integration — coming soon", category: "Payments", status: "coming_soon", logo: "ML", logoColor: "bg-[#00C2FF]", logoUrl: "/logos/melio.svg", tier: "free" },
   { id: "hostaway", name: "Hostaway", description: "Import reservations and revenue", category: "Property Management", status: "coming_soon", logo: "HA", logoColor: "bg-[#FF6B35]", logoUrl: "/logos/hostaway.svg", tier: "pro" },
   { id: "guesty", name: "Guesty", description: "Sync bookings, payouts, and property data", category: "Property Management", status: "coming_soon", logo: "GY", logoColor: "bg-[#00BFA5]", logoUrl: "/logos/guesty.svg", tier: "business" },
   { id: "ownerrez", name: "OwnerRez", description: "Import reservations and financial data", category: "Property Management", status: "coming_soon", logo: "OR", logoColor: "bg-[#1A73E8]", logoUrl: "/logos/ownerrez.svg", tier: "pro" },
@@ -159,7 +158,7 @@ export default function IntegrationsPage() {
   const [openModal, setOpenModal] = useState<string | null>(null);
 
   const handleConnect = (id: string) => {
-    const hasModal = ["quickbooks", "xero", "slack", "google_sheets", "zapier", "teams", "google_drive", "dropbox", "make", "email_smtp", "plaid"].includes(id);
+    const hasModal = ["xero", "slack", "google_sheets", "zapier", "teams", "google_drive", "dropbox", "make", "email_smtp", "plaid"].includes(id);
     if (hasModal) { setOpenModal(id); return; }
     // Toggle for Melio
     setConnectedIds(prev => {
@@ -267,7 +266,6 @@ export default function IntegrationsPage() {
       </div>
 
       {/* Modals */}
-      {openModal === "quickbooks" && <QuickBooksModal onClose={handleModalClose("quickbooks")} />}
       {openModal === "xero" && <XeroModal onClose={handleModalClose("xero")} />}
       {openModal === "slack" && <SlackModal onClose={handleModalClose("slack")} isConnected={connectedIds.has("slack")} onDisconnect={() => handleDisconnect("slack")} />}
       {openModal === "google_sheets" && <GoogleSheetsModal onClose={handleModalClose("google_sheets")} isConnected={connectedIds.has("google_sheets")} onDisconnect={() => handleDisconnect("google_sheets")} />}
