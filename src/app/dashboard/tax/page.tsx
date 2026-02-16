@@ -468,6 +468,51 @@ export default function TaxPage() {
         </p>
       </div>
 
+      {/* Cost Segregation Partner Card */}
+      <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-teal-200/60 p-6 sm:p-8">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-5">
+          <div className="w-12 h-12 bg-white rounded-xl border border-teal-200/60 flex items-center justify-center shrink-0 shadow-sm">
+            <Building2 className="w-6 h-6 text-teal-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-base font-bold text-gray-900">Save Thousands with Cost Segregation</h3>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-teal-700 bg-teal-100 px-2 py-0.5 rounded-full">Partner Offer</span>
+            </div>
+            <p className="text-sm text-gray-600 mt-2 leading-relaxed">
+              A cost segregation study reclassifies parts of your property into faster-depreciating categories —
+              accelerating your deductions and reducing your tax bill by <strong>$20,000–$100,000+</strong> depending on property value.
+            </p>
+            <div className="flex flex-wrap gap-4 mt-4">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-teal-500" />
+                <span className="text-xs text-gray-600"><strong className="text-gray-900">10% off</strong> for HostFi users</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-teal-500" />
+                <span className="text-xs text-gray-600"><strong className="text-gray-900">Virtual site visits</strong> — no travel needed</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-teal-500" />
+                <span className="text-xs text-gray-600"><strong className="text-gray-900">IRS audit support</strong> included</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 mt-5 flex-wrap">
+              <a
+                href="https://www.recostseg.com/free-proposal?ref=hostfi"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors shadow-sm"
+              >
+                Get Free Proposal
+                <ChevronRight className="w-4 h-4" />
+              </a>
+              <span className="text-xs text-gray-400">via R.E. Cost Seg · 10,000+ properties studied</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Share with CPA Modal */}
       {showCPAModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setShowCPAModal(false)}>
