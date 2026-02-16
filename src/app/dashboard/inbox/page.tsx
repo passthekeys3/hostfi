@@ -566,6 +566,26 @@ export default function InboxPage() {
                 >
                   {item.status === "confirmed" ? "Confirmed" : "Rejected"}
                 </span>
+                <button
+                  onClick={() => {
+                    // Move back to pending so user can re-confirm
+                    setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, status: "pending_review" as const } : i)));
+                    if (!demo) {
+                      (async () => {
+                        try {
+                          const { createClient } = await import("@/lib/supabase/client");
+                          const supabase = createClient();
+                          if (supabase) {
+                            await supabase.from("parsed_emails").update({ status: "pending" }).eq("id", item.id);
+                          }
+                        } catch {}
+                      })();
+                    }
+                  }}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors underline"
+                >
+                  Redo
+                </button>
               </div>
             ))}
           </div>
