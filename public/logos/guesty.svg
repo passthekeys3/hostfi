@@ -1,1 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" rx="8" fill="#00BFA5"/><text x="20" y="26" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" font-weight="bold" fill="white">G</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+  <rect width="40" height="40" rx="8" fill="#00695C"/>
+  <!-- House icon with arch door - Guesty brand -->
+  <path d="M20 8L8 18v14a2 2 0 002 2h20a2 2 0 002-2V18L20 8z" fill="none" stroke="#E8F5E9" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M16 34v-8a4 4 0 018 0v8" fill="none" stroke="#E8F5E9" stroke-width="2" stroke-linecap="round"/>
+</svg>
