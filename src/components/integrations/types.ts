@@ -1,4 +1,4 @@
-export type ConnectionStatus = "connected" | "disconnected" | "error" | "coming_soon";
+export type ConnectionStatus = "connected" | "disconnected" | "error" | "coming_soon" | "available";
 
 export interface Integration {
   id: string;

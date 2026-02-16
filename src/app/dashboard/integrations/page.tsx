@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { Zap, ExternalLink, RefreshCw, Check } from "lucide-react";
 import { UpgradeGate } from "@/components/upgrade-gate";
+import { GuestyModal } from "@/components/integrations/GuestyModal";
 import {
 
   XeroModal,
@@ -27,7 +28,7 @@ const INTEGRATIONS: Integration[] = [
   { id: "plaid", name: "Bank Accounts (Plaid)", description: "Auto-import and categorize transactions", category: "Banking", status: "coming_soon", logo: "PL", logoColor: "bg-[#111111]", logoUrl: "/logos/plaid.svg", tier: "pro" },
   { id: "melio", name: "Melio", description: "Bill pay integration — coming soon", category: "Payments", status: "coming_soon", logo: "ML", logoColor: "bg-[#00C2FF]", logoUrl: "/logos/melio.svg", tier: "free" },
   { id: "hostaway", name: "Hostaway", description: "Import reservations and revenue", category: "Property Management", status: "coming_soon", logo: "HA", logoColor: "bg-[#FF6B35]", logoUrl: "/logos/hostaway.svg", tier: "pro" },
-  { id: "guesty", name: "Guesty", description: "Sync bookings, payouts, and property data", category: "Property Management", status: "coming_soon", logo: "GY", logoColor: "bg-[#00BFA5]", logoUrl: "/logos/guesty.svg", tier: "business" },
+  { id: "guesty", name: "Guesty", description: "Sync bookings, payouts, and property data", category: "Property Management", status: "available", logo: "GY", logoColor: "bg-[#00BFA5]", logoUrl: "/logos/guesty.svg", tier: "pro" },
   { id: "ownerrez", name: "OwnerRez", description: "Import reservations and financial data", category: "Property Management", status: "coming_soon", logo: "OR", logoColor: "bg-[#1A73E8]", logoUrl: "/logos/ownerrez.svg", tier: "pro" },
   { id: "google_sheets", name: "Google Sheets", description: "Live sync expenses and P&L to Sheets", category: "Productivity", status: "disconnected", logo: "GS", logoColor: "bg-[#0F9D58]", logoUrl: "/logos/googlesheets.svg", tier: "pro" },
   { id: "google_drive", name: "Google Drive", description: "Auto-backup receipts and reports", category: "Productivity", status: "disconnected", logo: "GD", logoColor: "bg-[#4285F4]", logoUrl: "/logos/googledrive.svg", tier: "pro" },
@@ -159,7 +160,7 @@ export default function IntegrationsPage() {
   const [openModal, setOpenModal] = useState<string | null>(null);
 
   const handleConnect = (id: string) => {
-    const hasModal = ["xero", "slack", "google_sheets", "zapier", "teams", "google_drive", "dropbox", "make", "email_smtp", "plaid"].includes(id);
+    const hasModal = ["xero", "slack", "google_sheets", "zapier", "teams", "google_drive", "dropbox", "make", "email_smtp", "plaid", "guesty"].includes(id);
     if (hasModal) { setOpenModal(id); return; }
     // Toggle for Melio
     setConnectedIds(prev => {
@@ -277,6 +278,7 @@ export default function IntegrationsPage() {
       {openModal === "make" && <MakeModal onClose={handleModalClose("make")} />}
       {openModal === "email_smtp" && <EmailAlertsModal onClose={handleModalClose("email_smtp")} />}
       {openModal === "plaid" && <PlaidModal onClose={handleModalClose("plaid")} onConnected={() => setConnectedIds(prev => new Set(prev).add("plaid"))} />}
+      {openModal === "guesty" && <GuestyModal open={true} onClose={() => { setOpenModal(null); }} />}
       {/* Note: modals call onClose() without didConnect=true, so closing a modal
           does NOT mark the integration as connected. In production, the OAuth
           callback or API verification will call onClose with didConnect=true. */}
