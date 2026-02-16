@@ -10,13 +10,12 @@
 const GUESTY_TOKEN_URL = 'https://open-api.guesty.com/oauth2/token';
 const GUESTY_API_BASE = 'https://open-api.guesty.com/v1';
 
-// In-memory token cache (per-process)
-let cachedToken: { token: string; expiresAt: number } | null = null;
+// Per-credential token cache (keyed by client_id)
+const tokenCache = new Map<string, { token: string; expiresAt: number }>();
 
 /**
  * Get a valid Guesty access token using client credentials.
- * For marketplace integrations, each user would store their own credentials.
- * For now, we use the app-level credentials (Kevin's account).
+ * Caches tokens per client_id to support multiple users.
  */
 export async function getGuestyToken(clientId?: string, clientSecret?: string): Promise<string> {
   const id = clientId || process.env.GUESTY_CLIENT_ID;
@@ -27,8 +26,9 @@ export async function getGuestyToken(clientId?: string, clientSecret?: string): 
   }
 
   // Return cached token if still valid (with 5min buffer)
-  if (cachedToken && cachedToken.expiresAt > Date.now() + 300_000) {
-    return cachedToken.token;
+  const cached = tokenCache.get(id);
+  if (cached && cached.expiresAt > Date.now() + 300_000) {
+    return cached.token;
   }
 
   const res = await fetch(GUESTY_TOKEN_URL, {
@@ -47,12 +47,12 @@ export async function getGuestyToken(clientId?: string, clientSecret?: string): 
   }
 
   const data = await res.json();
-  cachedToken = {
+  tokenCache.set(id, {
     token: data.access_token,
     expiresAt: Date.now() + (data.expires_in * 1000),
-  };
+  });
 
-  return cachedToken.token;
+  return data.access_token;
 }
 
 /**

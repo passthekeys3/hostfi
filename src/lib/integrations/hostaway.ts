@@ -10,11 +10,14 @@
 const HOSTAWAY_TOKEN_URL = 'https://api.hostaway.com/accessTokens';
 const HOSTAWAY_API_BASE = 'https://api.hostaway.com/v1';
 
-let cachedToken: { token: string; expiresAt: number } | null = null;
+// Per-credential token cache (keyed by account_id)
+const tokenCache = new Map<string, { token: string; expiresAt: number }>();
 
 export async function getHostawayToken(accountId: string, apiKey: string): Promise<string> {
-  if (cachedToken && cachedToken.expiresAt > Date.now() + 300_000) {
-    return cachedToken.token;
+  // Return cached token if still valid (with 5min buffer)
+  const cached = tokenCache.get(accountId);
+  if (cached && cached.expiresAt > Date.now() + 300_000) {
+    return cached.token;
   }
 
   const res = await fetch(HOSTAWAY_TOKEN_URL, {
@@ -34,11 +37,11 @@ export async function getHostawayToken(accountId: string, apiKey: string): Promi
   }
 
   const data = await res.json();
-  cachedToken = {
+  tokenCache.set(accountId, {
     token: data.access_token,
     expiresAt: Date.now() + (data.expires_in * 1000),
-  };
-  return cachedToken.token;
+  });
+  return data.access_token;
 }
 
 async function hostawayFetch(path: string, token: string, params?: Record<string, string>) {
@@ -87,12 +90,23 @@ export interface HostawayReservation {
   confirmationCode: string;
 }
 
-export async function getListings(token: string): Promise<HostawayListing[]> {
-  return hostawayFetch('/listings', token);
+export async function getListings(token: string, params?: { limit?: number; offset?: number }): Promise<{ listings: HostawayListing[]; total: number }> {
+  const queryParams: Record<string, string> = {};
+  if (params?.limit) queryParams.limit = String(params.limit);
+  if (params?.offset) queryParams.offset = String(params.offset);
+  
+  const result = await hostawayFetch('/listings', token, queryParams);
+  // Hostaway returns array in result, total count in response headers (we estimate from results)
+  return { listings: result || [], total: result?.length || 0 };
 }
 
-export async function getReservations(token: string, params?: { limit?: string; offset?: string }): Promise<HostawayReservation[]> {
-  return hostawayFetch('/reservations', token, params);
+export async function getReservations(token: string, params?: { limit?: number; offset?: number }): Promise<{ reservations: HostawayReservation[]; total: number }> {
+  const queryParams: Record<string, string> = {};
+  if (params?.limit) queryParams.limit = String(params.limit);
+  if (params?.offset) queryParams.offset = String(params.offset);
+  
+  const result = await hostawayFetch('/reservations', token, queryParams);
+  return { reservations: result || [], total: result?.length || 0 };
 }
 
 export function mapListingToProperty(listing: HostawayListing) {

@@ -56,12 +56,43 @@ export interface OwnerRezBooking {
   confirmation_code?: string;
 }
 
-export async function getProperties(email: string, token: string): Promise<{ items: OwnerRezProperty[] }> {
-  return ownerrezFetch('/properties', email, token);
+export interface PaginatedResponse<T> {
+  items: T[];
+  page: number;
+  page_size: number;
+  total_count: number;
+  has_more: boolean;
 }
 
-export async function getBookings(email: string, token: string, params?: Record<string, string>): Promise<{ items: OwnerRezBooking[] }> {
-  return ownerrezFetch('/bookings', email, token, params);
+export async function getProperties(email: string, token: string, params?: { page?: number; page_size?: number }): Promise<PaginatedResponse<OwnerRezProperty>> {
+  const queryParams: Record<string, string> = {};
+  if (params?.page) queryParams.page = String(params.page);
+  if (params?.page_size) queryParams.page_size = String(params.page_size);
+  
+  const result = await ownerrezFetch('/properties', email, token, queryParams);
+  // OwnerRez returns { items: [], page: 1, page_size: 50, total_count: N }
+  return {
+    items: result.items || [],
+    page: result.page || 1,
+    page_size: result.page_size || 50,
+    total_count: result.total_count || result.items?.length || 0,
+    has_more: result.items?.length === (result.page_size || 50),
+  };
+}
+
+export async function getBookings(email: string, token: string, params?: { page?: number; page_size?: number }): Promise<PaginatedResponse<OwnerRezBooking>> {
+  const queryParams: Record<string, string> = {};
+  if (params?.page) queryParams.page = String(params.page);
+  if (params?.page_size) queryParams.page_size = String(params.page_size);
+  
+  const result = await ownerrezFetch('/bookings', email, token, queryParams);
+  return {
+    items: result.items || [],
+    page: result.page || 1,
+    page_size: result.page_size || 50,
+    total_count: result.total_count || result.items?.length || 0,
+    has_more: result.items?.length === (result.page_size || 50),
+  };
 }
 
 export async function verifyCredentials(email: string, token: string): Promise<boolean> {

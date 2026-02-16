@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateRequest } from '@/lib/auth';
 import { createClient } from '@supabase/supabase-js';
-import { getProperties, getBookings, mapPropertyToHostFi, mapBookingToRevenue } from '@/lib/integrations/ownerrez';
+import { PROPERTY_LIMITS, type Plan } from '@/lib/feature-gates';
+import {
+  getProperties,
+  getBookings,
+  mapPropertyToHostFi,
+  mapBookingToRevenue,
+  type OwnerRezProperty,
+  type OwnerRezBooking,
+} from '@/lib/integrations/ownerrez';
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -22,29 +30,77 @@ export async function POST(request: NextRequest) {
     if (!connection?.credentials) return NextResponse.json({ error: 'OwnerRez not connected' }, { status: 400 });
 
     const { email, api_token } = connection.credentials as { email: string; api_token: string };
+
+    // Get user's plan for property limits
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('plan')
+      .eq('id', auth.userId)
+      .single();
+    
+    const userPlan = (profile?.plan || 'free') as Plan;
+    const propertyLimit = PROPERTY_LIMITS[userPlan];
+
     const body = await request.json().catch(() => ({ type: 'all' }));
     const syncType = body.type || 'all';
-    const results: Record<string, unknown> = {};
+    const results: {
+      listings?: { imported: number; updated: number; total: number; skipped: number };
+      reservations?: { imported: number; skipped: number; total: number };
+      limitReached?: boolean;
+    } = {};
 
     if (syncType === 'listings' || syncType === 'all') {
-      const { items: properties } = await getProperties(email, api_token);
+      // Paginate through all properties
+      let allProperties: OwnerRezProperty[] = [];
+      let page = 1;
+      const pageSize = 50;
+
+      while (true) {
+        const result = await getProperties(email, api_token, { page, page_size: pageSize });
+        allProperties = allProperties.concat(result.items);
+        if (!result.has_more || result.items.length < pageSize) break;
+        page++;
+      }
+
       const { data: existingProps } = await supabase.from('properties')
         .select('id, ownerrez_property_id').eq('user_id', auth.userId).not('ownerrez_property_id', 'is', null);
       const existingMap = new Map((existingProps || []).map(p => [p.ownerrez_property_id, p.id]));
 
-      let imported = 0, updated = 0;
-      for (const prop of properties) {
+      // Count current properties to enforce limits
+      const { count: currentPropertyCount } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', auth.userId);
+
+      let currentCount = currentPropertyCount || 0;
+      let imported = 0, updated = 0, skippedDueToLimit = 0;
+
+      for (const prop of allProperties) {
         const mapped = mapPropertyToHostFi(prop);
         const existingId = existingMap.get(String(prop.id));
         if (existingId) {
           await supabase.from('properties').update({ name: mapped.name, address_line1: mapped.address_line1, city: mapped.city, state: mapped.state, zip: mapped.zip, status: mapped.status }).eq('id', existingId);
           updated++;
         } else {
+          // Check property limit before inserting new
+          if (currentCount >= propertyLimit) {
+            skippedDueToLimit++;
+            continue;
+          }
+
           const { error } = await supabase.from('properties').insert({ user_id: auth.userId, ...mapped });
-          if (!error) imported++; else console.error('OwnerRez import error:', error.message);
+          if (!error) {
+            imported++;
+            currentCount++;
+          } else {
+            console.error('OwnerRez import error:', error.message);
+          }
         }
       }
-      results.listings = { imported, updated, total: properties.length };
+      results.listings = { imported, updated, total: allProperties.length, skipped: skippedDueToLimit };
+      if (skippedDueToLimit > 0) {
+        results.limitReached = true;
+      }
     }
 
     if (syncType === 'reservations' || syncType === 'all') {
@@ -55,9 +111,20 @@ export async function POST(request: NextRequest) {
         const { data: existing } = await supabase.from('revenue').select('ownerrez_booking_id').eq('user_id', auth.userId).not('ownerrez_booking_id', 'is', null);
         const existingIds = new Set((existing || []).map(r => r.ownerrez_booking_id));
 
-        const { items: bookings } = await getBookings(email, api_token);
+        // Paginate through all bookings
+        let allBookings: OwnerRezBooking[] = [];
+        let page = 1;
+        const pageSize = 50;
+
+        while (true) {
+          const result = await getBookings(email, api_token, { page, page_size: pageSize });
+          allBookings = allBookings.concat(result.items);
+          if (!result.has_more || result.items.length < pageSize) break;
+          page++;
+        }
+
         let imported = 0, skipped = 0;
-        for (const booking of bookings) {
+        for (const booking of allBookings) {
           if (existingIds.has(String(booking.id))) { skipped++; continue; }
           const propertyId = propertyMap.get(String(booking.property_id));
           if (!propertyId) { skipped++; continue; }
@@ -65,7 +132,7 @@ export async function POST(request: NextRequest) {
           const { error } = await supabase.from('revenue').insert({ user_id: auth.userId, ...mapped });
           if (!error) imported++; else skipped++;
         }
-        results.reservations = { imported, skipped, total: bookings.length };
+        results.reservations = { imported, skipped, total: allBookings.length };
       } else {
         results.reservations = { imported: 0, skipped: 0, total: 0 };
       }

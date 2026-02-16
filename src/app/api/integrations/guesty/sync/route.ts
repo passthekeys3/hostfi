@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateRequest } from '@/lib/auth';
 import { createClient } from '@supabase/supabase-js';
+import { PROPERTY_LIMITS, type Plan } from '@/lib/feature-gates';
 import {
   getGuestyToken,
   getListings,
@@ -58,12 +59,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Guesty authentication failed. Please reconnect.' }, { status: 401 });
     }
 
+    // Get user's plan for property limits
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('plan')
+      .eq('id', auth.userId)
+      .single();
+    
+    const userPlan = (profile?.plan || 'free') as Plan;
+    const propertyLimit = PROPERTY_LIMITS[userPlan];
+
     const body = await request.json().catch(() => ({ type: 'all' }));
     const syncType = body.type || 'all';
 
     const results: {
-      listings?: { imported: number; updated: number; total: number };
+      listings?: { imported: number; updated: number; total: number; skipped: number };
       reservations?: { imported: number; skipped: number; total: number };
+      limitReached?: boolean;
     } = {};
 
     // ========================================================================
@@ -93,15 +105,23 @@ export async function POST(request: NextRequest) {
         (existingProps || []).map(p => [p.guesty_listing_id, p.id])
       );
 
+      // Count current properties to enforce limits
+      const { count: currentPropertyCount } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', auth.userId);
+
+      let currentCount = currentPropertyCount || 0;
       let imported = 0;
       let updated = 0;
+      let skippedDueToLimit = 0;
 
       for (const listing of allListings) {
         const mapped = mapListingToProperty(listing);
         const existingId = existingMap.get(listing._id);
 
         if (existingId) {
-          // Update existing property
+          // Update existing property (doesn't count against limit)
           await supabase
             .from('properties')
             .update({
@@ -117,6 +137,12 @@ export async function POST(request: NextRequest) {
             .eq('id', existingId);
           updated++;
         } else {
+          // Check property limit before inserting new
+          if (currentCount >= propertyLimit) {
+            skippedDueToLimit++;
+            continue;
+          }
+
           // Create new property
           const { error: insertError } = await supabase
             .from('properties')
@@ -124,12 +150,19 @@ export async function POST(request: NextRequest) {
               user_id: auth.userId,
               ...mapped,
             });
-          if (!insertError) imported++;
-          else console.error('Failed to import listing:', listing._id, insertError.message);
+          if (!insertError) {
+            imported++;
+            currentCount++;
+          } else {
+            console.error('Failed to import listing:', listing._id, insertError.message);
+          }
         }
       }
 
-      results.listings = { imported, updated, total: allListings.length };
+      results.listings = { imported, updated, total: allListings.length, skipped: skippedDueToLimit };
+      if (skippedDueToLimit > 0) {
+        results.limitReached = true;
+      }
     }
 
     // ========================================================================
