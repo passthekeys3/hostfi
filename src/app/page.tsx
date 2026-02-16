@@ -239,9 +239,7 @@ export default function LandingPage() {
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/80 backdrop-blur-xl border-b border-gray-100" : "bg-transparent"}`}>
         <div className="max-w-6xl mx-auto px-5 flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center">
-              <Building2 className="w-4 h-4 text-white" />
-            </div>
+            <img src="/logo.svg" alt="HostFi" className="w-8 h-8 rounded-lg" />
             <span className="text-lg font-semibold tracking-tight">HostFi</span>
           </Link>
           <div className="hidden md:flex items-center gap-8 text-[13px] font-medium text-gray-500">
@@ -806,9 +804,7 @@ export default function LandingPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-7 h-7 bg-teal-500 rounded-lg flex items-center justify-center">
-                  <Building2 className="w-3.5 h-3.5 text-white" />
-                </div>
+                <img src="/logo.svg" alt="HostFi" className="w-7 h-7 rounded-lg" />
                 <span className="text-base font-semibold">HostFi</span>
               </div>
               <p className="text-sm text-gray-400 leading-relaxed">AI-powered expense management for rental property operators.</p>

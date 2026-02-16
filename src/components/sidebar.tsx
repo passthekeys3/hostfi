@@ -187,8 +187,8 @@ export function Sidebar() {
         {/* Logo */}
         <div className="px-5 py-6 border-b border-gray-100">
           <Link href="/dashboard" className="flex items-center gap-3" onClick={() => setOpen(false)}>
-            <div className="w-9 h-9 bg-teal-500 rounded-lg flex items-center justify-center shadow-sm">
-              <Building2 className="w-5 h-5 text-white" />
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center shadow-sm overflow-hidden">
+              <img src="/logo.svg" alt="HostFi" className="w-9 h-9" />
             </div>
             <div>
               <span className="text-lg font-bold tracking-tight text-gray-900">HostFi</span>
