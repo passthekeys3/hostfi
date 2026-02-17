@@ -153,6 +153,13 @@ export default function DashboardPage() {
     }
   }, []);
 
+  // Current month filter for "Monthly Spend" card (must be before early returns)
+  const [currentMonthStr, setCurrentMonthStr] = useState<string>('');
+  useEffect(() => {
+    const now = new Date();
+    setCurrentMonthStr(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+  }, []);
+
   const handleDismissWelcome = () => {
     setWelcomeDismissed(true);
     localStorage.setItem('hostfi-welcome-dismissed', 'true');
@@ -174,12 +181,6 @@ export default function DashboardPage() {
   const isNewUser = !isDemo && (properties.length === 0 || expenses.length === 0);
   const showWelcome = isNewUser && !welcomeDismissed;
 
-  // Current month filter for "Monthly Spend" card (safe for hydration)
-  const [currentMonthStr, setCurrentMonthStr] = useState<string>('');
-  useEffect(() => {
-    const now = new Date();
-    setCurrentMonthStr(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
-  }, []);
   const currentMonthExpenses = currentMonthStr ? expenses.filter((e) => e.date?.startsWith(currentMonthStr)) : [];
   const totalSpend = currentMonthExpenses.reduce((sum, e) => sum + e.amount, 0);
   const pendingExpenses = expenses.filter((e) => e.status === 'pending');
