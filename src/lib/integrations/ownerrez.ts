@@ -190,7 +190,7 @@ export function mapBookingToRevenue(booking: OwnerRezBooking, propertyId: string
   else if (channel.includes('direct') || channel.includes('owner')) platform = 'direct';
 
   // OwnerRez API may return dates under different field names — try all known variants
-  const raw = booking as Record<string, unknown>;
+  const raw = booking as unknown as Record<string, unknown>;
   const arrivalRaw = booking.arrival || raw.arrive || raw.check_in || raw.checkin || raw.start_date || raw.start || '';
   const departureRaw = booking.departure || raw.depart || raw.check_out || raw.checkout || raw.end_date || raw.end || '';
   const checkIn = String(arrivalRaw).split('T')[0] || null;
