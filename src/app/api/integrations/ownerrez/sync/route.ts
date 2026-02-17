@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
         skipped: number;
         properties?: { id: string; name: string; address?: string }[];
       };
-      reservations?: { imported: number; skipped: number; total: number };
+      reservations?: { imported: number; skipped: number; total: number; skipReasons?: Record<string, number> };
       limitReached?: boolean;
     } = {};
 
@@ -161,17 +161,23 @@ export async function POST(request: NextRequest) {
         }
 
         let imported = 0, skipped = 0;
+        const skipReasons: Record<string, number> = {};
         for (const booking of allBookings) {
-          if (existingIds.has(String(booking.id))) { skipped++; continue; }
-          // Skip bookings for properties not in the selected set
-          if (relevantPropertyIds && !relevantPropertyIds.has(String(booking.property_id))) { skipped++; continue; }
+          if (existingIds.has(String(booking.id))) { skipped++; skipReasons['already_exists'] = (skipReasons['already_exists'] || 0) + 1; continue; }
+          if (relevantPropertyIds && !relevantPropertyIds.has(String(booking.property_id))) { skipped++; skipReasons['not_selected'] = (skipReasons['not_selected'] || 0) + 1; continue; }
           const propertyId = propertyMap.get(String(booking.property_id));
-          if (!propertyId) { skipped++; continue; }
+          if (!propertyId) {
+            skipped++;
+            skipReasons['no_matching_property'] = (skipReasons['no_matching_property'] || 0) + 1;
+            console.log(`OwnerRez sync: booking ${booking.id} skipped — property_id ${booking.property_id} not found in HostFi. Known property IDs: [${Array.from(propertyMap.keys()).join(', ')}]`);
+            continue;
+          }
           const mapped = mapBookingToRevenue(booking, propertyId);
           const { error } = await supabase.from('revenue').insert({ user_id: session.userId, ...mapped });
-          if (!error) imported++; else skipped++;
+          if (!error) imported++;
+          else { skipped++; skipReasons['db_error'] = (skipReasons['db_error'] || 0) + 1; console.error('Booking insert error:', error.message); }
         }
-        results.reservations = { imported, skipped, total: allBookings.length };
+        results.reservations = { imported, skipped, total: allBookings.length, skipReasons } as typeof results.reservations;
       } else {
         results.reservations = { imported: 0, skipped: 0, total: 0 };
       }
