@@ -96,7 +96,14 @@ export default function RevenuePage() {
   }, [revenue, allProperties, allExpenses]);
 
   const bySource = useMemo(() => getRevenueBySource(revenue), [revenue]);
-  const byMonth = useMemo(() => getRevenueByMonth(revenue), [revenue]);
+  const byMonth = useMemo(() => {
+    const result = getRevenueByMonth(revenue);
+    // Always ensure current month exists
+    const now = new Date();
+    const cm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    if (!result[cm]) result[cm] = { gross: 0, net: 0, fees: 0, bookings: 0 };
+    return result;
+  }, [revenue]);
 
   const handleAddManual = useCallback(async () => {
     const amount = parseFloat(form.amount) || 0;
