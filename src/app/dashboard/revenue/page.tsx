@@ -338,6 +338,7 @@ export default function RevenuePage() {
               })}
             </tbody>
             <tfoot>
+              <tr><td colSpan={7} className="h-3 border-t border-gray-200" /></tr>
               <tr className="bg-gray-50/50 font-semibold text-sm">
                 <td className="px-5 py-3">Total</td>
                 <td className="px-5 py-3 text-right">${fmt(totalGross)}</td>
