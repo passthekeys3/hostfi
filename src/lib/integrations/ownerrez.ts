@@ -183,17 +183,20 @@ export function mapBookingToRevenue(booking: OwnerRezBooking, propertyId: string
   else if (channel.includes('booking')) platform = 'booking_com';
   else if (channel.includes('direct') || channel.includes('owner')) platform = 'direct';
 
+  const checkIn = booking.arrival?.split('T')[0] || null;
+  const checkOut = booking.departure?.split('T')[0] || null;
+
   return {
     property_id: propertyId,
     platform,
     source: 'api_sync',
+    description: booking.confirmation_code ? `Booking #${booking.confirmation_code}` : 'OwnerRez Booking',
     guest_name: [booking.guest?.first_name, booking.guest?.last_name].filter(Boolean).join(' ') || 'Guest',
     amount: booking.total_amount || 0,
     platform_fee: 0,
-    check_in: booking.arrival?.split('T')[0] || '',
-    check_out: booking.departure?.split('T')[0] || '',
-    confirmation_code: booking.confirmation_code || '',
-    payout_date: null,
+    check_in: checkIn,
+    check_out: checkOut,
+    date: checkIn || new Date().toISOString().split('T')[0],
     ownerrez_booking_id: String(booking.id),
   };
 }
