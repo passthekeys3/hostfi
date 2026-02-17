@@ -132,6 +132,13 @@ export async function getBookings(authOrEmail: OwnerRezAuth | string, tokenOrPar
   if (actualParams?.page) queryParams.page = String(actualParams.page);
   if (actualParams?.page_size) queryParams.page_size = String(actualParams.page_size);
   
+  // OwnerRez requires either property_ids or since_utc for bookings
+  if (!queryParams.property_ids && !queryParams.since_utc) {
+    // Default to last 2 years of bookings
+    const since = new Date();
+    since.setFullYear(since.getFullYear() - 2);
+    queryParams.since_utc = since.toISOString();
+  }
   const result = await ownerrezFetch('/bookings', auth, queryParams);
   return {
     items: result.items || [],
