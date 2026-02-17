@@ -6,13 +6,13 @@ import { notFound } from "next/navigation";
 import { getExpensesByCategory } from "@/lib/demo-expenses";
 import { EXPENSE_CATEGORY_CONFIG } from "@/lib/expense-categories";
 import { cn, getPropertyTypeLabel, formatCurrency } from "@/lib/utils";
-import { ArrowLeft, MapPin, Plus, Bed, Bath, Ruler, Building2, Landmark, Mail } from "lucide-react";
+import { ArrowLeft, MapPin, Plus, Bed, Bath, Ruler, Building2, Landmark, Mail, TrendingUp, DollarSign, Calendar } from "lucide-react";
 import { PropertyExportBar } from "@/components/property-export-bar";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { properties, expenses, isDemo, loading } = useDashboardData();
+  const { properties, expenses, revenue, isDemo, loading } = useDashboardData();
 
   if (loading) {
     return (
@@ -32,6 +32,14 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   const propertyExpenses = expenses.filter(e => e.property_id === id);
   const expensesByCategory = getExpensesByCategory(propertyExpenses);
   const totalExpenses = propertyExpenses.reduce((sum, e) => sum + e.amount, 0);
+
+  // Revenue for this property
+  const propertyRevenue = (revenue || []).filter(r => r.property_id === id)
+    .sort((a, b) => (b.check_in || b.date || '').localeCompare(a.check_in || a.date || ''));
+  const totalRevenue = propertyRevenue.reduce((sum, r) => sum + (r.amount ?? 0), 0);
+  const totalNetRevenue = propertyRevenue.reduce((sum, r) => sum + (r.payout_amount ?? r.amount ?? 0), 0);
+  const totalFees = propertyRevenue.reduce((sum, r) => sum + (r.platform_fee ?? 0), 0);
+  const netProfit = totalNetRevenue - totalExpenses;
 
   // Build last 5 months of spend data from real expenses
   const now = new Date();
@@ -125,6 +133,74 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
           <p className="text-base sm:text-lg font-semibold mt-1">{formatCurrency(totalExpenses)}</p>
         </div>
       </div>
+
+      {/* Revenue Summary */}
+      {propertyRevenue.length > 0 && (
+        <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100">
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" /> Revenue
+            </h2>
+          </div>
+
+          {/* Revenue stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-gray-100">
+            <div className="bg-white p-4">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">Gross Revenue</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">{formatCurrency(totalRevenue)}</p>
+            </div>
+            <div className="bg-white p-4">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">Net Payouts</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">{formatCurrency(totalNetRevenue)}</p>
+            </div>
+            <div className="bg-white p-4">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">Bookings</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">{propertyRevenue.length}</p>
+            </div>
+            <div className="bg-white p-4">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">Net Profit</p>
+              <p className={cn("text-lg font-bold mt-1", netProfit >= 0 ? "text-teal-600" : "text-rose-600")}>
+                {netProfit >= 0 ? '' : '-'}{formatCurrency(Math.abs(netProfit))}
+              </p>
+            </div>
+          </div>
+
+          {/* Bookings list */}
+          <div className="divide-y divide-gray-50">
+            {propertyRevenue.slice(0, 10).map((r, i) => (
+              <div key={r.id || i} className="px-6 py-3.5 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {r.guest_name || 'Guest'}
+                  </p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs text-gray-400">
+                      {r.check_in ? new Date(r.check_in + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
+                      {r.check_out ? ` → ${new Date(r.check_out + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}
+                    </span>
+                    {r.platform && r.platform !== 'other' && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 capitalize">{r.platform === 'booking_com' ? 'Booking.com' : r.platform}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right shrink-0 ml-4">
+                  <p className="text-sm font-semibold text-gray-900">{formatCurrency(r.amount ?? 0)}</p>
+                  {(r.platform_fee ?? 0) > 0 && (
+                    <p className="text-[11px] text-gray-400">-{formatCurrency(r.platform_fee ?? 0)} fees</p>
+                  )}
+                </div>
+              </div>
+            ))}
+            {propertyRevenue.length > 10 && (
+              <div className="px-6 py-3 text-center">
+                <Link href="/dashboard/revenue" className="text-xs font-medium text-teal-600 hover:text-teal-700">
+                  View all {propertyRevenue.length} bookings →
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Expense Breakdown Summary */}
       {topCategories.length > 0 && (
