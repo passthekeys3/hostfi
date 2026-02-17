@@ -86,6 +86,35 @@ export async function POST(request: NextRequest) {
     // Store in Supabase
     const supabase = await createClient();
     if (supabase) {
+      // Store in plaid_items table (new approach)
+      const { error: itemError } = await supabase.from('plaid_items').upsert({
+        user_id: auth.userId,
+        item_id,
+        access_token: access_token,
+        institution_name: institution?.name || 'Unknown Bank',
+        institution_id: itemData.item.institution_id,
+        status: 'active',
+      }, {
+        onConflict: 'user_id,item_id',
+      });
+
+      if (itemError) {
+        console.error('Failed to store Plaid item:', itemError.message);
+      }
+
+      // Store account mappings
+      for (const acc of accountsData.accounts) {
+        await supabase.from('plaid_account_mappings').upsert({
+          user_id: auth.userId,
+          plaid_account_id: acc.account_id,
+          account_name: acc.name,
+          account_mask: acc.mask,
+        }, {
+          onConflict: 'user_id,plaid_account_id',
+        });
+      }
+
+      // Also store in integration_connections for backwards compatibility
       const { error } = await supabase.from('integration_connections').upsert({
         user_id: auth.userId,
         provider: 'plaid',

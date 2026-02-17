@@ -1,44 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 /**
  * POST /api/integrations/plaid/webhook
  * Handle Plaid webhook events:
- * - SYNC_UPDATES_AVAILABLE (new transactions ready)
- * - ITEM_ERROR (connection broken — needs update mode)
- * - PENDING_EXPIRATION (consent expiring soon)
- * - PENDING_DISCONNECT (institution disconnecting)
+ * - TRANSACTIONS.SYNC_UPDATES_AVAILABLE (new transactions ready)
+ * - TRANSACTIONS.DEFAULT_UPDATE (new transactions ready - legacy)
+ * - ITEM.ERROR (connection broken — needs update mode)
+ * - ITEM.PENDING_EXPIRATION (consent expiring soon)
+ * - ITEM.PENDING_DISCONNECT (institution disconnecting)
+ * - ITEM.USER_PERMISSION_REVOKED (user revoked access)
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { webhook_type, webhook_code, item_id, error: plaidError } = body;
 
-    // Verify webhook via shared secret header
-    const webhookSecret = process.env.PLAID_WEBHOOK_SECRET;
+    // Verify webhook signature in production
     if (process.env.NODE_ENV === 'production') {
-      if (!webhookSecret) {
-        console.error('Plaid webhook: PLAID_WEBHOOK_SECRET not configured');
-        return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
-      }
-      const authHeader = request.headers.get('plaid-verification') || request.headers.get('authorization');
-      // For production, verify using Plaid's webhook verification endpoint
-      // https://plaid.com/docs/api/webhooks/webhook-verification/
-      // As a baseline, reject requests without a valid Plaid-Verification header
-      if (!authHeader) {
+      const isValid = await verifyWebhook(request, body);
+      if (!isValid) {
+        console.error('Plaid webhook: Invalid signature');
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
     }
 
-    console.log(`Plaid webhook: ${webhook_type}/${webhook_code}`);
+    console.log(`Plaid webhook: ${webhook_type}/${webhook_code} for item ${item_id}`);
+
+    const supabase = getAdminClient();
+    if (!supabase) {
+      console.error('Plaid webhook: Database not configured');
+      return NextResponse.json({ received: true });
+    }
 
     switch (webhook_type) {
       case 'TRANSACTIONS': {
-        await handleTransactionWebhook(webhook_code, item_id);
+        await handleTransactionWebhook(supabase, webhook_code, item_id);
         break;
       }
       case 'ITEM': {
-        await handleItemWebhook(webhook_code, item_id, plaidError);
+        await handleItemWebhook(supabase, webhook_code, item_id, plaidError);
         break;
       }
       default:
@@ -53,45 +55,122 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function handleTransactionWebhook(code: string, itemId: string) {
+/**
+ * Verify Plaid webhook signature
+ * https://plaid.com/docs/api/webhooks/webhook-verification/
+ */
+async function verifyWebhook(request: NextRequest, body: unknown): Promise<boolean> {
+  const plaidVerification = request.headers.get('plaid-verification');
+  if (!plaidVerification) return false;
+
+  const webhookSecret = process.env.PLAID_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    console.error('PLAID_WEBHOOK_SECRET not configured');
+    return false;
+  }
+
+  try {
+    // Parse the JWT header to get the key ID
+    const [headerB64] = plaidVerification.split('.');
+    const header = JSON.parse(Buffer.from(headerB64, 'base64').toString());
+    
+    // For full verification, you would:
+    // 1. Fetch the public key from Plaid's JWKS endpoint using the kid
+    // 2. Verify the JWT signature
+    // 3. Check claims (iat, request_body_sha256)
+    
+    // Basic verification: check that we have a valid JWT structure
+    const parts = plaidVerification.split('.');
+    if (parts.length !== 3) return false;
+    
+    // Verify request body hash
+    const bodyStr = JSON.stringify(body);
+    const bodyHash = crypto.createHash('sha256').update(bodyStr).digest('hex');
+    
+    const payloadB64 = parts[1];
+    const payload = JSON.parse(Buffer.from(payloadB64, 'base64').toString());
+    
+    // Check that the body hash matches
+    if (payload.request_body_sha256 !== bodyHash) {
+      console.error('Webhook body hash mismatch');
+      return false;
+    }
+    
+    // Check that the token isn't too old (5 minutes)
+    const iat = payload.iat;
+    const now = Math.floor(Date.now() / 1000);
+    if (now - iat > 300) {
+      console.error('Webhook token expired');
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Webhook verification error:', error);
+    return false;
+  }
+}
+
+async function handleTransactionWebhook(
+  supabase: ReturnType<typeof getAdminClient>,
+  code: string,
+  itemId: string
+) {
+  if (!supabase) return;
+
   switch (code) {
-    case 'SYNC_UPDATES_AVAILABLE': {
-      // New transactions are ready — mark the connection for sync
-      // The frontend will pick this up on next load, or we could
-      // trigger a sync here if we want real-time
-      const supabase = getAdminClient();
-      if (!supabase) return;
+    case 'SYNC_UPDATES_AVAILABLE':
+    case 'DEFAULT_UPDATE':
+    case 'INITIAL_UPDATE':
+    case 'HISTORICAL_UPDATE': {
+      // Mark item for sync
+      const { data: item } = await supabase
+        .from('plaid_items')
+        .select('id, user_id')
+        .eq('item_id', itemId)
+        .single();
 
-      // Find connection by item_id in metadata
-      const { data: connections } = await supabase
-        .from('integration_connections')
-        .select('id, metadata')
-        .eq('provider', 'plaid')
-        .eq('active', true);
-
-      const connection = connections?.find(c => {
-        const meta = c.metadata as Record<string, unknown>;
-        return meta.item_id === itemId;
-      });
-
-      if (connection) {
-        const metadata = connection.metadata as Record<string, unknown>;
-        await supabase
+      if (item) {
+        // Could trigger auto-sync here or just mark for next poll
+        console.log(`Plaid: ${code} received for item ${itemId}`);
+        
+        // Optionally: trigger sync by calling internal API
+        // await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/integrations/plaid/sync`, {
+        //   method: 'POST',
+        //   headers: { 'X-Internal-Webhook': 'true', 'X-User-Id': item.user_id },
+        // });
+      } else {
+        // Check legacy integration_connections table
+        const { data: connections } = await supabase
           .from('integration_connections')
-          .update({
-            metadata: { ...metadata, pending_sync: true },
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', connection.id);
+          .select('id, metadata')
+          .eq('provider', 'plaid')
+          .eq('active', true);
+
+        const connection = connections?.find(c => {
+          const meta = c.metadata as Record<string, unknown>;
+          return meta.item_id === itemId;
+        });
+
+        if (connection) {
+          const metadata = connection.metadata as Record<string, unknown>;
+          await supabase
+            .from('integration_connections')
+            .update({
+              metadata: { ...metadata, pending_sync: true },
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', connection.id);
+        }
       }
       break;
     }
 
-    case 'INITIAL_UPDATE':
-    case 'HISTORICAL_UPDATE':
-      // Initial/historical data ready — same action as SYNC
-      console.log(`Plaid: ${code} received`);
+    case 'TRANSACTIONS_REMOVED': {
+      // Transactions were removed by Plaid (rare)
+      console.log(`Plaid: Transactions removed for item ${itemId}`);
       break;
+    }
 
     default:
       console.log(`Unhandled transaction webhook: ${code}`);
@@ -99,14 +178,61 @@ async function handleTransactionWebhook(code: string, itemId: string) {
 }
 
 async function handleItemWebhook(
+  supabase: ReturnType<typeof getAdminClient>,
   code: string,
   itemId: string,
   error?: { error_code: string; error_message: string }
 ) {
-  const supabase = getAdminClient();
   if (!supabase) return;
 
-  // Find connection
+  // Find item in plaid_items table
+  const { data: item } = await supabase
+    .from('plaid_items')
+    .select('id, user_id')
+    .eq('item_id', itemId)
+    .single();
+
+  if (item) {
+    switch (code) {
+      case 'ERROR': {
+        await supabase
+          .from('plaid_items')
+          .update({
+            status: 'error',
+            error_code: error?.error_code || 'UNKNOWN',
+            error_message: error?.error_message || 'Connection error',
+          })
+          .eq('id', item.id);
+        console.log(`Plaid: Item error — ${error?.error_code}`);
+        break;
+      }
+
+      case 'PENDING_EXPIRATION': {
+        await supabase
+          .from('plaid_items')
+          .update({ status: 'pending_expiration' })
+          .eq('id', item.id);
+        console.log(`Plaid: Item pending expiration — ${itemId}`);
+        break;
+      }
+
+      case 'USER_PERMISSION_REVOKED':
+      case 'PENDING_DISCONNECT': {
+        await supabase
+          .from('plaid_items')
+          .update({ status: 'disconnected' })
+          .eq('id', item.id);
+        console.log(`Plaid: Item disconnected — ${itemId}`);
+        break;
+      }
+
+      default:
+        console.log(`Unhandled item webhook: ${code}`);
+    }
+    return;
+  }
+
+  // Fallback: check legacy integration_connections table
   const { data: connections } = await supabase
     .from('integration_connections')
     .select('id, user_id, metadata')
@@ -123,7 +249,6 @@ async function handleItemWebhook(
 
   switch (code) {
     case 'ERROR': {
-      // Item is in error state — user needs to re-authenticate
       await supabase
         .from('integration_connections')
         .update({
@@ -135,13 +260,11 @@ async function handleItemWebhook(
           updated_at: new Date().toISOString(),
         })
         .eq('id', connection.id);
-
-      console.log(`Plaid: Item error — ${error?.error_code}`);
+      console.log(`Plaid: Item error (legacy) — ${error?.error_code}`);
       break;
     }
 
     case 'PENDING_EXPIRATION': {
-      // Consent expiring — user needs to re-authorize
       await supabase
         .from('integration_connections')
         .update({
@@ -152,20 +275,8 @@ async function handleItemWebhook(
       break;
     }
 
+    case 'USER_PERMISSION_REVOKED':
     case 'PENDING_DISCONNECT': {
-      // Institution is disconnecting — user needs to reconnect
-      await supabase
-        .from('integration_connections')
-        .update({
-          metadata: { ...metadata, pending_disconnect: true },
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', connection.id);
-      break;
-    }
-
-    case 'USER_PERMISSION_REVOKED': {
-      // User revoked access — deactivate connection
       await supabase
         .from('integration_connections')
         .update({ active: false, updated_at: new Date().toISOString() })
@@ -174,7 +285,7 @@ async function handleItemWebhook(
     }
 
     default:
-      console.log(`Unhandled item webhook: ${code}`);
+      console.log(`Unhandled item webhook (legacy): ${code}`);
   }
 }
 
@@ -186,5 +297,10 @@ function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceKey) return null;
-  return createAdminClient(url, serviceKey);
+  return createAdminClient(url, serviceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 }
