@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({ type: 'all' }));
     const syncType = body.type || 'all';
     const dryRun = body.dryRun === true;
+    const force = body.force === true;
     const selectedPropertyIds: string[] | null = body.selectedPropertyIds || null;
 
     const results: {
@@ -146,6 +147,11 @@ export async function POST(request: NextRequest) {
         : null;
 
       if (propertyMap.size > 0) {
+        // Force mode: delete all existing OwnerRez revenue and re-import fresh
+        if (force) {
+          await supabase.from('revenue').delete().eq('user_id', session.userId).not('ownerrez_booking_id', 'is', null);
+        }
+
         const { data: existing } = await supabase.from('revenue').select('ownerrez_booking_id').eq('user_id', session.userId).not('ownerrez_booking_id', 'is', null);
         const existingIds = new Set((existing || []).map(r => r.ownerrez_booking_id));
 
@@ -159,6 +165,9 @@ export async function POST(request: NextRequest) {
           if (!result.has_more || result.items.length < pageSize) break;
           page++;
         }
+
+        // Log raw first booking for field name debugging
+        const debugRawBooking = allBookings.length > 0 ? allBookings[0] : null;
 
         let imported = 0, skipped = 0;
         const skipReasons: Record<string, number> = {};
@@ -178,7 +187,7 @@ export async function POST(request: NextRequest) {
           if (!error) { imported++; console.log('Booking imported, raw data:', JSON.stringify(booking)); }
           else { skipped++; skipReasons['db_error'] = (skipReasons['db_error'] || 0) + 1; skipReasons['db_detail'] = error.message as unknown as number; console.error('Booking insert error:', error.message, 'Data:', JSON.stringify(mapped)); }
         }
-        results.reservations = { imported, skipped, total: allBookings.length, skipReasons } as typeof results.reservations;
+        results.reservations = { imported, skipped, total: allBookings.length, skipReasons, debug_raw_first_booking: debugRawBooking } as typeof results.reservations;
       } else {
         results.reservations = { imported: 0, skipped: 0, total: 0 };
       }

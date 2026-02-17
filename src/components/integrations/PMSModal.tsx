@@ -223,7 +223,7 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
     setSyncing(false);
   };
 
-  const handleSync = async () => {
+  const handleSync = async (force = false) => {
     setSyncing(true);
     setError(null);
     setSyncResults(null);
@@ -231,7 +231,7 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
       const res = await fetch(`/api/integrations/${provider}/sync`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "all" }),
+        body: JSON.stringify({ type: "all", force }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error || "Sync failed"); setSyncing(false); return; }
@@ -440,18 +440,24 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
                 </div>
               )}
 
-              <div className="flex gap-3">
-                <button onClick={() => loadRemoteProperties()} disabled={syncing || loadingProperties}
-                  className="flex-1 py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                  {syncing || loadingProperties ? (
-                    <><Loader2 className="w-4 h-4 animate-spin" /> Loading...</>
-                  ) : (
-                    <><RefreshCw className="w-4 h-4" /> {syncResults ? "Sync Again" : "Select & Import Properties"}</>
-                  )}
-                </button>
-                <button onClick={handleDisconnect}
-                  className="px-4 py-2.5 text-sm font-medium text-red-600 bg-red-50 rounded-xl hover:bg-red-100 transition-colors">
-                  Disconnect
+              <div className="space-y-2">
+                <div className="flex gap-3">
+                  <button onClick={() => loadRemoteProperties()} disabled={syncing || loadingProperties}
+                    className="flex-1 py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                    {syncing || loadingProperties ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Loading...</>
+                    ) : (
+                      <><RefreshCw className="w-4 h-4" /> {syncResults ? "Sync Again" : "Select & Import Properties"}</>
+                    )}
+                  </button>
+                  <button onClick={handleDisconnect}
+                    className="px-4 py-2.5 text-sm font-medium text-red-600 bg-red-50 rounded-xl hover:bg-red-100 transition-colors">
+                    Disconnect
+                  </button>
+                </div>
+                <button onClick={() => handleSync(true)} disabled={syncing}
+                  className="w-full py-2 text-xs font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors disabled:opacity-50">
+                  Force Re-sync (clears & re-imports all bookings)
                 </button>
               </div>
             </>
