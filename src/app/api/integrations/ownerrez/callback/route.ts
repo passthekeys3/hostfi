@@ -70,7 +70,12 @@ export async function GET(request: NextRequest) {
     if (!tokenRes.ok) {
       const err = await tokenRes.text();
       console.error('OwnerRez token exchange failed:', tokenRes.status, err);
-      return NextResponse.redirect(`${redirectBase}?ownerrez=error&reason=token_exchange`);
+      console.error('OwnerRez token exchange details:', {
+        clientIdPrefix: clientId?.substring(0, 4),
+        redirectUri,
+        codePrefix: code?.substring(0, 8),
+      });
+      return NextResponse.redirect(`${redirectBase}?ownerrez=error&reason=token_exchange&detail=${encodeURIComponent(err.substring(0, 200))}`);
     }
 
     const tokenData = await tokenRes.json();

@@ -91,7 +91,7 @@ export default function IntegrationsPage() {
         invalid_state: "Invalid authorization state. Please try connecting again.",
         expired: "Authorization expired. Please try connecting again.",
         not_configured: "OwnerRez OAuth is not configured. Please contact support.",
-        token_exchange: "Failed to exchange authorization code. Please try connecting again.",
+        token_exchange: `Failed to exchange authorization code. ${searchParams.get("detail") || "Please try connecting again."}`,
         no_token: "OwnerRez did not return an access token. Please try again.",
         db_error: "Failed to save connection. Please try again.",
       };
