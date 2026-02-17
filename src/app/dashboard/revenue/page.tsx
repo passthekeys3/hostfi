@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { 
   DollarSign, TrendingUp, Calendar, Upload, Plus, Building2, 
   ArrowUpRight, ArrowDownRight, FileSpreadsheet, X, ChevronDown,
@@ -82,14 +82,15 @@ export default function RevenuePage() {
   }, [revenue, allProperties, allExpenses]);
 
   const bySource = useMemo(() => getRevenueBySource(revenue), [revenue]);
-  const byMonth = useMemo(() => {
-    const result = getRevenueByMonth(revenue);
-    // Always ensure current month exists
+  
+  // Track current month client-side only to avoid hydration mismatch
+  const [currentMonth, setCurrentMonth] = useState<string | undefined>(undefined);
+  useEffect(() => {
     const now = new Date();
-    const cm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    if (!result[cm]) result[cm] = { gross: 0, net: 0, fees: 0, bookings: 0 };
-    return result;
-  }, [revenue]);
+    setCurrentMonth(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
+  }, []);
+  
+  const byMonth = useMemo(() => getRevenueByMonth(revenue, currentMonth), [revenue, currentMonth]);
 
   const handleAddManual = useCallback(async () => {
     const amount = parseFloat(form.amount) || 0;

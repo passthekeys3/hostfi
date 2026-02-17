@@ -59,12 +59,12 @@ export function getRevenueForProperty(propertyId: string): RevenueEntry[] {
   return DEMO_REVENUE.filter(r => r.property_id === propertyId);
 }
 
-export function getRevenueByMonth(revenue: RevenueEntry[]): Record<string, { gross: number; net: number; fees: number; bookings: number }> {
+export function getRevenueByMonth(revenue: RevenueEntry[], currentMonth?: string): Record<string, { gross: number; net: number; fees: number; bookings: number }> {
   const result: Record<string, { gross: number; net: number; fees: number; bookings: number }> = {};
-  // Always include current month
-  const now = new Date();
-  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  result[currentMonth] = { gross: 0, net: 0, fees: 0, bookings: 0 };
+  // Seed current month if provided (caller should pass this client-side only to avoid hydration mismatch)
+  if (currentMonth) {
+    result[currentMonth] = { gross: 0, net: 0, fees: 0, bookings: 0 };
+  }
   for (const r of revenue) {
     const month = (r.check_in || r.date || r.payout_date || r.created_at || '').substring(0, 7);
     if (!month) continue;

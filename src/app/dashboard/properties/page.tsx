@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { PropertyCard } from "@/components/property-card";
 import { Plus, Building2 } from "lucide-react";
@@ -7,6 +8,11 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 
 export default function PropertiesPage() {
   const { properties, expenses, isDemo, loading } = useDashboardData();
+  const [cmStr, setCmStr] = useState('');
+  useEffect(() => {
+    const n = new Date();
+    setCmStr(`${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}`);
+  }, []);
 
   if (loading) {
     return (
@@ -48,9 +54,7 @@ export default function PropertiesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
           {properties.map((property) => {
             const propertyExpenses = expenses.filter(e => e.property_id === property.id);
-            const now = new Date();
-            const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-            const monthlySpend = propertyExpenses.filter(e => e.date?.startsWith(currentMonthStr)).reduce((sum, e) => sum + e.amount, 0);
+            const monthlySpend = propertyExpenses.filter(e => cmStr ? e.date?.startsWith(cmStr) : false).reduce((sum, e) => sum + e.amount, 0);
             return (
               <PropertyCard
                 key={property.id}
