@@ -12,8 +12,10 @@ interface EmailTemplate {
 const HEADER = `
 <div style="max-width:560px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#111827;">
   <div style="padding:32px 0 24px;">
-    <span style="display:inline-block;width:32px;height:32px;background:#14b8a6;border-radius:8px;text-align:center;line-height:32px;color:white;font-weight:bold;font-size:16px;">H</span>
-    <span style="font-size:18px;font-weight:700;color:#111827;margin-left:8px;vertical-align:middle;">HostFi</span>
+    <a href="https://hostfi.ai" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px;">
+      <img src="https://hostfi.ai/logo.svg" alt="HostFi" width="32" height="32" style="display:inline-block;width:32px;height:32px;border-radius:8px;" />
+      <span style="font-size:18px;font-weight:700;color:#111827;">HostFi</span>
+    </a>
   </div>
 `;
 
