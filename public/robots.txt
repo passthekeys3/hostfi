@@ -5,3 +5,4 @@ Disallow: /api/
 Disallow: /login
 
 Sitemap: https://hostfi.ai/sitemap.xml
+RSS: https://hostfi.ai/blog/feed.xml

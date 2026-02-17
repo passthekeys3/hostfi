@@ -14,8 +14,36 @@ export const metadata: Metadata = {
 };
 
 export default function AirbnbExpenseTrackerPage() {
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: "Best Airbnb Expense Tracker for Hosts in 2026",
+    datePublished: "2026-02-16",
+    dateModified: "2026-02-17",
+    author: { "@type": "Organization", name: "HostFi Team" },
+    publisher: {
+      "@type": "Organization",
+      name: "HostFi",
+      logo: { "@type": "ImageObject", url: "https://hostfi.ai/logo.svg" },
+    },
+    url: "https://hostfi.ai/blog/airbnb-expense-tracker",
+    image: "https://hostfi.ai/og-image.png",
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://hostfi.ai" },
+      { "@type": "ListItem", position: 2, name: "Blog", item: "https://hostfi.ai/blog" },
+      { "@type": "ListItem", position: 3, name: "Best Airbnb Expense Tracker for Hosts in 2026", item: "https://hostfi.ai/blog/airbnb-expense-tracker" },
+    ],
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <header className="border-b border-gray-100 px-5 py-4">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
