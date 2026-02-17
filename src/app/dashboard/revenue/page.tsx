@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { DEMO_REVENUE, DEMO_PROPERTIES, DEMO_EXPENSES } from "@/lib/data";
 import { isDemoMode } from "@/lib/data/data-provider";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { REVENUE_SOURCES, getRevenueByMonth, getRevenueBySource, type RevenueEntry, type RevenueSource } from "@/lib/demo-revenue";
+import { REVENUE_SOURCES, getRevenueBySource, type RevenueEntry, type RevenueSource } from "@/lib/demo-revenue";
 import { parseRevenueCSV, SAMPLE_CSV } from "@/lib/revenue-csv-parser";
 import { StatCard } from "@/components/stat-card";
 
@@ -83,14 +83,34 @@ export default function RevenuePage() {
 
   const bySource = useMemo(() => getRevenueBySource(revenue), [revenue]);
   
-  // Track current month client-side only to avoid hydration mismatch
-  const [currentMonth, setCurrentMonth] = useState<string | undefined>(undefined);
+  // Build monthly summary client-side only (avoids hydration mismatch from Date())
+  const [monthlyData, setMonthlyData] = useState<{ month: string; label: string; gross: number; net: number; fees: number; bookings: number }[]>([]);
   useEffect(() => {
+    const map: Record<string, { gross: number; net: number; fees: number; bookings: number }> = {};
+    // Seed current month
     const now = new Date();
-    setCurrentMonth(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
-  }, []);
-  
-  const byMonth = useMemo(() => getRevenueByMonth(revenue, currentMonth), [revenue, currentMonth]);
+    const cm = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    map[cm] = { gross: 0, net: 0, fees: 0, bookings: 0 };
+    // Aggregate revenue
+    for (const r of revenue) {
+      const m = (r.check_in || r.date || r.created_at || '').substring(0, 7);
+      if (!m) continue;
+      if (!map[m]) map[m] = { gross: 0, net: 0, fees: 0, bookings: 0 };
+      map[m].gross += r.amount ?? 0;
+      map[m].net += r.payout_amount ?? r.amount ?? 0;
+      map[m].fees += r.platform_fee ?? 0;
+      map[m].bookings++;
+    }
+    // Sort descending and add labels
+    const sorted = Object.entries(map)
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([month, data]) => ({
+        month,
+        label: new Date(month + '-15').toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        ...data,
+      }));
+    setMonthlyData(sorted);
+  }, [revenue]);
 
   const handleAddManual = useCallback(async () => {
     const amount = parseFloat(form.amount) || 0;
@@ -358,30 +378,28 @@ export default function RevenuePage() {
       </div>
 
       {/* Monthly Breakdown */}
-      {Object.keys(byMonth).length > 0 && (
+      {monthlyData.length > 0 && (
         <div className="bg-white rounded-xl border border-gray-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-5">
           <h2 className="text-sm font-semibold text-gray-900 mb-4">Monthly Summary</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {Object.entries(byMonth).sort().reverse().map(([month, data]) => (
-              <div key={month} className="p-4 rounded-lg border border-gray-100">
+            {monthlyData.map((d) => (
+              <div key={d.month} className="p-4 rounded-lg border border-gray-100">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">
-                    {new Date(month + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                  </span>
-                  <span className="text-xs text-gray-400">{data.bookings} bookings</span>
+                  <span className="text-sm font-medium text-gray-700">{d.label}</span>
+                  <span className="text-xs text-gray-400">{d.bookings} bookings</span>
                 </div>
                 <div className="space-y-1">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Gross</span>
-                    <span className="font-medium text-gray-900">${fmt(data.gross)}</span>
+                    <span className="font-medium text-gray-900">${fmt(d.gross)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Fees</span>
-                    <span className="text-gray-400">-${fmt(data.fees)}</span>
+                    <span className="text-gray-400">-${fmt(d.fees)}</span>
                   </div>
                   <div className="flex justify-between text-sm pt-1 border-t border-gray-50">
                     <span className="text-gray-500 font-medium">Net</span>
-                    <span className="font-semibold text-teal-600">${fmt(data.net)}</span>
+                    <span className="font-semibold text-teal-600">${fmt(d.net)}</span>
                   </div>
                 </div>
               </div>
