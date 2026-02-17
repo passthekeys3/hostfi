@@ -8,6 +8,7 @@ interface PMSConfig {
   name: string;
   logoText: string;
   logoColor: string;
+  logoUrl?: string;
   oauth?: boolean;
   fields: { key: string; label: string; placeholder: string; type?: string }[];
   helpText: string;
@@ -19,6 +20,7 @@ export const PMS_CONFIGS: Record<string, PMSConfig> = {
     name: "Guesty",
     logoText: "G",
     logoColor: "bg-blue-50 text-blue-600",
+    logoUrl: "/logos/guesty.png",
     fields: [
       { key: "client_id", label: "Client ID", placeholder: "0oat..." },
       { key: "client_secret", label: "Client Secret", placeholder: "••••••••••••", type: "password" },
@@ -30,6 +32,7 @@ export const PMS_CONFIGS: Record<string, PMSConfig> = {
     name: "Hostaway",
     logoText: "H",
     logoColor: "bg-orange-50 text-orange-600",
+    logoUrl: "/logos/hostaway.png",
     fields: [
       { key: "account_id", label: "Account ID", placeholder: "Your Hostaway account ID" },
       { key: "api_key", label: "API Key", placeholder: "••••••••••••", type: "password" },
@@ -41,6 +44,7 @@ export const PMS_CONFIGS: Record<string, PMSConfig> = {
     name: "OwnerRez",
     logoText: "OR",
     logoColor: "bg-blue-50 text-blue-600",
+    logoUrl: "/logos/ownerrez.png",
     oauth: true,
     fields: [
       { key: "email", label: "Account Email", placeholder: "you@example.com" },
@@ -172,9 +176,13 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg font-bold ${config.logoColor}`}>
-              {config.logoText}
-            </div>
+            {config.logoUrl ? (
+              <img src={config.logoUrl} alt={config.name} className="w-9 h-9 rounded-lg object-contain" />
+            ) : (
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg font-bold ${config.logoColor}`}>
+                {config.logoText}
+              </div>
+            )}
             <div>
               <h3 className="font-semibold text-sm">{config.name}</h3>
               <p className="text-xs text-gray-400">Property Management System</p>
