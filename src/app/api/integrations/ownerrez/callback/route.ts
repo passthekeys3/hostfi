@@ -55,14 +55,17 @@ export async function GET(request: NextRequest) {
     const redirectUri = `${appUrl}/api/integrations/ownerrez/callback`;
 
     // Exchange code for access token
-    const tokenRes = await fetch('https://app.ownerrez.com/oauth/token', {
+    // OwnerRez uses Basic Auth (client_id:client_secret) per their docs
+    const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+    const tokenRes = await fetch('https://api.ownerrez.com/oauth/access_token', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${basicAuth}`,
+      },
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         code,
-        client_id: clientId,
-        client_secret: clientSecret,
         redirect_uri: redirectUri,
       }),
     });
