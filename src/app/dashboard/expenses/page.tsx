@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { getCategoryConfig, EXPENSE_CATEGORY_CONFIG, getCategoryColorClasses, ALL_EXPENSE_CATEGORIES, type ExpenseCategory } from "@/lib/expense-categories";
-import { getSourceIcon } from "@/lib/demo-expenses";
 import { formatCurrency, formatDate, cn, getStatusColor } from "@/lib/utils";
-import { Receipt, Plus, StickyNote, Pencil, Trash2, Check, X } from "lucide-react";
+import { Receipt, Plus, Pencil, Trash2, X, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { isDemoMode } from "@/lib/data/data-provider";
@@ -27,10 +26,10 @@ export default function ExpensesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editState, setEditState] = useState<EditState | null>(null);
   const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
   const demo = isDemoMode();
 
-  const startEdit = (expense: typeof expenses[0]) => {
+  const openEdit = (expense: typeof expenses[0]) => {
     setEditingId(expense.id);
     setEditState({
       description: expense.description || '',
@@ -41,14 +40,16 @@ export default function ExpensesPage() {
       vendor: expense.vendor || '',
       property_id: expense.property_id,
     });
+    setShowEditModal(true);
   };
 
-  const cancelEdit = () => {
+  const closeEdit = () => {
+    setShowEditModal(false);
     setEditingId(null);
     setEditState(null);
   };
 
-  const saveEdit = async () => {
+  const saveEdit = useCallback(async () => {
     if (!editState || !editingId || demo) return;
     setSaving(true);
     try {
@@ -68,7 +69,7 @@ export default function ExpensesPage() {
         })
         .eq('id', editingId);
       if (error) throw error;
-      cancelEdit();
+      closeEdit();
       if (refresh) refresh();
     } catch (err) {
       console.error('Failed to update expense:', err);
@@ -76,25 +77,26 @@ export default function ExpensesPage() {
     } finally {
       setSaving(false);
     }
-  };
+  }, [editState, editingId, demo, refresh]);
 
-  const deleteExpense = async (id: string) => {
-    if (demo) return;
+  const deleteExpense = useCallback(async () => {
+    if (!editingId || demo) return;
     if (!confirm('Delete this expense? This cannot be undone.')) return;
-    setDeleting(id);
+    setSaving(true);
     try {
       const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
       if (!supabase) return;
-      const { error } = await supabase.from('expenses').delete().eq('id', id);
+      const { error } = await supabase.from('expenses').delete().eq('id', editingId);
       if (error) throw error;
+      closeEdit();
       if (refresh) refresh();
     } catch (err) {
       console.error('Failed to delete expense:', err);
     } finally {
-      setDeleting(null);
+      setSaving(false);
     }
-  };
+  }, [editingId, demo, refresh]);
 
   const filteredExpenses = useMemo(() => {
     return expenses.filter((exp) => {
@@ -173,7 +175,6 @@ export default function ExpensesPage() {
                   <th className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-6 py-4 bg-gray-50/80">Amount</th>
                   <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-6 py-4 bg-gray-50/80">Date</th>
                   <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-6 py-4 bg-gray-50/80">Status</th>
-                  <th className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-6 py-4 bg-gray-50/80 w-24">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -181,61 +182,9 @@ export default function ExpensesPage() {
                   const catConfig = getCategoryConfig(expense.category);
                   const colorClasses = getCategoryColorClasses(catConfig?.color || 'gray');
                   const property = properties.find(p => p.id === expense.property_id);
-                  const isEditing = editingId === expense.id;
-
-                  if (isEditing && editState) {
-                    return (
-                      <tr key={expense.id} className="border-b border-gray-100 bg-gray-50/40">
-                        <td colSpan={6} className="px-6 py-4">
-                          <div className="grid grid-cols-12 gap-3 items-end">
-                            <div className="col-span-3">
-                              <label className="block text-[11px] font-medium text-gray-500 mb-1">Description</label>
-                              <input value={editState.description} onChange={e => setEditState({ ...editState, description: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white" placeholder="Description" />
-                            </div>
-                            <div className="col-span-2">
-                              <label className="block text-[11px] font-medium text-gray-500 mb-1">Category</label>
-                              <select value={editState.category} onChange={e => setEditState({ ...editState, category: e.target.value as ExpenseCategory })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
-                                {ALL_EXPENSE_CATEGORIES.map(cat => <option key={cat} value={cat}>{EXPENSE_CATEGORY_CONFIG[cat]?.label || cat}</option>)}
-                              </select>
-                            </div>
-                            <div className="col-span-2">
-                              <label className="block text-[11px] font-medium text-gray-500 mb-1">Property</label>
-                              <select value={editState.property_id} onChange={e => setEditState({ ...editState, property_id: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
-                                {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                              </select>
-                            </div>
-                            <div className="col-span-1">
-                              <label className="block text-[11px] font-medium text-gray-500 mb-1">Amount</label>
-                              <input type="number" step="0.01" value={editState.amount} onChange={e => setEditState({ ...editState, amount: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white text-right" />
-                            </div>
-                            <div className="col-span-2">
-                              <label className="block text-[11px] font-medium text-gray-500 mb-1">Date</label>
-                              <input type="date" value={editState.date} onChange={e => setEditState({ ...editState, date: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white" />
-                            </div>
-                            <div className="col-span-1">
-                              <label className="block text-[11px] font-medium text-gray-500 mb-1">Status</label>
-                              <select value={editState.status} onChange={e => setEditState({ ...editState, status: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
-                                <option value="paid">Paid</option>
-                                <option value="pending">Pending</option>
-                                <option value="overdue">Overdue</option>
-                              </select>
-                            </div>
-                            <div className="col-span-1 flex items-center justify-end gap-1">
-                              <button type="button" onClick={() => saveEdit()} disabled={saving} className="p-2 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors disabled:opacity-50 cursor-pointer" aria-label="Save">
-                                <Check className="w-4 h-4" />
-                              </button>
-                              <button type="button" onClick={() => cancelEdit()} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer" aria-label="Cancel">
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  }
 
                   return (
-                    <tr key={expense.id} className={cn("group transition-colors duration-150 hover:bg-gray-50/60", index !== filteredExpenses.length - 1 && "border-b border-gray-100")}>
+                    <tr key={expense.id} onClick={() => openEdit(expense)} className={cn("group transition-colors duration-150 hover:bg-gray-50/60 cursor-pointer", index !== filteredExpenses.length - 1 && "border-b border-gray-100")}>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <span className={cn("flex items-center justify-center w-9 h-9 rounded-xl text-sm border", colorClasses.bg, colorClasses.border)}>
@@ -253,16 +202,6 @@ export default function ExpensesPage() {
                       <td className="px-6 py-4">
                         <span className={cn("inline-flex items-center text-[11px] font-medium px-2.5 py-1 rounded-full capitalize", getStatusColor(expense.status))}>{expense.status}</span>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => startEdit(expense)} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Edit">
-                            <Pencil className="w-3.5 h-3.5" />
-                          </button>
-                          <button onClick={() => deleteExpense(expense.id)} disabled={deleting === expense.id} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" aria-label="Delete">
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
                     </tr>
                   );
                 })}
@@ -276,43 +215,9 @@ export default function ExpensesPage() {
               const catConfig = getCategoryConfig(expense.category);
               const colorClasses = getCategoryColorClasses(catConfig?.color || 'gray');
               const property = properties.find(p => p.id === expense.property_id);
-              const isEditing = editingId === expense.id;
-
-              if (isEditing && editState) {
-                return (
-                  <div key={expense.id} className="bg-white rounded-xl p-4 border border-teal-200 shadow-sm space-y-3">
-                    <input value={editState.description} onChange={e => setEditState({ ...editState, description: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="Description" />
-                    <div className="grid grid-cols-2 gap-2">
-                      <select value={editState.category} onChange={e => setEditState({ ...editState, category: e.target.value as ExpenseCategory })} className="px-3 py-2 border border-gray-200 rounded-lg text-sm">
-                        {ALL_EXPENSE_CATEGORIES.map(cat => <option key={cat} value={cat}>{EXPENSE_CATEGORY_CONFIG[cat]?.label || cat}</option>)}
-                      </select>
-                      <select value={editState.property_id} onChange={e => setEditState({ ...editState, property_id: e.target.value })} className="px-3 py-2 border border-gray-200 rounded-lg text-sm">
-                        {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                      </select>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      <input type="number" step="0.01" value={editState.amount} onChange={e => setEditState({ ...editState, amount: e.target.value })} className="px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="Amount" />
-                      <input type="date" value={editState.date} onChange={e => setEditState({ ...editState, date: e.target.value })} className="px-3 py-2 border border-gray-200 rounded-lg text-sm" />
-                      <select value={editState.status} onChange={e => setEditState({ ...editState, status: e.target.value })} className="px-3 py-2 border border-gray-200 rounded-lg text-sm">
-                        <option value="paid">Paid</option>
-                        <option value="pending">Pending</option>
-                        <option value="overdue">Overdue</option>
-                      </select>
-                    </div>
-                    <div className="flex items-center justify-end gap-1 pt-1">
-                      <button onClick={saveEdit} disabled={saving} className="p-2.5 text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors disabled:opacity-50" aria-label="Save">
-                        <Check className="w-5 h-5" />
-                      </button>
-                      <button onClick={cancelEdit} className="p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Cancel">
-                        <X className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              }
 
               return (
-                <div key={expense.id} className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm">
+                <div key={expense.id} onClick={() => openEdit(expense)} className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm cursor-pointer hover:bg-gray-50/60 transition-colors">
                   <div className="flex items-center gap-3">
                     <span className={cn("flex items-center justify-center w-10 h-10 rounded-xl text-sm border shrink-0", colorClasses.bg, colorClasses.border)}>
                       {catConfig?.icon && <catConfig.icon className="w-4 h-4" />}
@@ -325,20 +230,79 @@ export default function ExpensesPage() {
                       <p className="font-semibold text-sm tabular-nums">{formatCurrency(expense.amount)}</p>
                       <span className={cn("inline-flex items-center text-[10px] font-medium px-2 py-0.5 rounded-full capitalize mt-1", getStatusColor(expense.status))}>{expense.status}</span>
                     </div>
-                    <div className="flex flex-col gap-1 shrink-0">
-                      <button onClick={() => startEdit(expense)} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg" aria-label="Edit">
-                        <Pencil className="w-3.5 h-3.5" />
-                      </button>
-                      <button onClick={() => deleteExpense(expense.id)} className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg" aria-label="Delete">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
                   </div>
                 </div>
               );
             })}
           </div>
         </>
+      )}
+
+      {/* Edit Expense Modal */}
+      {showEditModal && editState && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/40 backdrop-blur-sm" onClick={closeEdit}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h3 className="text-base font-semibold text-gray-900">Edit Expense</h3>
+              <button onClick={closeEdit} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">Vendor</label>
+                <input type="text" value={editState.vendor} onChange={e => setEditState({ ...editState, vendor: e.target.value })} placeholder="e.g. Spectrum, Home Depot" className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">Description</label>
+                <input type="text" value={editState.description} onChange={e => setEditState({ ...editState, description: e.target.value })} placeholder="What was this expense for?" className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">Category</label>
+                  <select value={editState.category} onChange={e => setEditState({ ...editState, category: e.target.value as ExpenseCategory })} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none bg-white">
+                    {ALL_EXPENSE_CATEGORIES.map(cat => <option key={cat} value={cat}>{EXPENSE_CATEGORY_CONFIG[cat]?.label || cat}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">Property</label>
+                  <select value={editState.property_id} onChange={e => setEditState({ ...editState, property_id: e.target.value })} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none bg-white">
+                    {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">Amount</label>
+                  <input type="number" step="0.01" value={editState.amount} onChange={e => setEditState({ ...editState, amount: e.target.value })} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">Date</label>
+                  <input type="date" value={editState.date} onChange={e => setEditState({ ...editState, date: e.target.value })} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">Status</label>
+                <select value={editState.status} onChange={e => setEditState({ ...editState, status: e.target.value })} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none bg-white">
+                  <option value="paid">Paid</option>
+                  <option value="pending">Pending</option>
+                  <option value="overdue">Overdue</option>
+                </select>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+              <button onClick={deleteExpense} disabled={saving} className="px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50">
+                Delete
+              </button>
+              <div className="flex gap-2">
+                <button onClick={closeEdit} className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
+                <button onClick={saveEdit} disabled={saving || !editState.amount || !editState.date} className="px-4 py-2.5 text-sm font-medium text-white bg-teal-500 hover:bg-teal-600 disabled:bg-gray-200 disabled:text-gray-400 rounded-lg transition-colors flex items-center gap-2">
+                  {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
