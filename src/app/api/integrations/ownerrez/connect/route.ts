@@ -45,8 +45,9 @@ export async function GET() {
     const supabase = getServiceClient();
     if (!supabase) return NextResponse.json({ connected: false });
     const { data } = await supabase.from('integration_connections')
-      .select('status, connected_at, active').eq('user_id', auth.userId).eq('provider', 'ownerrez').single();
-    return NextResponse.json({ connected: (data?.status === 'connected' || data?.active === true) && !!data, connectedAt: data?.connected_at || null });
+      .select('status, connected_at, active, credentials').eq('user_id', auth.userId).eq('provider', 'ownerrez').single();
+    const isConnected = !!data && (data.status === 'connected' || data.active === true) && !!data.credentials;
+    return NextResponse.json({ connected: isConnected, connectedAt: data?.connected_at || null });
   } catch (error) {
     if (error instanceof NextResponse) return error;
     return NextResponse.json({ connected: false });

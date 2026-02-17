@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Check, RefreshCw, Loader2, AlertCircle, Building2, Calendar } from "lucide-react";
+import { X, Check, RefreshCw, Loader2, AlertCircle, Building2, Calendar, ChevronRight } from "lucide-react";
 
 interface PMSConfig {
   id: string;
@@ -50,9 +50,16 @@ export const PMS_CONFIGS: Record<string, PMSConfig> = {
       { key: "email", label: "Account Email", placeholder: "you@example.com" },
       { key: "api_token", label: "API Token", placeholder: "••••••••••••", type: "password" },
     ],
-    helpText: "Connect your OwnerRez account to sync properties and bookings.",
+    helpText: "Find your API token in OwnerRez → Settings → API Access.",
   },
 };
+
+interface RemoteProperty {
+  id: string;
+  name: string;
+  address?: string;
+  selected: boolean;
+}
 
 interface PMSModalProps {
   provider: string;
@@ -62,17 +69,20 @@ interface PMSModalProps {
 
 export function PMSModal({ provider, open, onClose }: PMSModalProps) {
   const config = PMS_CONFIGS[provider];
-  const [step, setStep] = useState<"connect" | "connected">("connect");
+  const [step, setStep] = useState<"connect" | "connected" | "select-properties">("connect");
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [connecting, setConnecting] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [syncResults, setSyncResults] = useState<{
-    listings?: { imported: number; updated: number; total: number };
+    listings?: { imported: number; updated: number; total: number; skipped?: number };
     reservations?: { imported: number; skipped: number; total: number };
+    limitReached?: boolean;
   } | null>(null);
   const [connectedAt, setConnectedAt] = useState<string | null>(null);
   const [oauthAvailable, setOauthAvailable] = useState(true);
+  const [remoteProperties, setRemoteProperties] = useState<RemoteProperty[]>([]);
+  const [loadingProperties, setLoadingProperties] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -82,9 +92,15 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
       try {
         const res = await fetch(`/api/integrations/${provider}/connect`);
         const data = await res.json();
-        if (data.connected) { setStep("connected"); setConnectedAt(data.connectedAt); }
-        else setStep("connect");
-      } catch { setStep("connect"); }
+        if (data.connected) {
+          setStep("connected");
+          setConnectedAt(data.connectedAt);
+        } else {
+          setStep("connect");
+        }
+      } catch {
+        setStep("connect");
+      }
     })();
   }, [open, provider]);
 
@@ -95,12 +111,10 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
       const res = await fetch(`/api/integrations/${provider}/auth`);
       const data = await res.json();
       if (!res.ok || !data.url) {
-        // OAuth not configured — fall back to manual fields
         setOauthAvailable(false);
         setConnecting(false);
         return;
       }
-      // Redirect to OwnerRez authorization page
       window.location.href = data.url;
     } catch {
       setOauthAvailable(false);
@@ -109,7 +123,6 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
   };
 
   const handleConnect = async () => {
-    // If OAuth is available for this provider, try that first
     if (config.oauth && oauthAvailable) {
       return handleOAuthConnect();
     }
@@ -129,16 +142,85 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
         body: JSON.stringify(body),
       });
       const data = await res.json();
-      if (!res.ok) { setError(data.error || "Failed to connect"); setConnecting(false); return; }
+      if (!res.ok) {
+        setError(data.error || "Failed to connect. Check your credentials and try again.");
+        setConnecting(false);
+        return;
+      }
 
       setStep("connected");
       setConnectedAt(new Date().toISOString());
       setConnecting(false);
-      handleSync();
+
+      // Go straight to property selection
+      loadRemoteProperties();
     } catch {
-      setError("Connection failed. Please try again.");
+      setError("Connection failed. Please check your credentials and try again.");
       setConnecting(false);
     }
+  };
+
+  const loadRemoteProperties = async () => {
+    setLoadingProperties(true);
+    setError(null);
+    try {
+      // Sync listings only to discover properties
+      const res = await fetch(`/api/integrations/${provider}/sync`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "listings", dryRun: true }),
+      });
+      const data = await res.json();
+      if (res.ok && data.results?.listings?.properties) {
+        setRemoteProperties(
+          data.results.listings.properties.map((p: { id: string; name: string; address?: string }) => ({
+            ...p,
+            selected: true,
+          }))
+        );
+        setStep("select-properties");
+      } else {
+        // Fallback: just do a full sync without selection
+        handleSync();
+      }
+    } catch {
+      // Fallback: full sync
+      handleSync();
+    }
+    setLoadingProperties(false);
+  };
+
+  const toggleProperty = (id: string) => {
+    setRemoteProperties(prev =>
+      prev.map(p => p.id === id ? { ...p, selected: !p.selected } : p)
+    );
+  };
+
+  const selectAll = () => {
+    const allSelected = remoteProperties.every(p => p.selected);
+    setRemoteProperties(prev => prev.map(p => ({ ...p, selected: !allSelected })));
+  };
+
+  const handleSyncSelected = async () => {
+    setSyncing(true);
+    setError(null);
+    setSyncResults(null);
+    const selectedIds = remoteProperties.filter(p => p.selected).map(p => p.id);
+
+    try {
+      const res = await fetch(`/api/integrations/${provider}/sync`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "all", selectedPropertyIds: selectedIds }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || "Sync failed"); setSyncing(false); return; }
+      setSyncResults(data.results);
+      setStep("connected");
+    } catch {
+      setError("Sync failed. Please try again.");
+    }
+    setSyncing(false);
   };
 
   const handleSync = async () => {
@@ -165,16 +247,17 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
       setFieldValues({});
       setSyncResults(null);
       setConnectedAt(null);
+      setRemoteProperties([]);
     } catch {}
   };
 
   if (!open || !config) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <div className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-md max-h-[90vh] safe-area-bottom overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
           <div className="flex items-center gap-3">
             {config.logoUrl ? (
               <img src={config.logoUrl} alt={config.name} className="w-9 h-9 rounded-lg object-contain" />
@@ -193,7 +276,7 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
           </button>
         </div>
 
-        <div className="p-6 space-y-5">
+        <div className="p-6 space-y-5 overflow-y-auto">
           {error && (
             <div className="flex items-start gap-2.5 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
               <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /> {error}
@@ -208,13 +291,11 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
               </div>
 
               {config.oauth && oauthAvailable ? (
-                /* OAuth flow — one-click connect */
                 <button onClick={handleConnect} disabled={connecting}
                   className="w-full py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
                   {connecting ? <><Loader2 className="w-4 h-4 animate-spin" /> Redirecting...</> : `Connect with ${config.name}`}
                 </button>
               ) : (
-                /* Manual credential entry (fallback or non-OAuth providers) */
                 <>
                   <div className="space-y-3">
                     {config.fields.map(field => (
@@ -232,8 +313,86 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
                   </div>
                   <button onClick={handleConnect} disabled={connecting}
                     className="w-full py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                    {connecting ? <><Loader2 className="w-4 h-4 animate-spin" /> Connecting...</> : `Connect ${config.name}`}
+                    {connecting ? <><Loader2 className="w-4 h-4 animate-spin" /> Verifying...</> : `Connect ${config.name}`}
                   </button>
+                </>
+              )}
+            </>
+          )}
+
+          {step === "select-properties" && (
+            <>
+              <div className="space-y-1">
+                <h4 className="font-semibold text-sm">Select Properties to Import</h4>
+                <p className="text-xs text-gray-500">Choose which {config.name} properties you want to track in HostFi.</p>
+              </div>
+
+              {loadingProperties ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+                  <span className="text-sm text-gray-500 ml-2">Loading properties...</span>
+                </div>
+              ) : (
+                <>
+                  {remoteProperties.length > 1 && (
+                    <button
+                      onClick={selectAll}
+                      className="text-xs font-medium text-teal-600 hover:text-teal-700"
+                    >
+                      {remoteProperties.every(p => p.selected) ? "Deselect All" : "Select All"}
+                    </button>
+                  )}
+
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {remoteProperties.map((prop) => (
+                      <label
+                        key={prop.id}
+                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                          prop.selected ? "border-teal-300 bg-teal-50/50" : "border-gray-200 hover:bg-gray-50"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={prop.selected}
+                          onChange={() => toggleProperty(prop.id)}
+                          className="accent-teal-500"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-gray-900 truncate">{prop.name}</p>
+                          {prop.address && (
+                            <p className="text-[11px] text-gray-500 truncate">{prop.address}</p>
+                          )}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+
+                  {remoteProperties.filter(p => p.selected).length === 0 && (
+                    <div className="flex items-center gap-2 p-3 bg-amber-50 rounded-lg border border-amber-100">
+                      <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
+                      <p className="text-xs text-amber-700">Select at least one property to import</p>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setStep("connected")}
+                      className="flex-1 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                    >
+                      Skip
+                    </button>
+                    <button
+                      onClick={handleSyncSelected}
+                      disabled={syncing || remoteProperties.filter(p => p.selected).length === 0}
+                      className="flex-1 py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {syncing ? (
+                        <><Loader2 className="w-4 h-4 animate-spin" /> Importing...</>
+                      ) : (
+                        <>Import {remoteProperties.filter(p => p.selected).length} Properties</>
+                      )}
+                    </button>
+                  </div>
                 </>
               )}
             </>
@@ -257,6 +416,9 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
                       <div className="text-xs">
                         <span className="font-medium">{syncResults.listings.total} listings found</span>
                         <span className="text-gray-500"> — {syncResults.listings.imported} imported, {syncResults.listings.updated} updated</span>
+                        {(syncResults.listings.skipped || 0) > 0 && (
+                          <span className="text-amber-600"> ({syncResults.listings.skipped} skipped — plan limit)</span>
+                        )}
                       </div>
                     </div>
                   )}
@@ -269,13 +431,23 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
                       </div>
                     </div>
                   )}
+                  {syncResults.limitReached && (
+                    <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                      <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                      <p className="text-xs text-amber-700">Some properties were skipped due to your plan limit. Upgrade to import more.</p>
+                    </div>
+                  )}
                 </div>
               )}
 
               <div className="flex gap-3">
-                <button onClick={handleSync} disabled={syncing}
+                <button onClick={() => loadRemoteProperties()} disabled={syncing || loadingProperties}
                   className="flex-1 py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                  {syncing ? <><Loader2 className="w-4 h-4 animate-spin" /> Syncing...</> : <><RefreshCw className="w-4 h-4" /> Sync Now</>}
+                  {syncing || loadingProperties ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Loading...</>
+                  ) : (
+                    <><RefreshCw className="w-4 h-4" /> {syncResults ? "Sync Again" : "Select & Import Properties"}</>
+                  )}
                 </button>
                 <button onClick={handleDisconnect}
                   className="px-4 py-2.5 text-sm font-medium text-red-600 bg-red-50 rounded-xl hover:bg-red-100 transition-colors">
