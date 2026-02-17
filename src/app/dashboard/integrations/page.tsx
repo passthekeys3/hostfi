@@ -54,6 +54,7 @@ export default function IntegrationsPage() {
   const [googleDriveFolderUrl, setGoogleDriveFolderUrl] = useState<string | null>(null);
   const [sheetsSyncing, setSheetsSyncing] = useState(false);
   const [sheetsSyncSuccess, setSheetsSyncSuccess] = useState(false);
+  const [oauthError, setOauthError] = useState<string | null>(null);
 
   // Check URL params for OAuth redirect results
   const searchParams = useSearchParams();
@@ -79,6 +80,22 @@ export default function IntegrationsPage() {
     if (ownerrezStatus === "connected") {
       setConnectedIds(prev => new Set(prev).add("ownerrez"));
       setOpenModal("ownerrez");
+      window.history.replaceState({}, "", "/dashboard/integrations");
+    } else if (ownerrezStatus === "denied") {
+      setOauthError("OwnerRez authorization was denied. Please try again.");
+      window.history.replaceState({}, "", "/dashboard/integrations");
+    } else if (ownerrezStatus === "error") {
+      const reason = searchParams.get("reason") || "unknown";
+      const reasonMessages: Record<string, string> = {
+        missing_params: "Missing authorization parameters. Please try connecting again.",
+        invalid_state: "Invalid authorization state. Please try connecting again.",
+        expired: "Authorization expired. Please try connecting again.",
+        not_configured: "OwnerRez OAuth is not configured. Please contact support.",
+        token_exchange: "Failed to exchange authorization code. Please try connecting again.",
+        no_token: "OwnerRez did not return an access token. Please try again.",
+        db_error: "Failed to save connection. Please try again.",
+      };
+      setOauthError(reasonMessages[reason] || `OwnerRez connection failed (${reason}). Please try again.`);
       window.history.replaceState({}, "", "/dashboard/integrations");
     }
   }, [searchParams]);
@@ -206,6 +223,17 @@ export default function IntegrationsPage() {
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Integrations</h1>
         <p className="text-gray-500 mt-1.5 text-sm">Connect Your Tools to Automate Your Workflow</p>
       </div>
+
+      {/* OAuth error banner */}
+      {oauthError && (
+        <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+          <span className="text-red-500 mt-0.5">⚠️</span>
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-800">{oauthError}</p>
+          </div>
+          <button onClick={() => setOauthError(null)} className="text-red-400 hover:text-red-600 text-sm">✕</button>
+        </div>
+      )}
 
       {/* Grouped integrations */}
       {grouped.map(group => (
