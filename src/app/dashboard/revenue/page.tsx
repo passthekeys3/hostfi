@@ -536,7 +536,7 @@ export default function RevenuePage() {
                         {src?.label || r.source}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-right text-gray-600 hidden sm:table-cell">{r.nights}</td>
+                    <td className="px-5 py-3 text-right text-gray-600 hidden sm:table-cell">{r.nights || (r.check_in && r.check_out ? Math.max(1, Math.round((new Date(r.check_out).getTime() - new Date(r.check_in).getTime()) / 86400000)) : '—')}</td>
                     <td className="px-5 py-3 text-right text-gray-700">${fmt(r.amount)}</td>
                     <td className="px-5 py-3 text-right font-medium text-teal-600">${fmt(r.payout_amount)}</td>
                   </tr>

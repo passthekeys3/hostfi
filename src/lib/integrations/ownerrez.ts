@@ -214,6 +214,7 @@ export function mapBookingToRevenue(booking: OwnerRezBooking, propertyId: string
     check_in: checkIn,
     check_out: checkOut,
     date: checkIn || new Date().toISOString().split('T')[0],
+    nights: checkIn && checkOut ? Math.max(1, Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000)) : null,
     ownerrez_booking_id: String(booking.id),
   };
 }
