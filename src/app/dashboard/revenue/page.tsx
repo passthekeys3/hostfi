@@ -93,7 +93,7 @@ export default function RevenuePage() {
       const expenses = propExpenses.reduce((s, e) => s + e.amount, 0);
       return { property: prop, gross, net, expenses, profit: net - expenses, bookings: propRevenue.length };
     });
-  }, [revenue]);
+  }, [revenue, allProperties, allExpenses]);
 
   const bySource = useMemo(() => getRevenueBySource(revenue), [revenue]);
   const byMonth = useMemo(() => getRevenueByMonth(revenue), [revenue]);
