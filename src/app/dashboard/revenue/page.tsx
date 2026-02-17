@@ -14,7 +14,7 @@ import { REVENUE_SOURCES, getRevenueBySource, type RevenueEntry, type RevenueSou
 import { parseRevenueCSV, SAMPLE_CSV } from "@/lib/revenue-csv-parser";
 import { StatCard } from "@/components/stat-card";
 
-type ModalView = null | 'add' | 'csv';
+type ModalView = null | 'add' | 'csv' | 'edit';
 
 interface ImportApiResult {
   imported: number;
@@ -50,6 +50,77 @@ export default function RevenuePage() {
     confirmation_code: '',
     payout_date: '',
   });
+
+  // Edit state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    property_id: '', source: 'airbnb' as RevenueSource, guest_name: '',
+    amount: '', platform_fee: '', check_in: '', check_out: '',
+    confirmation_code: '', payout_date: '',
+  });
+  const [editSaving, setEditSaving] = useState(false);
+
+  const openEdit = (r: RevenueEntry) => {
+    setEditingId(r.id);
+    setEditForm({
+      property_id: r.property_id || '',
+      source: (r.platform || r.source || 'other') as RevenueSource,
+      guest_name: r.guest_name || '',
+      amount: String(r.amount ?? ''),
+      platform_fee: String(r.platform_fee ?? ''),
+      check_in: r.check_in || '',
+      check_out: r.check_out || '',
+      confirmation_code: r.confirmation_code || '',
+      payout_date: r.payout_date || '',
+    });
+    setModal('edit');
+  };
+
+  const handleEditSave = useCallback(async () => {
+    if (!editingId) return;
+    setEditSaving(true);
+    try {
+      const res = await fetch('/api/revenue/update', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingId,
+          property_id: editForm.property_id,
+          platform: editForm.source,
+          guest_name: editForm.guest_name || null,
+          amount: parseFloat(editForm.amount) || 0,
+          payout_amount: (parseFloat(editForm.amount) || 0) - (parseFloat(editForm.platform_fee) || 0),
+          platform_fee: parseFloat(editForm.platform_fee) || 0,
+          check_in: editForm.check_in,
+          check_out: editForm.check_out,
+          confirmation_code: editForm.confirmation_code || null,
+          payout_date: editForm.payout_date || null,
+          date: editForm.check_in,
+          nights: Math.max(1, Math.round((new Date(editForm.check_out).getTime() - new Date(editForm.check_in).getTime()) / 86400000)),
+        }),
+      });
+      if (res.ok && refresh) refresh();
+    } catch {}
+    setEditSaving(false);
+    setModal(null);
+    setEditingId(null);
+  }, [editingId, editForm, refresh]);
+
+  const handleDelete = useCallback(async () => {
+    if (!editingId || !confirm('Delete this revenue entry?')) return;
+    setEditSaving(true);
+    try {
+      const res = await fetch('/api/revenue/update', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: editingId }),
+      });
+      if (res.ok && refresh) refresh();
+    } catch {}
+    setEditSaving(false);
+    setModal(null);
+    setEditingId(null);
+  }, [editingId, refresh]);
 
   const filtered = useMemo(() => {
     return revenue.filter(r => {
@@ -451,7 +522,7 @@ export default function RevenuePage() {
                 const prop = allProperties.find(p => p.id === r.property_id);
                 const src = REVENUE_SOURCES.find(s => s.value === (r.platform || r.source));
                 return (
-                  <tr key={r.id} className="hover:bg-gray-50/50 transition-colors">
+                  <tr key={r.id} className="hover:bg-gray-50/50 transition-colors cursor-pointer" onClick={() => openEdit(r)}>
                     <td className="px-5 py-3 text-gray-600 whitespace-nowrap">
                       {new Date(r.payout_date || r.date || r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </td>
@@ -545,6 +616,82 @@ export default function RevenuePage() {
             <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
               <button onClick={() => setModal(null)} className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
               <button onClick={handleAddManual} disabled={!form.property_id || !form.amount || !form.check_in || !form.check_out} className="px-4 py-2.5 text-sm font-medium text-white bg-teal-500 hover:bg-teal-600 disabled:bg-gray-200 disabled:text-gray-400 rounded-lg transition-colors">Add Revenue</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Revenue Modal */}
+      {modal === 'edit' && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/40 backdrop-blur-sm" onClick={() => { setModal(null); setEditingId(null); }}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h3 className="text-base font-semibold text-gray-900">Edit Revenue</h3>
+              <button onClick={() => { setModal(null); setEditingId(null); }} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">Property</label>
+                <select value={editForm.property_id} onChange={e => setEditForm(f => ({ ...f, property_id: e.target.value }))} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none bg-white">
+                  <option value="">Select property...</option>
+                  {allProperties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">Platform</label>
+                  <select value={editForm.source} onChange={e => setEditForm(f => ({ ...f, source: e.target.value as RevenueSource }))} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none bg-white">
+                    {REVENUE_SOURCES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">Guest Name</label>
+                  <input type="text" value={editForm.guest_name} onChange={e => setEditForm(f => ({ ...f, guest_name: e.target.value }))} placeholder="Optional" className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">Total Amount</label>
+                  <input type="number" step="0.01" value={editForm.amount} onChange={e => setEditForm(f => ({ ...f, amount: e.target.value }))} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">Platform Fee</label>
+                  <input type="number" step="0.01" value={editForm.platform_fee} onChange={e => setEditForm(f => ({ ...f, platform_fee: e.target.value }))} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">Check-in</label>
+                  <input type="date" value={editForm.check_in} onChange={e => setEditForm(f => ({ ...f, check_in: e.target.value }))} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">Check-out</label>
+                  <input type="date" value={editForm.check_out} onChange={e => setEditForm(f => ({ ...f, check_out: e.target.value }))} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">Payout Date</label>
+                  <input type="date" value={editForm.payout_date} onChange={e => setEditForm(f => ({ ...f, payout_date: e.target.value }))} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">Confirmation Code</label>
+                  <input type="text" value={editForm.confirmation_code} onChange={e => setEditForm(f => ({ ...f, confirmation_code: e.target.value }))} placeholder="Optional" className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none" />
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+              <button onClick={handleDelete} disabled={editSaving} className="px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50">
+                Delete
+              </button>
+              <div className="flex gap-2">
+                <button onClick={() => { setModal(null); setEditingId(null); }} className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
+                <button onClick={handleEditSave} disabled={editSaving || !editForm.property_id || !editForm.amount || !editForm.check_in || !editForm.check_out} className="px-4 py-2.5 text-sm font-medium text-white bg-teal-500 hover:bg-teal-600 disabled:bg-gray-200 disabled:text-gray-400 rounded-lg transition-colors flex items-center gap-2">
+                  {editSaving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : 'Save Changes'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
