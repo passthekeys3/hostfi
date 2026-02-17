@@ -1,14 +1,11 @@
 import Link from "next/link";
-import { Building2 } from "lucide-react";
 
 export default function NotFound() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-white">
       <div className="text-center">
         <div className="inline-flex items-center gap-2.5 mb-8">
-          <div className="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center">
-            <Building2 className="w-5 h-5 text-white" />
-          </div>
+          <img src="/logo.svg" alt="HostFi" className="w-10 h-10" />
           <span className="text-2xl font-bold tracking-tight text-gray-900">HostFi</span>
         </div>
         <h1 className="text-6xl font-bold text-gray-900 mb-4">404</h1>
