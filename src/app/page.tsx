@@ -331,7 +331,7 @@ export default function LandingPage() {
           { "@type": "Question", "name": "What's the difference between Owner and Arbitrage mappings?", "acceptedAnswer": { "@type": "Answer", "text": "Owners and arbitrage operators have different tax situations. For example, an owner deducts mortgage interest on Line 12, while an arbitrage operator deducts rent on Line 14. HostFi handles both automatically." }},
           { "@type": "Question", "name": "Is my financial data secure?", "acceptedAnswer": { "@type": "Answer", "text": "We use bank-level encryption and never store banking credentials. Your data is encrypted at rest and in transit. Bill payments are processed through licensed third-party providers — we never touch your funds." }},
           { "@type": "Question", "name": "Can I import existing expense data?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Import from CSV or Excel — our import wizard auto-maps your columns and flags duplicates. Xero sync coming soon on Business plan." }},
-          { "@type": "Question", "name": "Do you integrate with property management software?", "acceptedAnswer": { "@type": "Answer", "text": "Today we integrate with Slack, Google Sheets, Google Drive, Zapier, and Make — with Xero and PMS integrations (Hostaway, Guesty, OwnerRez) on the roadmap. New integrations added regularly." }},
+          { "@type": "Question", "name": "Do you integrate with property management software?", "acceptedAnswer": { "@type": "Answer", "text": "Yes! HostFi integrates with Guesty, Hostaway, and OwnerRez to sync properties and bookings automatically. We also integrate with Slack, Google Sheets, Google Drive, Zapier, and Make. Plaid bank sync, QuickBooks, and Xero are coming soon." }},
           { "@type": "Question", "name": "What is the cancellation policy?", "acceptedAnswer": { "@type": "Answer", "text": "Cancel anytime from your settings — no contracts, no fees. Your data stays accessible for 30 days after cancellation." }}
         ]
       })}} />
@@ -389,14 +389,18 @@ export default function LandingPage() {
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6">
               Know Exactly Where Your Money Goes.{" "}
-              <span className="text-teal-500">
-                {displayedText}
-                {!isComplete && (
-                  <span 
-                    className="inline-block w-[3px] h-[0.9em] bg-teal-500 ml-1 align-middle"
-                    style={{ animation: "blink 1s infinite" }}
-                  />
-                )}
+              {/* Full text in DOM for SEO, visually replaced by typing animation */}
+              <span className="text-teal-500" aria-label={heroText}>
+                <span aria-hidden="true">
+                  {displayedText}
+                  {!isComplete && (
+                    <span 
+                      className="inline-block w-[3px] h-[0.9em] bg-teal-500 ml-1 align-middle"
+                      style={{ animation: "blink 1s infinite" }}
+                    />
+                  )}
+                </span>
+                <span className="sr-only">{heroText}</span>
               </span>
             </h1>
             <p className="text-lg sm:text-xl text-gray-500 leading-relaxed max-w-2xl mb-10">
@@ -897,7 +901,7 @@ export default function LandingPage() {
               <FAQItem q="What's the difference between Owner and Arbitrage mappings?" a="Owners and arbitrage operators have different tax situations. For example, an owner deducts mortgage interest on Line 12, while an arbitrage operator deducts rent on Line 19 (Other). HostFi handles both automatically." />
               <FAQItem q="Is my financial data secure?" a="We use bank-level encryption and never store banking credentials. Your data is encrypted at rest and in transit. Bill payments are processed through licensed third-party providers — we never touch your funds." />
               <FAQItem q="Can I import existing expense data?" a="Yes. Import from CSV or Excel — our import wizard auto-maps your columns and flags duplicates. Xero sync coming soon on Business plan." />
-              <FAQItem q="Do you integrate with property management software?" a="Today we integrate with Slack, Google Sheets, Google Drive, Zapier, and Make — with Xero and PMS integrations (Hostaway, Guesty, OwnerRez) on the roadmap. New integrations added regularly." />
+              <FAQItem q="Do you integrate with property management software?" a="Yes! HostFi integrates with Guesty, Hostaway, and OwnerRez to sync properties and bookings automatically. We also connect with Slack, Google Sheets, Google Drive, Zapier, and Make. Plaid bank sync, QuickBooks, and Xero coming soon." />
               <FAQItem q="What's the cancellation policy?" a="Cancel anytime from your settings — no contracts, no fees. Your data stays accessible for 30 days after cancellation." />
             </div>
           </FadeIn>

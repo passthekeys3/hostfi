@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Building2, ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Schedule E for Rental Properties: The Complete 2026 Guide | HostFi",
   description: "Everything rental property owners and STR operators need to know about IRS Schedule E. Line-by-line breakdown, common deductions, and how to avoid audit triggers.",
+  alternates: { canonical: "https://hostfi.ai/blog/schedule-e-guide" },
   openGraph: {
     title: "Schedule E for Rental Properties: The Complete 2026 Guide",
     description: "Line-by-line breakdown of Schedule E for rental property owners and STR operators.",
@@ -19,9 +20,7 @@ export default function ScheduleEGuidePage() {
       <header className="border-b border-gray-100 px-5 py-4">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center">
-              <Building2 className="w-4 h-4 text-white" />
-            </div>
+            <img src="/logo.svg" alt="HostFi" className="w-8 h-8" />
             <span className="text-lg font-bold text-gray-900">HostFi</span>
           </Link>
           <Link href="/login" className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">

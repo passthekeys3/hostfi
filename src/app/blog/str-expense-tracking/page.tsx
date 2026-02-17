@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Building2, ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "How to Track STR Expenses for Schedule E | HostFi",
   description: "A practical guide to tracking short-term rental expenses for IRS Schedule E. Learn which expenses are deductible, how to categorize them, and how to avoid common mistakes at tax time.",
+  alternates: { canonical: "https://hostfi.ai/blog/str-expense-tracking" },
   openGraph: {
     title: "How to Track STR Expenses for Schedule E",
     description: "A practical guide to tracking short-term rental expenses for IRS Schedule E.",
@@ -19,9 +20,7 @@ export default function STRExpenseTrackingPage() {
       <header className="border-b border-gray-100 px-5 py-4">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center">
-              <Building2 className="w-4 h-4 text-white" />
-            </div>
+            <img src="/logo.svg" alt="HostFi" className="w-8 h-8" />
             <span className="text-lg font-bold text-gray-900">HostFi</span>
           </Link>
           <Link href="/login" className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">
