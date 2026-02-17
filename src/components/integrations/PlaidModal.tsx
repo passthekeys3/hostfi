@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useId } from "react";
-import { Check, X, Shield, Landmark, CreditCard, ArrowRight, AlertCircle } from "lucide-react";
+import { useState, useEffect, useId } from "react";
+import { Check, X, Shield, Landmark, CreditCard, ArrowRight, AlertCircle, Building2, Link2 } from "lucide-react";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import type { ModalProps } from "./types";
 import { PlaidLinkButton } from "./PlaidLinkButton";
@@ -13,13 +13,43 @@ interface Account {
   mask: string | null;
 }
 
+interface Property {
+  id: string;
+  name: string;
+}
+
 export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?: () => void }) {
-  const [step, setStep] = useState<"intro" | "connect" | "accounts" | "success">("intro");
+  const [step, setStep] = useState<"intro" | "connect" | "accounts" | "mapping" | "success">("intro");
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [institution, setInstitution] = useState<{ name: string } | null>(null);
   const [selectedAccounts, setSelectedAccounts] = useState<Set<string>>(new Set());
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [accountPropertyMap, setAccountPropertyMap] = useState<Record<string, string>>({});
+  const [importing, setImporting] = useState(false);
+  const [savingMappings, setSavingMappings] = useState(false);
+  const [txnCount, setTxnCount] = useState(0);
   const titleId = useId();
   const modalRef = useFocusTrap<HTMLDivElement>(true, { onEscape: onClose });
+
+  // Load properties on mount
+  useEffect(() => {
+    async function loadProperties() {
+      try {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        if (!supabase) return;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data } = await supabase
+          .from("properties")
+          .select("id, name")
+          .eq("user_id", user.id)
+          .order("name");
+        if (data) setProperties(data);
+      } catch {}
+    }
+    loadProperties();
+  }, []);
 
   const handlePlaidSuccess = (accts: Account[], inst: { name: string } | null) => {
     setAccounts(accts);
@@ -37,11 +67,42 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
     });
   };
 
-  const [importing, setImporting] = useState(false);
-  const [txnCount, setTxnCount] = useState(0);
+  const handleContinueToMapping = () => {
+    // Initialize mapping with empty values for selected accounts
+    const initial: Record<string, string> = {};
+    accounts
+      .filter(a => selectedAccounts.has(a.account_id))
+      .forEach(a => { initial[a.account_id] = accountPropertyMap[a.account_id] || ""; });
+    setAccountPropertyMap(initial);
+    setStep("mapping");
+  };
 
   const handleFinish = async () => {
+    setSavingMappings(true);
+
+    // Save property mappings
+    try {
+      const mappingPromises = Object.entries(accountPropertyMap)
+        .filter(([accountId]) => selectedAccounts.has(accountId))
+        .map(([plaid_account_id, property_id]) =>
+          fetch("/api/integrations/plaid/accounts/map", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              plaid_account_id,
+              property_id: property_id || null,
+            }),
+          })
+        );
+      await Promise.all(mappingPromises);
+    } catch (err) {
+      console.error("Failed to save mappings:", err);
+    }
+
+    setSavingMappings(false);
     setImporting(true);
+
+    // Import transactions
     try {
       const res = await fetch("/api/integrations/plaid/transactions", {
         method: "POST",
@@ -52,6 +113,7 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
         setTxnCount((data.added || []).length);
       }
     } catch {}
+
     setImporting(false);
     onConnected?.();
     setStep("success");
@@ -180,12 +242,82 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
               )}
 
               <button
-                onClick={handleFinish}
-                disabled={selectedAccounts.size === 0 || importing}
+                onClick={handleContinueToMapping}
+                disabled={selectedAccounts.size === 0}
                 className="w-full py-3 text-sm font-semibold text-white bg-gray-900 hover:bg-gray-800 disabled:bg-gray-200 disabled:text-gray-400 rounded-xl transition-colors"
               >
-                {importing ? "Importing Transactions..." : "Import Transactions"}
+                Next: Link to Properties
               </button>
+            </div>
+          )}
+
+          {step === "mapping" && (
+            <div className="space-y-6">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Link2 className="w-4 h-4 text-teal-500" />
+                  <h4 className="text-sm font-semibold text-gray-900">Link Accounts to Properties</h4>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Map each bank account to a property so transactions are automatically assigned. You can skip this and assign later.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {accounts
+                  .filter(a => selectedAccounts.has(a.account_id))
+                  .map((account) => (
+                    <div key={account.account_id} className="p-3 rounded-lg border border-gray-200 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <CreditCard className="w-3.5 h-3.5 text-gray-400" />
+                        <p className="text-xs font-medium text-gray-900">
+                          {account.name}
+                          {account.mask ? <span className="text-gray-400 ml-1">••{account.mask}</span> : ""}
+                        </p>
+                      </div>
+                      <select
+                        value={accountPropertyMap[account.account_id] || ""}
+                        onChange={(e) =>
+                          setAccountPropertyMap(prev => ({
+                            ...prev,
+                            [account.account_id]: e.target.value,
+                          }))
+                        }
+                        className="w-full text-xs px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-300"
+                      >
+                        <option value="">All properties (auto-match)</option>
+                        {properties.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
+              </div>
+
+              {properties.length === 0 && (
+                <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-lg border border-amber-100">
+                  <Building2 className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+                  <p className="text-xs text-amber-700">No properties found. Add properties first, or skip this step — you can map accounts to properties later from the integration settings.</p>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setStep("accounts")}
+                  className="flex-1 py-3 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handleFinish}
+                  disabled={savingMappings || importing}
+                  className="flex-1 py-3 text-sm font-semibold text-white bg-gray-900 hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-500 rounded-xl transition-colors"
+                >
+                  {savingMappings ? "Saving..." : importing ? "Importing..." : "Import Transactions"}
+                </button>
+              </div>
             </div>
           )}
 
@@ -209,6 +341,14 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
                   <span className="text-gray-500">Accounts</span>
                   <span className="font-medium text-gray-700">{selectedAccounts.size}</span>
                 </div>
+                {Object.values(accountPropertyMap).some(v => v) && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Linked Properties</span>
+                    <span className="font-medium text-gray-700">
+                      {Object.values(accountPropertyMap).filter(v => v).length}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-gray-500">Sync</span>
                   <span className="font-medium text-teal-600">Active — Real-Time</span>
