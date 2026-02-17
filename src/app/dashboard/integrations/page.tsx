@@ -73,6 +73,14 @@ export default function IntegrationsPage() {
       // Clean URL
       window.history.replaceState({}, "", "/dashboard/integrations");
     }
+
+    // Handle OwnerRez OAuth callback
+    const ownerrezStatus = searchParams.get("ownerrez");
+    if (ownerrezStatus === "connected") {
+      setConnectedIds(prev => new Set(prev).add("ownerrez"));
+      setOpenModal("ownerrez");
+      window.history.replaceState({}, "", "/dashboard/integrations");
+    }
   }, [searchParams]);
 
   // Load existing connections from Supabase on mount

@@ -8,6 +8,7 @@ interface PMSConfig {
   name: string;
   logoText: string;
   logoColor: string;
+  oauth?: boolean;
   fields: { key: string; label: string; placeholder: string; type?: string }[];
   helpText: string;
 }
@@ -40,11 +41,12 @@ export const PMS_CONFIGS: Record<string, PMSConfig> = {
     name: "OwnerRez",
     logoText: "OR",
     logoColor: "bg-blue-50 text-blue-600",
+    oauth: true,
     fields: [
       { key: "email", label: "Account Email", placeholder: "you@example.com" },
       { key: "api_token", label: "API Token", placeholder: "••••••••••••", type: "password" },
     ],
-    helpText: "Find your API token in OwnerRez → Settings → API Access.",
+    helpText: "Connect your OwnerRez account to sync properties and bookings.",
   },
 };
 
@@ -66,6 +68,7 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
     reservations?: { imported: number; skipped: number; total: number };
   } | null>(null);
   const [connectedAt, setConnectedAt] = useState<string | null>(null);
+  const [oauthAvailable, setOauthAvailable] = useState(true);
 
   useEffect(() => {
     if (!open) return;
@@ -81,7 +84,32 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
     })();
   }, [open, provider]);
 
+  const handleOAuthConnect = async () => {
+    setConnecting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/integrations/${provider}/auth`);
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        // OAuth not configured — fall back to manual fields
+        setOauthAvailable(false);
+        setConnecting(false);
+        return;
+      }
+      // Redirect to OwnerRez authorization page
+      window.location.href = data.url;
+    } catch {
+      setOauthAvailable(false);
+      setConnecting(false);
+    }
+  };
+
   const handleConnect = async () => {
+    // If OAuth is available for this provider, try that first
+    if (config.oauth && oauthAvailable) {
+      return handleOAuthConnect();
+    }
+
     const missing = config.fields.find(f => !fieldValues[f.key]?.trim());
     if (missing) { setError(`${missing.label} is required`); return; }
 
@@ -170,24 +198,36 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
                 <h4 className="font-semibold text-sm">Connect Your {config.name} Account</h4>
                 <p className="text-xs text-gray-500 leading-relaxed">{config.helpText}</p>
               </div>
-              <div className="space-y-3">
-                {config.fields.map(field => (
-                  <div key={field.key}>
-                    <label className="block text-xs font-medium text-gray-700 mb-1.5">{field.label}</label>
-                    <input
-                      type={field.type || "text"}
-                      value={fieldValues[field.key] || ""}
-                      onChange={e => setFieldValues(prev => ({ ...prev, [field.key]: e.target.value }))}
-                      placeholder={field.placeholder}
-                      className="w-full px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
-                    />
+
+              {config.oauth && oauthAvailable ? (
+                /* OAuth flow — one-click connect */
+                <button onClick={handleConnect} disabled={connecting}
+                  className="w-full py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                  {connecting ? <><Loader2 className="w-4 h-4 animate-spin" /> Redirecting...</> : `Connect with ${config.name}`}
+                </button>
+              ) : (
+                /* Manual credential entry (fallback or non-OAuth providers) */
+                <>
+                  <div className="space-y-3">
+                    {config.fields.map(field => (
+                      <div key={field.key}>
+                        <label className="block text-xs font-medium text-gray-700 mb-1.5">{field.label}</label>
+                        <input
+                          type={field.type || "text"}
+                          value={fieldValues[field.key] || ""}
+                          onChange={e => setFieldValues(prev => ({ ...prev, [field.key]: e.target.value }))}
+                          placeholder={field.placeholder}
+                          className="w-full px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                        />
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <button onClick={handleConnect} disabled={connecting}
-                className="w-full py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                {connecting ? <><Loader2 className="w-4 h-4 animate-spin" /> Connecting...</> : `Connect ${config.name}`}
-              </button>
+                  <button onClick={handleConnect} disabled={connecting}
+                    className="w-full py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                    {connecting ? <><Loader2 className="w-4 h-4 animate-spin" /> Connecting...</> : `Connect ${config.name}`}
+                  </button>
+                </>
+              )}
             </>
           )}
 

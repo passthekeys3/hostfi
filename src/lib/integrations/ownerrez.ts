@@ -1,23 +1,48 @@
 /**
  * OwnerRez API client for HostFi integration
  * 
- * Auth: HTTP Basic Auth (email + API token)
+ * Auth: OAuth 2.0 Bearer token (preferred) OR HTTP Basic Auth (legacy)
  * Base URL: https://api.ownerrez.com/v2
  * Docs: https://www.ownerrez.com/support/articles/api-overview
+ * OAuth: https://www.ownerrez.com/support/articles/api-oauth-app
+ * 
+ * Access tokens are long-lived (no refresh needed).
  */
 
 const OWNERREZ_API_BASE = 'https://api.ownerrez.com/v2';
 
-function basicAuth(email: string, token: string): string {
-  return 'Basic ' + Buffer.from(`${email}:${token}`).toString('base64');
+export interface OwnerRezAuth {
+  type: 'oauth' | 'basic';
+  accessToken?: string;   // OAuth bearer token
+  email?: string;         // Basic auth email
+  apiToken?: string;      // Basic auth token
 }
 
-async function ownerrezFetch(path: string, email: string, token: string, params?: Record<string, string>) {
+function buildAuthHeader(auth: OwnerRezAuth): string {
+  if (auth.type === 'oauth' && auth.accessToken) {
+    return `Bearer ${auth.accessToken}`;
+  }
+  if (auth.type === 'basic' && auth.email && auth.apiToken) {
+    return 'Basic ' + Buffer.from(`${auth.email}:${auth.apiToken}`).toString('base64');
+  }
+  throw new Error('Invalid OwnerRez auth config');
+}
+
+/** Helper to build auth from stored credentials */
+export function authFromCredentials(credentials: Record<string, string>): OwnerRezAuth {
+  if (credentials.auth_type === 'oauth' && credentials.access_token) {
+    return { type: 'oauth', accessToken: credentials.access_token };
+  }
+  // Legacy basic auth
+  return { type: 'basic', email: credentials.email, apiToken: credentials.api_token };
+}
+
+async function ownerrezFetch(path: string, auth: OwnerRezAuth, params?: Record<string, string>) {
   const url = new URL(`${OWNERREZ_API_BASE}${path}`);
   if (params) Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
 
   const res = await fetch(url.toString(), {
-    headers: { 'Authorization': basicAuth(email, token), 'Content-Type': 'application/json' },
+    headers: { 'Authorization': buildAuthHeader(auth), 'Content-Type': 'application/json' },
   });
 
   if (!res.ok) {
@@ -26,6 +51,11 @@ async function ownerrezFetch(path: string, email: string, token: string, params?
   }
 
   return res.json();
+}
+
+// Backwards-compatible wrapper for basic auth callers
+function legacyAuth(email: string, token: string): OwnerRezAuth {
+  return { type: 'basic', email, apiToken: token };
 }
 
 export interface OwnerRezProperty {
@@ -64,13 +94,21 @@ export interface PaginatedResponse<T> {
   has_more: boolean;
 }
 
-export async function getProperties(email: string, token: string, params?: { page?: number; page_size?: number }): Promise<PaginatedResponse<OwnerRezProperty>> {
+export async function getProperties(authOrEmail: OwnerRezAuth | string, tokenOrParams?: string | { page?: number; page_size?: number }, params?: { page?: number; page_size?: number }): Promise<PaginatedResponse<OwnerRezProperty>> {
+  let auth: OwnerRezAuth;
+  let actualParams: { page?: number; page_size?: number } | undefined;
+  if (typeof authOrEmail === 'string') {
+    auth = legacyAuth(authOrEmail, tokenOrParams as string);
+    actualParams = params;
+  } else {
+    auth = authOrEmail;
+    actualParams = (typeof tokenOrParams === 'object' ? tokenOrParams : params) as { page?: number; page_size?: number } | undefined;
+  }
   const queryParams: Record<string, string> = {};
-  if (params?.page) queryParams.page = String(params.page);
-  if (params?.page_size) queryParams.page_size = String(params.page_size);
+  if (actualParams?.page) queryParams.page = String(actualParams.page);
+  if (actualParams?.page_size) queryParams.page_size = String(actualParams.page_size);
   
-  const result = await ownerrezFetch('/properties', email, token, queryParams);
-  // OwnerRez returns { items: [], page: 1, page_size: 50, total_count: N }
+  const result = await ownerrezFetch('/properties', auth, queryParams);
   return {
     items: result.items || [],
     page: result.page || 1,
@@ -80,12 +118,21 @@ export async function getProperties(email: string, token: string, params?: { pag
   };
 }
 
-export async function getBookings(email: string, token: string, params?: { page?: number; page_size?: number }): Promise<PaginatedResponse<OwnerRezBooking>> {
+export async function getBookings(authOrEmail: OwnerRezAuth | string, tokenOrParams?: string | { page?: number; page_size?: number }, params?: { page?: number; page_size?: number }): Promise<PaginatedResponse<OwnerRezBooking>> {
+  let auth: OwnerRezAuth;
+  let actualParams: { page?: number; page_size?: number } | undefined;
+  if (typeof authOrEmail === 'string') {
+    auth = legacyAuth(authOrEmail, tokenOrParams as string);
+    actualParams = params;
+  } else {
+    auth = authOrEmail;
+    actualParams = (typeof tokenOrParams === 'object' ? tokenOrParams : params) as { page?: number; page_size?: number } | undefined;
+  }
   const queryParams: Record<string, string> = {};
-  if (params?.page) queryParams.page = String(params.page);
-  if (params?.page_size) queryParams.page_size = String(params.page_size);
+  if (actualParams?.page) queryParams.page = String(actualParams.page);
+  if (actualParams?.page_size) queryParams.page_size = String(actualParams.page_size);
   
-  const result = await ownerrezFetch('/bookings', email, token, queryParams);
+  const result = await ownerrezFetch('/bookings', auth, queryParams);
   return {
     items: result.items || [],
     page: result.page || 1,
@@ -95,9 +142,10 @@ export async function getBookings(email: string, token: string, params?: { page?
   };
 }
 
-export async function verifyCredentials(email: string, token: string): Promise<boolean> {
+export async function verifyCredentials(emailOrAuth: OwnerRezAuth | string, token?: string): Promise<boolean> {
+  const auth = typeof emailOrAuth === 'string' ? legacyAuth(emailOrAuth, token!) : emailOrAuth;
   try {
-    await ownerrezFetch('/properties', email, token, { page_size: '1' });
+    await ownerrezFetch('/properties', auth, { page_size: '1' });
     return true;
   } catch {
     return false;
