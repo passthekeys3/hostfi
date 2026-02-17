@@ -25,24 +25,10 @@ interface ImportApiResult {
 export default function RevenuePage() {
   const demo = isDemoMode();
   const { properties: realProperties, expenses: realExpenses, revenue: dashRevenue, loading: dashLoading, refresh } = useDashboardData();
-  const [revenue, setRevenue] = useState<RevenueEntry[]>(demo ? DEMO_REVENUE : []);
-  const [realRevenue, setRealRevenue] = useState<RevenueEntry[]>([]);
-  const [revenueLoaded, setRevenueLoaded] = useState(false);
-
-  // Fetch real revenue from Supabase
-  useState(() => {
-    if (demo) return;
-    (async () => {
-      try {
-        const { createClient } = await import("@/lib/supabase/client");
-        const supabase = createClient();
-        if (!supabase) return;
-        const { data } = await supabase.from("revenue").select("*").order("check_in", { ascending: false });
-        if (data) { setRealRevenue(data as RevenueEntry[]); setRevenue(data as RevenueEntry[]); }
-      } catch {}
-      setRevenueLoaded(true);
-    })();
-  });
+  
+  // Use dashboard hook data for real users, demo data for demo mode
+  const revenue: RevenueEntry[] = demo ? DEMO_REVENUE : (dashRevenue as RevenueEntry[] || []);
+  const revenueLoaded = !dashLoading;
   const [modal, setModal] = useState<ModalView>(null);
   const [filterProperty, setFilterProperty] = useState<string>('all');
   const [filterSource, setFilterSource] = useState<string>('all');
@@ -161,10 +147,11 @@ export default function RevenuePage() {
       } catch {}
     }
 
-    setRevenue(prev => [...prev, entry]);
+    // For demo mode, just close modal (data won't persist anyway)
+    if (refresh) refresh();
     setModal(null);
     setForm({ property_id: '', source: 'airbnb', guest_name: '', amount: '', platform_fee: '', check_in: '', check_out: '', confirmation_code: '', payout_date: '' });
-  }, [form, demo]);
+  }, [form, demo, refresh]);
 
   const handleCSVParse = useCallback(() => {
     const result = parseRevenueCSV(csvText);
@@ -203,9 +190,7 @@ export default function RevenuePage() {
       const result = await response.json();
       
       if (result.success) {
-        // Refresh from Supabase if available, otherwise add to local state
-        if (refresh && !demo) { refresh(); }
-        else { setRevenue(prev => [...prev, ...result.entries]); }
+        if (refresh) refresh();
         setImportResult({
           imported: result.imported,
           skipped: result.skipped,
