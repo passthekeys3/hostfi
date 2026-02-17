@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
       credentials: process.env.CREDENTIALS_ENCRYPTION_KEY ? encryptCredentials({ auth_type: 'oauth', access_token: accessToken }) : { auth_type: 'oauth', access_token: accessToken },
       access_token: accessToken,
       connected_at: new Date().toISOString(),
-      metadata: { oauth: true },
+      metadata: { oauth: true, ownerrez_user_id: tokenData.user_id || null },
       active: true,
     }, { onConflict: 'user_id,provider' });
 

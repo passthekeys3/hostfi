@@ -64,10 +64,7 @@ export async function POST(request: NextRequest) {
     console.log(`OwnerRez webhook: action=${action} entity_type=${entity_type} entity_id=${entity_id} user_id=${user_id}`);
 
     // Find the HostFi user by OwnerRez user_id stored in metadata
-    // The OAuth callback stores user_id in the state, but we need to find
-    // the HostFi user who connected this OwnerRez account.
-    // We'll look up by provider='ownerrez' and check metadata or just process for all ownerrez users
-    // Since webhook is app-level (all users of our OAuth app), we need to find the right user.
+    // First try exact match via ownerrez_user_id in metadata
     const { data: connections } = await supabase
       .from('integration_connections')
       .select('user_id, credentials, metadata')
@@ -78,12 +75,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ received: true, note: 'No active connections' });
     }
 
+    // Filter to the specific user if we can match by ownerrez_user_id
+    const matchedConnections = user_id
+      ? connections.filter(c => c.metadata?.ownerrez_user_id === user_id)
+      : [];
+    
+    // Fall back to all connections if no match (legacy connections without ownerrez_user_id)
+    const targetConnections = matchedConnections.length > 0 ? matchedConnections : connections;
+
     // ========================================================================
     // App revocation
     // ========================================================================
     if (action === 'application_authorization_revoked') {
       // Disconnect all users (or the specific user if we can match)
-      for (const conn of connections) {
+      for (const conn of targetConnections) {
         await supabase.from('integration_connections')
           .update({ status: 'disconnected', credentials: null, active: false })
           .eq('user_id', conn.user_id)
@@ -103,7 +108,7 @@ export async function POST(request: NextRequest) {
     // ========================================================================
     // Entity events — process for each connected user
     // ========================================================================
-    for (const conn of connections) {
+    for (const conn of targetConnections) {
       const hostfiUserId = conn.user_id;
 
       // --- BOOKING EVENTS ---
