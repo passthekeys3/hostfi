@@ -68,7 +68,7 @@ export default function RevenuePage() {
   const filtered = useMemo(() => {
     return revenue.filter(r => {
       if (filterProperty !== 'all' && r.property_id !== filterProperty) return false;
-      if (filterSource !== 'all' && r.source !== filterSource) return false;
+      if (filterSource !== 'all' && (r.platform || r.source) !== filterSource) return false;
       return true;
     }).sort((a, b) => (b.payout_date || b.date || '').localeCompare(a.payout_date || a.date || ''));
   }, [revenue, filterProperty, filterSource]);
@@ -437,7 +437,7 @@ export default function RevenuePage() {
             <tbody className="divide-y divide-gray-50">
               {filtered.map(r => {
                 const prop = allProperties.find(p => p.id === r.property_id);
-                const src = REVENUE_SOURCES.find(s => s.value === r.source);
+                const src = REVENUE_SOURCES.find(s => s.value === (r.platform || r.source));
                 return (
                   <tr key={r.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-5 py-3 text-gray-600 whitespace-nowrap">

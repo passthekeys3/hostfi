@@ -5,6 +5,7 @@ export interface RevenueEntry {
   user_id: string;
   property_id: string;
   source: RevenueSource;
+  platform?: string; // airbnb, vrbo, direct, booking_com, other — from API syncs
   description: string;
   guest_name: string | null;
   amount: number;
@@ -61,7 +62,7 @@ export function getRevenueForProperty(propertyId: string): RevenueEntry[] {
 export function getRevenueByMonth(revenue: RevenueEntry[]): Record<string, { gross: number; net: number; fees: number; bookings: number }> {
   const result: Record<string, { gross: number; net: number; fees: number; bookings: number }> = {};
   for (const r of revenue) {
-    const month = (r.payout_date || r.date || r.created_at || '').substring(0, 7);
+    const month = (r.check_in || r.date || r.payout_date || r.created_at || '').substring(0, 7);
     if (!result[month]) result[month] = { gross: 0, net: 0, fees: 0, bookings: 0 };
     result[month].gross += r.amount ?? 0;
     result[month].net += r.payout_amount ?? r.amount ?? 0;
@@ -74,7 +75,12 @@ export function getRevenueByMonth(revenue: RevenueEntry[]): Record<string, { gro
 export function getRevenueBySource(revenue: RevenueEntry[]): Record<RevenueSource, number> {
   const result = { airbnb: 0, vrbo: 0, booking: 0, direct: 0, other: 0 };
   for (const r of revenue) {
-    result[r.source ?? 'other'] += r.payout_amount ?? r.amount ?? 0;
+    // Use platform field (airbnb/vrbo/etc), fall back to source for demo data compatibility
+    let key = (r.platform || r.source || 'other') as string;
+    if (key === 'booking_com') key = 'booking'; // normalize DB value to UI value
+    if (key === 'api_sync' || key === 'manual' || key === 'csv_import') key = 'other'; // source values aren't platforms
+    const validKey = (key in result ? key : 'other') as RevenueSource;
+    result[validKey] += r.payout_amount ?? r.amount ?? 0;
   }
   return result;
 }
