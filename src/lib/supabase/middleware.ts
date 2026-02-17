@@ -30,22 +30,10 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Allow demo mode: if user has demo cookie or ?demo query param, skip auth
-  const isDemo = request.cookies.get('hostfi_demo')?.value === 'true' 
-    || request.nextUrl.searchParams.get('demo') === 'true';
-
-  if (!user && !isDemo && request.nextUrl.pathname.startsWith('/dashboard')) {
+  if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);
-  }
-
-  // Set demo cookie if entering via ?demo=true
-  if (isDemo && !request.cookies.get('hostfi_demo')) {
-    supabaseResponse.cookies.set('hostfi_demo', 'true', {
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-    });
   }
 
   return supabaseResponse;

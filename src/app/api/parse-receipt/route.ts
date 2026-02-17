@@ -1,42 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
+import { authenticateRequest } from "@/lib/auth";
 import { parseReceipt } from "@/lib/receipt-parser";
+import { createRateLimiter } from "@/lib/rate-limit";
 
-// Simple in-memory rate limiter
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
-const RATE_LIMIT_MAX = 20; // requests per window
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return false;
-  }
-  entry.count++;
-  return entry.count > RATE_LIMIT_MAX;
-}
+const isRateLimited = createRateLimiter('parse-receipt', 20, 60_000);
 
 const MAX_PAYLOAD_SIZE = 5_242_880; // 5MB (receipts can be larger images)
 
 export async function POST(request: NextRequest) {
   try {
-    // Authentication: verify webhook secret (required in production)
-    const webhookSecret = process.env.WEBHOOK_SECRET;
-    if (!webhookSecret && process.env.NODE_ENV === 'production') {
-      console.error('WEBHOOK_SECRET not configured in production');
-      return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
-    }
-    if (webhookSecret) {
-      const providedSecret = request.headers.get("X-Webhook-Secret");
-      if (providedSecret !== webhookSecret) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
+    // Require authenticated user
+    const auth = await authenticateRequest();
+    if (!auth.authenticated) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Rate limiting
-    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-    if (isRateLimited(ip)) {
+    // Rate limiting by user
+    if (isRateLimited(auth.userId)) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
