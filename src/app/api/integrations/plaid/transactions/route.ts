@@ -1,3 +1,4 @@
+import { decryptPlaidToken } from "@/lib/integrations/plaid-crypto";
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateRequest } from '@/lib/auth';
 import { createRateLimiter } from '@/lib/rate-limit';
@@ -108,7 +109,7 @@ export async function POST(request: NextRequest) {
     const cursor = (metadata.sync_cursor as string) || undefined;
 
     // Fetch all new transactions
-    const result = await fetchAllTransactions(connection.access_token, cursor);
+    const result = await fetchAllTransactions(decryptPlaidToken(connection.access_token), cursor);
 
     // Map categories
     const addedWithCategories = result.added.map(t => ({

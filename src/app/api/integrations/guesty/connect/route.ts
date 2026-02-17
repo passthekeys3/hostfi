@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { authenticateRequest } from '@/lib/auth';
 import { createClient } from '@supabase/supabase-js';
+import { encryptCredentials } from '@/lib/crypto';
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -62,7 +63,7 @@ export async function POST(request: Request) {
         user_id: auth.userId,
         provider: 'guesty',
         status: 'connected',
-        credentials: { client_id, client_secret },
+        credentials: process.env.CREDENTIALS_ENCRYPTION_KEY ? encryptCredentials({ client_id, client_secret }) : { client_id, client_secret },
         connected_at: new Date().toISOString(),
         access_token: 'guesty_client_credentials',
         metadata: {},

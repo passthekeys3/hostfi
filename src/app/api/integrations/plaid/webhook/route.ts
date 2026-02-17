@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import { createRemoteJWKSet, jwtVerify } from 'jose';
 
 /**
  * POST /api/integrations/plaid/webhook
@@ -59,54 +60,43 @@ export async function POST(request: NextRequest) {
  * Verify Plaid webhook signature
  * https://plaid.com/docs/api/webhooks/webhook-verification/
  */
+// Plaid JWKS endpoint for webhook signature verification
+const PLAID_JWKS = createRemoteJWKSet(
+  new URL('https://production.plaid.com/webhook_verification_key/get')
+);
+
+// Cache JWKS for sandbox/development environments
+const PLAID_SANDBOX_JWKS = createRemoteJWKSet(
+  new URL('https://sandbox.plaid.com/webhook_verification_key/get')
+);
+
+function getJWKS() {
+  const env = process.env.PLAID_ENV || 'sandbox';
+  return env === 'production' ? PLAID_JWKS : PLAID_SANDBOX_JWKS;
+}
+
 async function verifyWebhook(request: NextRequest, body: unknown): Promise<boolean> {
   const plaidVerification = request.headers.get('plaid-verification');
   if (!plaidVerification) return false;
 
-  const webhookSecret = process.env.PLAID_WEBHOOK_SECRET;
-  if (!webhookSecret) {
-    console.error('PLAID_WEBHOOK_SECRET not configured');
-    return false;
-  }
-
   try {
-    // Parse the JWT header to get the key ID
-    const [headerB64] = plaidVerification.split('.');
-    const header = JSON.parse(Buffer.from(headerB64, 'base64').toString());
-    
-    // For full verification, you would:
-    // 1. Fetch the public key from Plaid's JWKS endpoint using the kid
-    // 2. Verify the JWT signature
-    // 3. Check claims (iat, request_body_sha256)
-    
-    // Basic verification: check that we have a valid JWT structure
-    const parts = plaidVerification.split('.');
-    if (parts.length !== 3) return false;
-    
-    // Verify request body hash
+    // 1. Verify JWT signature using Plaid's public keys (JWKS)
+    const { payload } = await jwtVerify(plaidVerification, getJWKS(), {
+      maxTokenAge: '5 minutes',
+    });
+
+    // 2. Verify request body hash matches the claim
     const bodyStr = JSON.stringify(body);
     const bodyHash = crypto.createHash('sha256').update(bodyStr).digest('hex');
-    
-    const payloadB64 = parts[1];
-    const payload = JSON.parse(Buffer.from(payloadB64, 'base64').toString());
-    
-    // Check that the body hash matches
+
     if (payload.request_body_sha256 !== bodyHash) {
-      console.error('Webhook body hash mismatch');
+      console.error('Plaid webhook: body hash mismatch');
       return false;
     }
-    
-    // Check that the token isn't too old (5 minutes)
-    const iat = payload.iat;
-    const now = Math.floor(Date.now() / 1000);
-    if (now - iat > 300) {
-      console.error('Webhook token expired');
-      return false;
-    }
-    
+
     return true;
   } catch (error) {
-    console.error('Webhook verification error:', error);
+    console.error('Plaid webhook verification error:', error);
     return false;
   }
 }

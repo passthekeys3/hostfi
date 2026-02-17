@@ -32,7 +32,8 @@ export async function POST(request: NextRequest) {
 
     if (!connection?.credentials) return NextResponse.json({ error: 'Hostaway not connected' }, { status: 400 });
 
-    const { account_id, api_key } = connection.credentials as { account_id: string; api_key: string };
+    const { readCredentials } = await import('@/lib/crypto');
+    const { account_id, api_key } = readCredentials(connection.credentials) as { account_id: string; api_key: string };
     const token = await getHostawayToken(account_id, api_key);
 
     // Get user's plan for property limits

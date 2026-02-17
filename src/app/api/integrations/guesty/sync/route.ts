@@ -50,7 +50,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Guesty not connected' }, { status: 400 });
     }
 
-    const { client_id, client_secret } = connection.credentials as { client_id: string; client_secret: string };
+    const { readCredentials } = await import('@/lib/crypto');
+    const { client_id, client_secret } = readCredentials(connection.credentials) as { client_id: string; client_secret: string };
 
     // Verify token works
     try {

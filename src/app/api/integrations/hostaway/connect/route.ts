@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { authenticateRequest } from '@/lib/auth';
 import { createClient } from '@supabase/supabase-js';
 import { getHostawayToken } from '@/lib/integrations/hostaway';
+import { encryptCredentials } from '@/lib/crypto';
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
       user_id: auth.userId,
       provider: 'hostaway',
       status: 'connected',
-      credentials: { account_id, api_key },
+      credentials: process.env.CREDENTIALS_ENCRYPTION_KEY ? encryptCredentials({ account_id, api_key }) : { account_id, api_key },
       connected_at: new Date().toISOString(),
       access_token: 'hostaway_client_credentials',
       metadata: {},

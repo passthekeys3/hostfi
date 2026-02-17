@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateRequest } from '@/lib/auth';
 import { createRateLimiter } from '@/lib/rate-limit';
+import { decryptPlaidToken } from '@/lib/integrations/plaid-crypto';
 import {
   fetchAllTransactions,
   mapPlaidCategory,
@@ -112,7 +113,7 @@ export async function POST(request: NextRequest) {
     for (const item of plaidItems) {
       try {
         const { added, modified, removed, nextCursor, accounts } = await fetchAllTransactions(
-          item.access_token,
+          decryptPlaidToken(item.access_token),
           item.sync_cursor || undefined
         );
 
@@ -377,7 +378,7 @@ async function handleLegacySync(userId: string, supabase: ReturnType<typeof getS
   await supabase.from('plaid_items').upsert({
     user_id: userId,
     item_id: metadata.item_id as string,
-    access_token: connection.access_token,
+    access_token: decryptPlaidToken(connection.access_token),
     institution_name: metadata.institution_name as string,
     institution_id: metadata.institution_id as string,
     sync_cursor: metadata.sync_cursor as string || null,

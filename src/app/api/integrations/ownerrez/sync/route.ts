@@ -30,7 +30,8 @@ export async function POST(request: NextRequest) {
       .select('credentials').eq('user_id', session.userId).eq('provider', 'ownerrez').eq('status', 'connected').single();
     if (!connection?.credentials) return NextResponse.json({ error: 'OwnerRez not connected' }, { status: 400 });
 
-    const auth = authFromCredentials(connection.credentials as Record<string, string>);
+    const { readCredentials } = await import('@/lib/crypto');
+    const auth = authFromCredentials(readCredentials(connection.credentials));
 
     // Get user's plan for property limits
     const { data: profile } = await supabase

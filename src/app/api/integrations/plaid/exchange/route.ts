@@ -90,7 +90,9 @@ export async function POST(request: NextRequest) {
       const { error: itemError } = await supabase.from('plaid_items').upsert({
         user_id: auth.userId,
         item_id,
-        access_token: access_token,
+        access_token: process.env.CREDENTIALS_ENCRYPTION_KEY
+          ? (await import('@/lib/crypto')).encryptCredentials({ token: access_token })
+          : access_token,
         institution_name: institution?.name || 'Unknown Bank',
         institution_id: itemData.item.institution_id,
         status: 'active',

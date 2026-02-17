@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { authenticateRequest } from '@/lib/auth';
 import { createClient } from '@supabase/supabase-js';
 import { verifyCredentials } from '@/lib/integrations/ownerrez';
+import { encryptCredentials } from '@/lib/crypto';
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
 
     const { error } = await supabase.from('integration_connections').upsert({
       user_id: auth.userId, provider: 'ownerrez', status: 'connected',
-      credentials: { email, api_token }, connected_at: new Date().toISOString(),
+      credentials: process.env.CREDENTIALS_ENCRYPTION_KEY ? encryptCredentials({ email, api_token }) : { email, api_token }, connected_at: new Date().toISOString(),
       access_token: 'ownerrez_basic_auth', metadata: {}, active: true,
     }, { onConflict: 'user_id,provider' });
 
