@@ -181,7 +181,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, results });
   } catch (error) {
     if (error instanceof NextResponse) return error;
-    console.error('OwnerRez sync error:', error);
-    return NextResponse.json({ error: 'Sync failed' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('OwnerRez sync error:', message);
+    return NextResponse.json({ error: `Sync failed: ${message}` }, { status: 500 });
   }
 }
