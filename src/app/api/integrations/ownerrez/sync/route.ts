@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
           const mapped = mapBookingToRevenue(booking, propertyId);
           const { error } = await supabase.from('revenue').insert({ user_id: session.userId, ...mapped });
           if (!error) imported++;
-          else { skipped++; skipReasons['db_error'] = (skipReasons['db_error'] || 0) + 1; console.error('Booking insert error:', error.message); }
+          else { skipped++; skipReasons['db_error'] = (skipReasons['db_error'] || 0) + 1; skipReasons['db_detail'] = error.message as unknown as number; console.error('Booking insert error:', error.message, 'Data:', JSON.stringify(mapped)); }
         }
         results.reservations = { imported, skipped, total: allBookings.length, skipReasons } as typeof results.reservations;
       } else {
