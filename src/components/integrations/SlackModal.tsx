@@ -189,7 +189,7 @@ export function SlackConnectModal({ onClose, isConnected: initialConnected, onDi
       <div ref={modalRef} role="dialog" aria-modal="true" aria-labelledby={titleId} className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] safe-area-bottom overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#4A154B] rounded-xl flex items-center justify-center text-white text-sm font-bold">SL</div>
+            <img src="/logos/slack.svg" alt="Slack" className="w-10 h-10 rounded-xl object-contain" />
             <div>
               <h2 id={titleId} className="text-base font-semibold text-gray-900">
                 {initialConnected ? "Manage Slack" : "Connect Slack"}

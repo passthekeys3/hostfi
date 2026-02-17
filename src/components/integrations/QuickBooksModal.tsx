@@ -39,7 +39,7 @@ export function QBConnectModal({ onClose }: ModalProps) {
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#2CA01C] rounded-xl flex items-center justify-center text-white text-sm font-bold" aria-hidden="true">QB</div>
+            <img src="/logos/quickbooks.svg" alt="QuickBooks" className="w-10 h-10 rounded-xl object-contain" />
             <div>
               <h2 id={titleId} className="text-base font-semibold text-gray-900">Connect QuickBooks</h2>
               <p className="text-xs text-gray-400">Two-way expense sync</p>

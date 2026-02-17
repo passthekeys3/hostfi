@@ -30,7 +30,7 @@ export function DropboxModal({ onClose }: ModalProps) {
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#0061FF] rounded-xl flex items-center justify-center text-white text-sm font-bold" aria-hidden="true">DB</div>
+            <img src="/logos/dropbox.svg" alt="Dropbox" className="w-10 h-10 rounded-xl object-contain" />
             <div>
               <h2 id={titleId} className="text-base font-semibold text-gray-900">Connect Dropbox</h2>
               <p className="text-xs text-gray-400">Auto-backup receipts & reports</p>

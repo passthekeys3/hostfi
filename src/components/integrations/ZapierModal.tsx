@@ -138,7 +138,7 @@ export function ZapierModal({ onClose }: ModalProps) {
       <div ref={modalRef} role="dialog" aria-modal="true" aria-labelledby={titleId} className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] safe-area-bottom overflow-y-auto" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#FF4A00] rounded-xl flex items-center justify-center text-white text-sm font-bold" aria-hidden="true">ZP</div>
+            <img src="/logos/zapier.svg" alt="Zapier" className="w-10 h-10 rounded-xl object-contain" />
             <div>
               <h2 id={titleId} className="text-base font-semibold text-gray-900">Connect Zapier</h2>
               <p className="text-xs text-gray-400">Automate with 5,000+ apps</p>
