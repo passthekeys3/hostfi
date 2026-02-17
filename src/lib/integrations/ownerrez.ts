@@ -77,13 +77,19 @@ export interface OwnerRezProperty {
 export interface OwnerRezBooking {
   id: number;
   property_id: number;
-  guest: { first_name?: string; last_name?: string };
+  guest_id?: number;
+  guest?: { first_name?: string; last_name?: string };
   arrival: string;
   departure: string;
   status: string;
   total_amount: number;
+  total_paid?: number;
   channel?: string;
   confirmation_code?: string;
+  booked_utc?: string;
+  type?: string;
+  is_block?: boolean;
+  property?: { id: number; name: string };
 }
 
 export interface PaginatedResponse<T> {
@@ -183,15 +189,23 @@ export function mapBookingToRevenue(booking: OwnerRezBooking, propertyId: string
   else if (channel.includes('booking')) platform = 'booking_com';
   else if (channel.includes('direct') || channel.includes('owner')) platform = 'direct';
 
+  // OwnerRez returns dates as "2026-02-17" (no T), but handle both formats
   const checkIn = booking.arrival?.split('T')[0] || null;
   const checkOut = booking.departure?.split('T')[0] || null;
+
+  // Guest name: OwnerRez may return guest object or just guest_id
+  const guestName = booking.guest
+    ? [booking.guest.first_name, booking.guest.last_name].filter(Boolean).join(' ')
+    : null;
 
   return {
     property_id: propertyId,
     platform,
-    source: 'api_sync',
-    description: booking.confirmation_code ? `Booking #${booking.confirmation_code}` : 'OwnerRez Booking',
-    guest_name: [booking.guest?.first_name, booking.guest?.last_name].filter(Boolean).join(' ') || 'Guest',
+    source: 'api_sync' as const,
+    description: booking.property?.name
+      ? `${booking.property.name} — ${checkIn || 'Booking'}`
+      : 'OwnerRez Booking',
+    guest_name: guestName || 'Guest',
     amount: booking.total_amount || 0,
     platform_fee: 0,
     check_in: checkIn,

@@ -163,6 +163,7 @@ export async function POST(request: NextRequest) {
         let imported = 0, skipped = 0;
         const skipReasons: Record<string, number> = {};
         for (const booking of allBookings) {
+          if (booking.is_block) { skipped++; skipReasons['is_block'] = (skipReasons['is_block'] || 0) + 1; continue; }
           if (existingIds.has(String(booking.id))) { skipped++; skipReasons['already_exists'] = (skipReasons['already_exists'] || 0) + 1; continue; }
           if (relevantPropertyIds && !relevantPropertyIds.has(String(booking.property_id))) { skipped++; skipReasons['not_selected'] = (skipReasons['not_selected'] || 0) + 1; continue; }
           const propertyId = propertyMap.get(String(booking.property_id));
@@ -177,7 +178,7 @@ export async function POST(request: NextRequest) {
           if (!error) { imported++; console.log('Booking imported, raw data:', JSON.stringify(booking)); }
           else { skipped++; skipReasons['db_error'] = (skipReasons['db_error'] || 0) + 1; skipReasons['db_detail'] = error.message as unknown as number; console.error('Booking insert error:', error.message, 'Data:', JSON.stringify(mapped)); }
         }
-        results.reservations = { imported, skipped, total: allBookings.length, skipReasons, debug_first_booking: allBookings[0] ? JSON.parse(JSON.stringify(allBookings[0])) : null } as typeof results.reservations;
+        results.reservations = { imported, skipped, total: allBookings.length, skipReasons } as typeof results.reservations;
       } else {
         results.reservations = { imported: 0, skipped: 0, total: 0 };
       }
