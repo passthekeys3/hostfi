@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>HostFi — Information Security Policy</title>
+<style>
+@page { margin: 1in; size: letter; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; color: #1a1a2e; line-height: 1.7; font-size: 11pt; max-width: 7.5in; margin: 0 auto; padding: 40px; }
+h1 { font-size: 22pt; margin-bottom: 4px; }
+h2 { font-size: 14pt; margin-top: 28px; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; color: #0f766e; }
+h3 { font-size: 12pt; margin-top: 18px; }
+.subtitle { color: #666; font-size: 10pt; margin-bottom: 8px; }
+.header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #14b8a6; }
+.logo { width: 40px; height: 40px; }
+ul { padding-left: 20px; }
+li { margin-bottom: 6px; }
+.meta { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 16px; font-size: 9.5pt; margin-bottom: 24px; }
+.meta td { padding: 3px 16px 3px 0; }
+.meta .label { font-weight: 600; color: #666; }
+</style>
+</head>
+<body>
+
+<div class="header">
+<svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+<path d="M50 8L8 42V48H16V88H84V48H92V42L50 8Z" fill="#1a1a2e"/>
+<path d="M22 48V82H78V48L50 24L22 48Z" fill="white"/>
+<rect x="30" y="62" width="10" height="20" rx="1" fill="#14b8a6"/>
+<rect x="44" y="52" width="10" height="30" rx="1" fill="#14b8a6"/>
+<rect x="58" y="40" width="10" height="42" rx="1" fill="#14b8a6"/>
+<rect x="72" y="22" width="10" height="60" rx="1" fill="#14b8a6"/>
+<polygon points="77,10 67,26 87,26" fill="#14b8a6"/>
+</svg>
+<div>
+<h1>Information Security Policy</h1>
+<div class="subtitle">HostFi, Inc. — hostfi.ai</div>
+</div>
+</div>
+
+<table class="meta">
+<tr><td class="label">Document Owner</td><td>Kevin Aramalla, Founder & CEO</td></tr>
+<tr><td class="label">Effective Date</td><td>February 1, 2026</td></tr>
+<tr><td class="label">Last Reviewed</td><td>February 17, 2026</td></tr>
+<tr><td class="label">Next Review</td><td>August 2026</td></tr>
+<tr><td class="label">Classification</td><td>Internal / Shared with Partners</td></tr>
+</table>
+
+<h2>1. Purpose</h2>
+<p>This policy establishes the information security framework for HostFi to protect the confidentiality, integrity, and availability of customer data, financial information, and company systems. It applies to all systems, data, and personnel involved in the operation of HostFi's products and services.</p>
+
+<h2>2. Scope</h2>
+<p>This policy covers:</p>
+<ul>
+<li>All production systems and infrastructure (web application, APIs, databases)</li>
+<li>Customer data including financial records, property information, and integration credentials</li>
+<li>Third-party services and integrations (Plaid, Stripe, Supabase, Vercel, PMS integrations)</li>
+<li>All personnel with access to production systems or customer data</li>
+</ul>
+
+<h2>3. Information Security Principles</h2>
+<ul>
+<li><strong>Least Privilege:</strong> Access to systems and data is granted on a need-to-know basis with minimum necessary permissions.</li>
+<li><strong>Defense in Depth:</strong> Multiple layers of security controls protect against threats at the network, application, and data layers.</li>
+<li><strong>Encryption by Default:</strong> All data is encrypted in transit and at rest.</li>
+<li><strong>Data Minimization:</strong> Only data necessary for service delivery is collected and retained.</li>
+</ul>
+
+<h2>4. Infrastructure Security</h2>
+<h3>4.1 Hosting & Compute</h3>
+<p>HostFi is deployed on Vercel (SOC 2 Type II certified), providing enterprise-grade DDoS protection, Web Application Firewall (WAF), automatic SSL/TLS management, and global edge network distribution.</p>
+
+<h3>4.2 Database</h3>
+<p>Application data is stored in Supabase (SOC 2 Type II certified), built on PostgreSQL with data centers in the United States. Row Level Security (RLS) policies enforce per-user data isolation at the database level.</p>
+
+<h3>4.3 Payment Processing</h3>
+<p>All payment processing is handled by Stripe (PCI DSS Level 1 certified). HostFi never stores, processes, or transmits credit card numbers or payment credentials.</p>
+
+<h2>5. Encryption</h2>
+<ul>
+<li><strong>In Transit:</strong> All communications encrypted via TLS 1.2+. HSTS is enforced on all domains.</li>
+<li><strong>At Rest:</strong> Database encryption via AES-256, managed by Supabase/AWS infrastructure.</li>
+<li><strong>Credentials:</strong> Third-party integration tokens and API keys are stored encrypted in the database and never exposed to client-side code.</li>
+<li><strong>Secrets Management:</strong> Environment variables and API keys are managed through Vercel's encrypted environment variable system, with separate values for production, preview, and development.</li>
+</ul>
+
+<h2>6. Authentication & Access Control</h2>
+<ul>
+<li>User authentication via Supabase Auth with bcrypt password hashing and secure session tokens</li>
+<li>Support for Google OAuth 2.0 single sign-on</li>
+<li>Multi-factor authentication (TOTP) available via Supabase Auth</li>
+<li>All API endpoints enforce server-side authentication — unauthenticated requests are rejected before data access</li>
+<li>Row Level Security (RLS) enforced at the PostgreSQL level prevents cross-user data access</li>
+<li>OAuth 2.0 used for all third-party integrations — HostFi never stores third-party passwords</li>
+</ul>
+
+<h2>7. Financial Data Handling</h2>
+<ul>
+<li>Bank connectivity powered by Plaid (SOC 2 Type II certified) — HostFi never accesses bank login credentials</li>
+<li>Only transaction data necessary for expense matching and tax categorization is stored</li>
+<li>No full bank account numbers or routing numbers are stored</li>
+<li>Customer financial data is never sold, shared, or disclosed to third parties for marketing purposes</li>
+<li>Users can disconnect integrations and delete their data at any time</li>
+</ul>
+
+<h2>8. Monitoring & Logging</h2>
+<ul>
+<li>Application errors and security events are logged via Vercel's observability platform</li>
+<li>Database query performance and errors monitored via Supabase dashboard</li>
+<li>Authentication events (logins, failed attempts) are logged</li>
+<li>Integration webhook events are logged for audit purposes</li>
+</ul>
+
+<h2>9. Incident Response</h2>
+<p>In the event of a suspected or confirmed security incident:</p>
+<ol>
+<li><strong>Identification:</strong> Detect and classify the incident severity</li>
+<li><strong>Containment:</strong> Isolate affected systems to prevent further exposure</li>
+<li><strong>Notification:</strong> Notify affected users within 72 hours with incident details and recommended actions</li>
+<li><strong>Remediation:</strong> Fix the root cause and restore affected systems</li>
+<li><strong>Post-Mortem:</strong> Document lessons learned and update security controls as needed</li>
+</ol>
+
+<h2>10. Vulnerability Management</h2>
+<ul>
+<li>Dependencies are monitored for known vulnerabilities via automated tooling</li>
+<li>Security patches are applied promptly upon identification</li>
+<li>Responsible disclosure reports can be sent to <strong>security@hostfi.ai</strong></li>
+</ul>
+
+<h2>11. Data Retention & Disposal</h2>
+<ul>
+<li>Customer data is retained for the duration of the account plus 30 days after deletion request</li>
+<li>Users can export their data and request account deletion from dashboard settings</li>
+<li>Backups are encrypted and retained per Supabase's backup policy (daily, 7-day retention)</li>
+</ul>
+
+<h2>12. Third-Party Risk Management</h2>
+<p>All third-party vendors handling customer data are evaluated for security compliance. Current vendors and their certifications:</p>
+<ul>
+<li><strong>Supabase</strong> — SOC 2 Type II (database, auth)</li>
+<li><strong>Vercel</strong> — SOC 2 Type II (hosting, edge, CDN)</li>
+<li><strong>Stripe</strong> — PCI DSS Level 1 (payments)</li>
+<li><strong>Plaid</strong> — SOC 2 Type II (financial data)</li>
+<li><strong>Postmark</strong> — SOC 2 Type II (transactional email)</li>
+</ul>
+
+<h2>13. Policy Review</h2>
+<p>This policy is reviewed semi-annually or upon significant changes to systems, services, or regulatory requirements. Updates are approved by the document owner.</p>
+
+</body>
+</html>

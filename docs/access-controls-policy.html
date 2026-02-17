@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>HostFi — Access Controls Policy</title>
+<style>
+@page { margin: 1in; size: letter; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; color: #1a1a2e; line-height: 1.7; font-size: 11pt; max-width: 7.5in; margin: 0 auto; padding: 40px; }
+h1 { font-size: 22pt; margin-bottom: 4px; }
+h2 { font-size: 14pt; margin-top: 28px; border-bottom: 1px solid #e5e7eb; padding-bottom: 6px; color: #0f766e; }
+h3 { font-size: 12pt; margin-top: 18px; }
+.subtitle { color: #666; font-size: 10pt; margin-bottom: 8px; }
+.header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #14b8a6; }
+.logo { width: 40px; height: 40px; }
+ul, ol { padding-left: 20px; }
+li { margin-bottom: 6px; }
+.meta { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 16px; font-size: 9.5pt; margin-bottom: 24px; }
+.meta td { padding: 3px 16px 3px 0; }
+.meta .label { font-weight: 600; color: #666; }
+table.controls { width: 100%; border-collapse: collapse; font-size: 10pt; margin-top: 12px; }
+table.controls th { background: #f3f4f6; text-align: left; padding: 8px 12px; border: 1px solid #e5e7eb; }
+table.controls td { padding: 8px 12px; border: 1px solid #e5e7eb; vertical-align: top; }
+</style>
+</head>
+<body>
+
+<div class="header">
+<svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+<path d="M50 8L8 42V48H16V88H84V48H92V42L50 8Z" fill="#1a1a2e"/>
+<path d="M22 48V82H78V48L50 24L22 48Z" fill="white"/>
+<rect x="30" y="62" width="10" height="20" rx="1" fill="#14b8a6"/>
+<rect x="44" y="52" width="10" height="30" rx="1" fill="#14b8a6"/>
+<rect x="58" y="40" width="10" height="42" rx="1" fill="#14b8a6"/>
+<rect x="72" y="22" width="10" height="60" rx="1" fill="#14b8a6"/>
+<polygon points="77,10 67,26 87,26" fill="#14b8a6"/>
+</svg>
+<div>
+<h1>Access Controls Policy</h1>
+<div class="subtitle">HostFi, Inc. — hostfi.ai</div>
+</div>
+</div>
+
+<table class="meta">
+<tr><td class="label">Document Owner</td><td>Kevin Aramalla, Founder & CEO</td></tr>
+<tr><td class="label">Effective Date</td><td>February 1, 2026</td></tr>
+<tr><td class="label">Last Reviewed</td><td>February 17, 2026</td></tr>
+<tr><td class="label">Next Review</td><td>August 2026</td></tr>
+<tr><td class="label">Classification</td><td>Internal / Shared with Partners</td></tr>
+</table>
+
+<h2>1. Purpose</h2>
+<p>This policy defines the access control requirements for HostFi's production systems, customer data, and third-party integrations. The goal is to ensure that access to sensitive resources is authorized, appropriate, and auditable.</p>
+
+<h2>2. Scope</h2>
+<p>This policy applies to:</p>
+<ul>
+<li>Production infrastructure (Vercel, Supabase, DNS, domain registrar)</li>
+<li>Source code repositories (GitHub)</li>
+<li>Third-party service accounts (Stripe, Plaid, Postmark, Google Workspace)</li>
+<li>Customer-facing application access</li>
+<li>All personnel, contractors, or automated systems with access to the above</li>
+</ul>
+
+<h2>3. Principles</h2>
+<ul>
+<li><strong>Least Privilege:</strong> Every user and system is granted the minimum access necessary to perform its function.</li>
+<li><strong>Need to Know:</strong> Access to customer data is restricted to personnel who require it for service delivery or support.</li>
+<li><strong>Segregation:</strong> Production, preview, and development environments use separate credentials and configurations.</li>
+<li><strong>Default Deny:</strong> Access is denied by default and explicitly granted when authorized.</li>
+</ul>
+
+<h2>4. Customer Application Access Controls</h2>
+
+<h3>4.1 Authentication</h3>
+<ul>
+<li>Users authenticate via email/password (bcrypt hashed) or Google OAuth 2.0 SSO</li>
+<li>Multi-factor authentication (TOTP) is supported via Supabase Auth</li>
+<li>Session tokens are securely generated, transmitted over HTTPS only, and expire after inactivity</li>
+<li>Failed login attempts are rate-limited to prevent brute force attacks</li>
+</ul>
+
+<h3>4.2 Authorization — Row Level Security (RLS)</h3>
+<p>HostFi enforces data isolation at the database level using PostgreSQL Row Level Security policies:</p>
+<ul>
+<li>Every database table containing user data has RLS policies enabled</li>
+<li>All queries are automatically scoped to the authenticated user's ID</li>
+<li>Cross-user data access is architecturally impossible — enforced by the database engine, not application code</li>
+<li>Service role access (for webhooks, background jobs) uses a separate service key with explicit scoping in application logic</li>
+</ul>
+
+<h3>4.3 API Endpoint Security</h3>
+<ul>
+<li>All API endpoints call <code>authenticateRequest()</code> as the first operation</li>
+<li>Unauthenticated requests receive a 401 response before any data access</li>
+<li>User ID from the authenticated session is used for all subsequent database queries</li>
+<li>No API endpoint accepts a user-supplied user ID for data access</li>
+</ul>
+
+<h3>4.4 Plan-Based Feature Gating</h3>
+<ul>
+<li>Features and resource limits (property count, integrations) are enforced server-side based on the user's subscription plan</li>
+<li>Plan limits are checked on every relevant API call, not just the UI</li>
+</ul>
+
+<h2>5. Production Infrastructure Access</h2>
+
+<table class="controls">
+<tr><th>System</th><th>Access Method</th><th>Who Has Access</th><th>MFA</th></tr>
+<tr><td>Vercel (hosting)</td><td>SSO / email login</td><td>Founder only</td><td>Yes</td></tr>
+<tr><td>Supabase (database)</td><td>SSO / email login</td><td>Founder only</td><td>Yes</td></tr>
+<tr><td>GitHub (source code)</td><td>SSO / SSH key</td><td>Founder only</td><td>Yes</td></tr>
+<tr><td>Stripe (payments)</td><td>Email login</td><td>Founder only</td><td>Yes</td></tr>
+<tr><td>Plaid (financial data)</td><td>Email login</td><td>Founder only</td><td>Yes</td></tr>
+<tr><td>Google Workspace</td><td>Google login</td><td>Founder only</td><td>Yes</td></tr>
+<tr><td>Postmark (email)</td><td>Email login</td><td>Founder only</td><td>Yes</td></tr>
+<tr><td>Domain / DNS (Vercel)</td><td>Vercel dashboard</td><td>Founder only</td><td>Yes</td></tr>
+</table>
+
+<h2>6. Third-Party Integration Credentials</h2>
+<ul>
+<li>OAuth tokens and API keys for user integrations (Google, Slack, PMS systems) are stored encrypted in the database</li>
+<li>Credentials are never logged, exposed in API responses, or sent to the client-side application</li>
+<li>OAuth 2.0 is used wherever supported — HostFi never stores third-party user passwords</li>
+<li>Users can revoke integration access at any time from their dashboard, which deletes stored credentials</li>
+</ul>
+
+<h2>7. Environment Separation</h2>
+<ul>
+<li><strong>Production:</strong> Live environment at hostfi.ai with production database and API keys</li>
+<li><strong>Preview:</strong> Vercel preview deployments use separate environment variables where applicable</li>
+<li><strong>Development:</strong> Local development uses separate Supabase project and test API keys</li>
+<li>Production secrets are never used in development or preview environments</li>
+</ul>
+
+<h2>8. Secrets Management</h2>
+<ul>
+<li>All secrets (API keys, database credentials, OAuth secrets) are stored in Vercel's encrypted environment variable system</li>
+<li>Secrets are never committed to source code or version control</li>
+<li><code>.env</code> files are excluded from git via <code>.gitignore</code></li>
+<li>Secrets are rotated when compromise is suspected or personnel changes occur</li>
+</ul>
+
+<h2>9. Access Provisioning & De-provisioning</h2>
+<ul>
+<li>New personnel access is granted by the Founder on a need-to-know basis</li>
+<li>Access is revoked immediately upon termination or role change</li>
+<li>All production access is reviewed when team composition changes</li>
+<li>Currently, all production access is held solely by the Founder</li>
+</ul>
+
+<h2>10. Monitoring & Auditing</h2>
+<ul>
+<li>Authentication events are logged (successful logins, failed attempts)</li>
+<li>API access patterns are logged via Vercel's request logging</li>
+<li>Database access is logged via Supabase's audit capabilities</li>
+<li>Third-party service access is auditable through each provider's admin dashboard</li>
+</ul>
+
+<h2>11. Non-Human Access (Service Accounts & Tokens)</h2>
+<ul>
+<li>Webhook endpoints authenticate via OAuth tokens or Basic Auth credentials specific to each integration</li>
+<li>The Supabase service role key is used only for server-side operations (webhooks, background sync) and is never exposed to the client</li>
+<li>TLS certificates are used for all machine-to-machine communication</li>
+<li>CI/CD deployments are authenticated through Vercel's GitHub integration with scoped permissions</li>
+</ul>
+
+<h2>12. Policy Review</h2>
+<p>This policy is reviewed semi-annually, upon significant infrastructure changes, or when new team members are onboarded. Updates are approved by the document owner.</p>
+
+</body>
+</html>
