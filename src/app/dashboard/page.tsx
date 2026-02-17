@@ -174,7 +174,11 @@ export default function DashboardPage() {
   const isNewUser = !isDemo && (properties.length === 0 || expenses.length === 0);
   const showWelcome = isNewUser && !welcomeDismissed;
 
-  const totalSpend = expenses.reduce((sum, e) => sum + e.amount, 0);
+  // Current month filter for "Monthly Spend" card
+  const now = new Date();
+  const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const currentMonthExpenses = expenses.filter((e) => e.date?.startsWith(currentMonthStr));
+  const totalSpend = currentMonthExpenses.reduce((sum, e) => sum + e.amount, 0);
   const pendingExpenses = expenses.filter((e) => e.status === 'pending');
   const overdueExpenses = expenses.filter((e) => e.status === 'overdue');
   const recentExpenses = [...expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);

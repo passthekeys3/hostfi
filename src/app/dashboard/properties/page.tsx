@@ -48,7 +48,9 @@ export default function PropertiesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6">
           {properties.map((property) => {
             const propertyExpenses = expenses.filter(e => e.property_id === property.id);
-            const monthlySpend = propertyExpenses.reduce((sum, e) => sum + e.amount, 0);
+            const now = new Date();
+            const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            const monthlySpend = propertyExpenses.filter(e => e.date?.startsWith(currentMonthStr)).reduce((sum, e) => sum + e.amount, 0);
             return (
               <PropertyCard
                 key={property.id}
