@@ -145,9 +145,10 @@ export async function POST(request: NextRequest) {
                 amount: mapped.amount,
                 check_in: mapped.check_in,
                 check_out: mapped.check_out,
+                date: mapped.date,
                 guest_name: mapped.guest_name,
                 platform: mapped.platform,
-                confirmation_code: mapped.confirmation_code,
+                description: mapped.description,
               })
               .eq('id', existing.id);
             console.log(`OwnerRez webhook: updated booking ${orBookingId} for user ${hostfiUserId}`);
