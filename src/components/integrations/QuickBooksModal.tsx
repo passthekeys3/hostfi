@@ -106,7 +106,7 @@ export function QBConnectModal({ onClose }: ModalProps) {
               <button onClick={handleAuthorize} className="w-full py-3 text-sm font-semibold text-white bg-[#2CA01C] hover:bg-[#248F17] rounded-xl transition-colors">
                 Authorize Access
               </button>
-              <p className="text-center text-[10px] text-gray-400">Demo mode — no actual redirect. In production, this opens QuickBooks OAuth.</p>
+              <p className="text-center text-[10px] text-gray-400">Coming soon — QuickBooks integration is not yet available.</p>
             </div>
           )}
 

@@ -17,7 +17,7 @@ export async function GET() {
   try {
     const auth = await authenticateRequest();
     if (!auth.authenticated) {
-      return NextResponse.json({ error: 'Demo mode - alerts not available' }, { status: 400 });
+      return NextResponse.json({ error: 'Database not configured' }, { status: 400 });
     }
 
     const supabase = getServiceClient();
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
   try {
     const auth = await authenticateRequest();
     if (!auth.authenticated) {
-      return NextResponse.json({ error: 'Demo mode - alerts not available' }, { status: 400 });
+      return NextResponse.json({ error: 'Database not configured' }, { status: 400 });
     }
 
     const supabase = getServiceClient();
@@ -119,7 +119,7 @@ export async function DELETE() {
   try {
     const auth = await authenticateRequest();
     if (!auth.authenticated) {
-      return NextResponse.json({ error: 'Demo mode - alerts not available' }, { status: 400 });
+      return NextResponse.json({ error: 'Database not configured' }, { status: 400 });
     }
 
     const supabase = getServiceClient();

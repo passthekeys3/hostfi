@@ -83,7 +83,7 @@ export function TeamsModal({ onClose }: ModalProps) {
               <button onClick={() => setStep("channel")} className="w-full py-3 text-sm font-semibold text-white bg-[#6264A7] hover:bg-[#545699] rounded-xl transition-colors flex items-center justify-center gap-2">
                 Connect Teams Workspace <ExternalLink className="w-4 h-4" />
               </button>
-              <p className="text-center text-[10px] text-gray-400">Demo mode — no actual Microsoft redirect.</p>
+              <p className="text-center text-[10px] text-gray-400">Coming soon — Microsoft Teams integration is not yet available.</p>
             </div>
           )}
 

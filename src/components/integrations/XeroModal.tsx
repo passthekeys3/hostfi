@@ -106,14 +106,14 @@ export function XeroConnectModal({ onClose }: ModalProps) {
               <div className="space-y-2">
                 <p className="text-xs font-medium text-gray-700">Select Xero organization:</p>
                 <select className="w-full px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#13B5EA]/20 focus:outline-none">
-                  <option>Demo Properties LLC</option>
+                  <option>Your Organization</option>
                   <option>Kevin&apos;s STR Portfolio</option>
                 </select>
               </div>
               <button onClick={handleAuthorize} className="w-full py-3 text-sm font-semibold text-white bg-[#13B5EA] hover:bg-[#0FA2D4] rounded-xl transition-colors">
                 Authorize Access
               </button>
-              <p className="text-center text-[10px] text-gray-400">Demo mode — no actual redirect. In production, this opens Xero OAuth.</p>
+              <p className="text-center text-[10px] text-gray-400">Coming soon — Xero integration is not yet available.</p>
             </div>
           )}
 
@@ -262,7 +262,7 @@ export function XeroConnectModal({ onClose }: ModalProps) {
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-gray-500 flex items-center gap-1.5"><Link2 className="w-3.5 h-3.5" /> Organization</span>
-                  <span className="font-medium text-gray-700">Demo Properties LLC</span>
+                  <span className="font-medium text-gray-700">Your Organization</span>
                 </div>
               </div>
               <button onClick={onClose} className="w-full py-3 text-sm font-semibold text-white bg-teal-500 hover:bg-teal-600 rounded-xl transition-colors">

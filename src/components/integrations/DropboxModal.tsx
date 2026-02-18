@@ -93,7 +93,7 @@ export function DropboxModal({ onClose }: ModalProps) {
               <button onClick={() => setStep("folder")} className="w-full py-3 text-sm font-semibold text-white bg-[#0061FF] hover:bg-[#0052D4] rounded-xl transition-colors flex items-center justify-center gap-2">
                 Connect Dropbox <ExternalLink className="w-4 h-4" />
               </button>
-              <p className="text-center text-[10px] text-gray-400">Demo mode — no actual Dropbox redirect.</p>
+              <p className="text-center text-[10px] text-gray-400">Coming soon — Dropbox integration is not yet available.</p>
             </div>
           )}
 
