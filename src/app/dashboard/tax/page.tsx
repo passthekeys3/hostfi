@@ -227,7 +227,7 @@ function PropertyTaxCard({ summary }: { summary: PropertyTaxSummary }) {
 }
 
 export default function TaxPage() {
-  const { properties: realProperties, expenses: realExpenses, loading } = useDashboardData();
+  const { properties: realProperties, expenses: realExpenses, revenue: realRevenue, loading } = useDashboardData();
   const [selectedYear, setSelectedYear] = useState(AVAILABLE_TAX_YEARS[0].key);
   const [showCPAModal, setShowCPAModal] = useState(false);
   const [cpaEmail, setCpaEmail] = useState('');
@@ -248,6 +248,20 @@ export default function TaxPage() {
   // Filter expenses by year
   const yearExpenses = realExpenses.filter(exp => exp.date.startsWith(selectedYear));
   
+  // Filter revenue by year and group by property (for tax exports)
+  const yearRevenue = realRevenue.filter(rev => {
+    const dateField = rev.check_in || rev.payout_date || rev.date;
+    return dateField && dateField.startsWith(selectedYear);
+  });
+  // Build revenue by property map with proper typing for exports
+  const revenueByProperty: Record<string, Array<{ payout_amount: number }>> = {};
+  for (const rev of yearRevenue) {
+    if (!revenueByProperty[rev.property_id]) {
+      revenueByProperty[rev.property_id] = [];
+    }
+    revenueByProperty[rev.property_id].push({ payout_amount: rev.payout_amount || rev.amount || 0 });
+  }
+  
   // Generate summaries for each property (excluding primary residence)
   const allProperties = realProperties;
   const allPropertySummaries = allProperties
@@ -267,7 +281,7 @@ export default function TaxPage() {
   const totalImprovements = propertySummaries.reduce((sum, s) => sum + s.improvementTotal, 0);
 
   const handleDownloadPDF = () => {
-    const html = generateScheduleEHTML(propertySummaries, selectedYear);
+    const html = generateScheduleEHTML(propertySummaries, selectedYear, revenueByProperty);
     const printWindow = window.open('', '_blank');
     if (printWindow) {
       printWindow.document.write(html);
@@ -280,12 +294,12 @@ export default function TaxPage() {
   };
 
   const handleDownloadCSV = () => {
-    const csv = generateScheduleECSV(propertySummaries, selectedYear);
+    const csv = generateScheduleECSV(propertySummaries, selectedYear, revenueByProperty);
     downloadFile(csv, `hostfi-schedule-e-${selectedYear}.csv`, 'text/csv');
   };
 
   const handleDownloadTXF = () => {
-    const txf = generateTXF(propertySummaries, selectedYear);
+    const txf = generateTXF(propertySummaries, selectedYear, revenueByProperty);
     downloadFile(txf, `hostfi-schedule-e-${selectedYear}.txf`, 'application/x-tax-exchange');
   };
 
@@ -297,7 +311,7 @@ export default function TaxPage() {
 
   const handleSendToCPA = () => {
     // Download CSV for attachment
-    const csv = generateScheduleECSV(propertySummaries, selectedYear);
+    const csv = generateScheduleECSV(propertySummaries, selectedYear, revenueByProperty);
     downloadFile(csv, `hostfi-schedule-e-${selectedYear}.csv`, 'text/csv');
 
     // Open email client with pre-filled message

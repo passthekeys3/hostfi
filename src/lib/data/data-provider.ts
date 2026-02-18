@@ -50,14 +50,14 @@ export interface RevenueEntry {
 
 export interface Alert {
   id: string;
-  type: string;
+  type: 'due_soon' | 'overdue' | 'unusual_amount' | 'missing_bill' | 'new_parsed';
   title: string;
-  message: string;
+  description: string;
   severity: 'info' | 'warning' | 'critical';
   read: boolean;
   created_at: string;
   property_id?: string;
-  expense_id?: string;
+  bill_id?: string;
 }
 
 export interface MonthlyBill {

@@ -1,6 +1,9 @@
 import { type PropertyTaxSummary } from './tax-mapping';
 import type { RevenueEntry } from './types';
 
+// Simplified revenue type for exports (only needs payout_amount)
+type TaxRevenueEntry = Pick<RevenueEntry, 'payout_amount'> | { payout_amount: number };
+
 /**
  * Generate TurboTax TXF (Tax Exchange Format) file
  * TXF spec: https://turbotax.intuit.com/txf/
@@ -32,7 +35,7 @@ const TXF_SCHEDULE_E_MAP: Record<number, { refNum: number; description: string }
   19: { refNum: 2454, description: 'Other Expenses' },
 };
 
-export function generateTXF(summaries: PropertyTaxSummary[], taxYear: string, revenueByProperty: Record<string, RevenueEntry[]> = {}): string {
+export function generateTXF(summaries: PropertyTaxSummary[], taxYear: string, revenueByProperty: Record<string, TaxRevenueEntry[]> = {}): string {
   const lines: string[] = [];
   
   // TXF Header
@@ -84,7 +87,7 @@ export function generateTXF(summaries: PropertyTaxSummary[], taxYear: string, re
 /**
  * Generate a printable Schedule E report as HTML
  */
-export function generateScheduleEHTML(summaries: PropertyTaxSummary[], taxYear: string, revenueByProperty: Record<string, RevenueEntry[]> = {}): string {
+export function generateScheduleEHTML(summaries: PropertyTaxSummary[], taxYear: string, revenueByProperty: Record<string, TaxRevenueEntry[]> = {}): string {
   const fmt = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   let html = `
@@ -240,7 +243,7 @@ export function generateScheduleEHTML(summaries: PropertyTaxSummary[], taxYear: 
 /**
  * Generate CSV export of Schedule E data
  */
-export function generateScheduleECSV(summaries: PropertyTaxSummary[], taxYear: string, revenueByProperty: Record<string, RevenueEntry[]> = {}): string {
+export function generateScheduleECSV(summaries: PropertyTaxSummary[], taxYear: string, revenueByProperty: Record<string, TaxRevenueEntry[]> = {}): string {
   const rows: string[] = [];
   rows.push('Property,Property Type,Line Number,Description,Amount,Tax Year');
 

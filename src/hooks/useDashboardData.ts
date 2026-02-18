@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { Property, Expense, RecurringExpense, RevenueEntry, Alert } from "@/lib/data/data-provider";
+import type { Property, Expense, RecurringExpense, RevenueEntry } from "@/lib/data/data-provider";
+import type { Alert } from "@/lib/alerts";
 import type { AnomalyResult } from "@/lib/anomaly-detection";
 
 interface DashboardData {
@@ -13,6 +14,58 @@ interface DashboardData {
   recurringExpenses: RecurringExpense[];
   loading: boolean;
   refresh?: () => void;
+}
+
+/**
+ * Generate real-time alerts from expense data
+ */
+function generateAlertsFromExpenses(expenses: Expense[], properties: Property[]): Alert[] {
+  const alerts: Alert[] = [];
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
+  const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+  for (const expense of expenses) {
+    if (!expense.due_date) continue;
+    const property = properties.find(p => p.id === expense.property_id);
+    const propertyName = property?.name || 'Unknown Property';
+    const dueDate = expense.due_date;
+
+    // Overdue: due_date < today AND status is pending
+    if (dueDate < today && expense.status === 'pending') {
+      const daysOverdue = Math.floor((now.getTime() - new Date(dueDate).getTime()) / (1000 * 60 * 60 * 24));
+      alerts.push({
+        id: `overdue-${expense.id}`,
+        type: 'overdue',
+        title: `${expense.vendor || expense.description || 'Bill'} is overdue`,
+        description: `This bill at ${propertyName} was due ${daysOverdue} day${daysOverdue === 1 ? '' : 's'} ago.`,
+        severity: daysOverdue > 7 ? 'critical' : 'warning',
+        read: false,
+        created_at: expense.due_date,
+        property_id: expense.property_id,
+        bill_id: expense.id,
+      });
+    }
+    // Due soon: due_date within 7 days AND status is pending
+    else if (dueDate >= today && dueDate <= sevenDaysFromNow && expense.status === 'pending') {
+      const daysUntilDue = Math.ceil((new Date(dueDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      alerts.push({
+        id: `due_soon-${expense.id}`,
+        type: 'due_soon',
+        title: `${expense.vendor || expense.description || 'Bill'} due ${daysUntilDue === 0 ? 'today' : `in ${daysUntilDue} day${daysUntilDue === 1 ? '' : 's'}`}`,
+        description: `$${expense.amount.toFixed(2)} due at ${propertyName} on ${dueDate}.`,
+        severity: daysUntilDue <= 1 ? 'warning' : 'info',
+        read: false,
+        created_at: new Date().toISOString(),
+        property_id: expense.property_id,
+        bill_id: expense.id,
+      });
+    }
+  }
+
+  // Sort by severity (critical > warning > info)
+  const severityOrder = { critical: 0, warning: 1, info: 2 };
+  return alerts.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
 }
 
 export function useDashboardData(): DashboardData {
@@ -53,6 +106,9 @@ export function useDashboardData(): DashboardData {
           supabase.from("anomaly_logs").select("*").order("created_at", { ascending: false }),
         ]);
 
+        const properties = (propertiesRes.data as Property[]) || [];
+        const expenses = (expensesRes.data as Expense[]) || [];
+
         // Transform anomaly_logs to AnomalyResult format
         const anomalies: AnomalyResult[] = (anomalyRes.data || []).map((log: {
           id: string;
@@ -71,7 +127,7 @@ export function useDashboardData(): DashboardData {
           created_at: string;
         }) => {
           // Find property name
-          const property = (propertiesRes.data || []).find((p: Property) => p.id === log.property_id);
+          const property = properties.find((p: Property) => p.id === log.property_id);
           return {
             id: log.id,
             bill_id: log.expense_id || '',
@@ -90,11 +146,14 @@ export function useDashboardData(): DashboardData {
           };
         });
 
+        // Generate real-time alerts from expense due dates
+        const alerts = generateAlertsFromExpenses(expenses, properties);
+
         setData({
-          properties: (propertiesRes.data as Property[]) || [],
-          expenses: (expensesRes.data as Expense[]) || [],
+          properties,
+          expenses,
           anomalies,
-          alerts: [],
+          alerts,
           revenue: (revenueRes.data as RevenueEntry[]) || [],
           recurringExpenses: (recurringRes.data as RecurringExpense[]) || [],
           loading: false,
