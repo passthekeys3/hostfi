@@ -89,7 +89,32 @@ export async function POST(request: NextRequest) {
     const isAnomaly = expenseAmount > average * 2;
 
     if (isAnomaly) {
-      // Trigger the alert
+      const deviationPercent = Math.round(((expenseAmount - average) / average) * 100 * 10) / 10;
+      const severity = deviationPercent > 100 ? 'critical' : deviationPercent > 50 ? 'high' : 'medium';
+
+      // Store the anomaly in the database
+      const { error: insertError } = await supabase
+        .from('anomaly_logs')
+        .insert({
+          user_id: targetUserId,
+          expense_id: expense_id,
+          property_id: expense.property_id,
+          anomaly_type: 'spike',
+          severity,
+          utility_type: expense.category,
+          current_amount: expenseAmount,
+          expected_amount: Math.round(average * 100) / 100,
+          deviation_percent: deviationPercent,
+          message: `${expense.category?.charAt(0).toUpperCase()}${expense.category?.slice(1) || 'Expense'} at ${propertyName} is ${Math.round(deviationPercent)}% higher than your 90-day average ($${expenseAmount.toFixed(2)} vs $${average.toFixed(2)})`,
+          recommendation: `Review this expense for ${propertyName}. The amount ($${expenseAmount.toFixed(2)}) is significantly higher than your typical ${expense.category || 'expenses'} which average $${average.toFixed(2)}.`,
+          status: 'new',
+        });
+
+      if (insertError) {
+        console.error('[check-expense] Failed to insert anomaly log:', insertError);
+      }
+
+      // Trigger the alert (email/Slack)
       triggerAnomalyAlert(targetUserId, {
         amount: expenseAmount,
         vendor: expense.vendor || expense.description || 'Unknown',

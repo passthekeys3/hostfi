@@ -80,17 +80,55 @@ export function useDashboardData(): DashboardData {
           return;
         }
 
-        const [propertiesRes, expensesRes, revenueRes, recurringRes] = await Promise.all([
+        const [propertiesRes, expensesRes, revenueRes, recurringRes, anomalyRes] = await Promise.all([
           supabase.from("properties").select("*").order("created_at", { ascending: false }),
           supabase.from("expenses").select("*").order("date", { ascending: false }),
           supabase.from("revenue").select("*").order("date", { ascending: false }),
           supabase.from("recurring_expenses").select("*").order("created_at", { ascending: false }),
+          supabase.from("anomaly_logs").select("*").order("created_at", { ascending: false }),
         ]);
+
+        // Transform anomaly_logs to AnomalyResult format
+        const anomalies: AnomalyResult[] = (anomalyRes.data || []).map((log: {
+          id: string;
+          expense_id: string | null;
+          property_id: string | null;
+          anomaly_type: string;
+          severity: string;
+          utility_type: string | null;
+          current_amount: number | null;
+          expected_amount: number | null;
+          deviation_percent: number | null;
+          message: string;
+          recommendation: string | null;
+          seasonal_context: string | null;
+          status: string;
+          created_at: string;
+        }) => {
+          // Find property name
+          const property = (propertiesRes.data || []).find((p: Property) => p.id === log.property_id);
+          return {
+            id: log.id,
+            bill_id: log.expense_id || '',
+            property_name: property?.name || 'Unknown Property',
+            utility_type: log.utility_type || 'other',
+            anomaly_type: log.anomaly_type as AnomalyResult['anomaly_type'],
+            severity: log.severity as AnomalyResult['severity'],
+            current_amount: log.current_amount || 0,
+            expected_amount: log.expected_amount || 0,
+            deviation_percent: log.deviation_percent || 0,
+            message: log.message,
+            recommendation: log.recommendation || '',
+            seasonal_context: log.seasonal_context || undefined,
+            detected_at: log.created_at,
+            status: log.status as AnomalyResult['status'],
+          };
+        });
 
         setData({
           properties: (propertiesRes.data as Property[]) || [],
           expenses: (expensesRes.data as DemoExpense[]) || [],
-          anomalies: [],
+          anomalies,
           alerts: [],
           revenue: (revenueRes.data as RevenueEntry[]) || [],
           recurringExpenses: (recurringRes.data as RecurringExpense[]) || [],

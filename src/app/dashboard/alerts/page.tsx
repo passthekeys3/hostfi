@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { DEMO_ALERTS, DEMO_ANOMALIES } from "@/lib/data";
 import { isDemoMode } from "@/lib/data/data-provider";
 import { ALERT_TYPE_CONFIG, filterAlerts, type AlertFilter } from "@/lib/demo-alerts";
 import { ANOMALY_TYPE_CONFIG, SEVERITY_CONFIG, type AnomalyResult } from "@/lib/anomaly-detection";
+import { useDashboardData } from "@/hooks/useDashboardData";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import {
   Clock, AlertTriangle, TrendingUp, FileQuestion, Sparkles,
@@ -50,9 +52,9 @@ export default function AlertsPage() {
 
 function AlertsPageContent() {
   const searchParams = useSearchParams();
-  const demo = isDemoMode();
-  const [alerts, setAlerts] = useState(demo ? DEMO_ALERTS : []);
-  const [anomalies, setAnomalies] = useState(demo ? DEMO_ANOMALIES : []);
+  const { anomalies: dashboardAnomalies, isDemo, refresh } = useDashboardData();
+  const [alerts, setAlerts] = useState(isDemo ? DEMO_ALERTS : []);
+  const [anomalies, setAnomalies] = useState<AnomalyResult[]>([]);
   const initialFilter = (searchParams.get('filter') as ExtendedFilter) || 'all';
   const [filter, setFilter] = useState<ExtendedFilter>(
     FILTER_TABS.some(t => t.key === initialFilter) ? initialFilter : 'all'
@@ -65,6 +67,15 @@ function AlertsPageContent() {
     due_soon: true, overdue: true, unusual_amount: true,
     missing_bill: true, new_parsed: true, dueSoonDays: 3, unusualThreshold: 30,
   });
+
+  // Sync anomalies from dashboard data
+  useEffect(() => {
+    if (isDemo) {
+      setAnomalies(DEMO_ANOMALIES);
+    } else {
+      setAnomalies(dashboardAnomalies);
+    }
+  }, [dashboardAnomalies, isDemo]);
 
   const filtered = filter === 'anomalies' ? [] : filterAlerts(alerts, filter === 'all' ? 'all' : filter as AlertFilter);
   const filteredAnomalies = filter === 'anomalies' || filter === 'all' ? anomalies : [];
@@ -79,8 +90,49 @@ function AlertsPageContent() {
 
   function markRead(id: string) { setAlerts(prev => prev.map(a => a.id === id ? { ...a, read: true } : a)); }
   function dismiss(id: string) { setAlerts(prev => prev.filter(a => a.id !== id)); }
-  function updateAnomalyStatus(id: string, status: AnomalyResult['status']) { setAnomalies(prev => prev.map(a => a.id === id ? { ...a, status } : a)); }
-  function dismissAnomaly(id: string) { setAnomalies(prev => prev.filter(a => a.id !== id)); }
+  
+  async function updateAnomalyStatus(id: string, status: AnomalyResult['status']) {
+    // Update local state immediately
+    setAnomalies(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+    
+    // Persist to database if not in demo mode
+    if (!isDemo) {
+      try {
+        const supabase = createClient();
+        if (supabase) {
+          await supabase
+            .from('anomaly_logs')
+            .update({ 
+              status, 
+              resolved_at: status === 'resolved' ? new Date().toISOString() : null 
+            })
+            .eq('id', id);
+        }
+      } catch (err) {
+        console.error('Failed to update anomaly status:', err);
+      }
+    }
+  }
+  
+  async function dismissAnomaly(id: string) {
+    // Update local state immediately
+    setAnomalies(prev => prev.filter(a => a.id !== id));
+    
+    // Persist to database if not in demo mode
+    if (!isDemo) {
+      try {
+        const supabase = createClient();
+        if (supabase) {
+          await supabase
+            .from('anomaly_logs')
+            .update({ status: 'dismissed' })
+            .eq('id', id);
+        }
+      } catch (err) {
+        console.error('Failed to dismiss anomaly:', err);
+      }
+    }
+  }
 
   function timeAgo(dateStr: string) {
     const diff = Date.now() - new Date(dateStr).getTime();

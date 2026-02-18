@@ -5,17 +5,21 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   Legend, LineChart, Line, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
 } from "recharts";
-import { DEMO_BENCHMARKS, DEMO_PROPERTIES } from "@/lib/data";
+import { DEMO_PROPERTIES } from "@/lib/data";
 import {
-  DEMO_INSIGHTS, DEMO_PORTFOLIO_SUMMARY,
+  DEMO_BENCHMARKS, DEMO_INSIGHTS, DEMO_PORTFOLIO_SUMMARY,
   DEMO_MONTHLY_TRENDS, DEMO_HEATMAP, DEMO_UTILITY_COMPARISON,
 } from "@/lib/demo-benchmarks";
-import { isDemoMode } from "@/lib/data/data-provider";
-import { UTILITY_LABELS, type UtilityType } from "@/lib/demo-analytics";
+import { useDashboardData } from "@/hooks/useDashboardData";
+import {
+  calculateBenchmarks, generateInsights, getPortfolioSummary,
+  getMonthlyTrendByProperty, getHeatmapData, getUtilityComparisonData,
+} from "@/lib/benchmarking";
+import { UTILITY_LABELS, type UtilityType, type MonthlyBill } from "@/lib/demo-analytics";
 import { cn } from "@/lib/utils";
-import { Trophy, AlertTriangle, Lightbulb, TrendingUp, DollarSign, Target, Crown, PiggyBank, Coins, Bed } from "lucide-react";
+import { Trophy, AlertTriangle, Lightbulb, TrendingUp, DollarSign, Target, Crown, PiggyBank, Coins, Bed, Loader2 } from "lucide-react";
 
-const PROPERTY_COLORS = ['#14B8A6', '#3B82F6', '#F59E0B'];
+const PROPERTY_COLORS = ['#14B8A6', '#3B82F6', '#F59E0B', '#8B5CF6', '#EC4899', '#10B981', '#6366F1', '#F97316'];
 const tooltipStyle = {
   contentStyle: { backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '12px', color: '#111827', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.04)', padding: '12px 16px' },
   labelStyle: { color: '#6b7280', fontSize: '12px' },
@@ -38,23 +42,141 @@ const INSIGHT_COLORS = {
   opportunity: { bg: 'bg-teal-500/5', border: 'border-teal-500/15', text: 'text-teal-600' },
 };
 
+// Map expense categories to utility types for benchmarking
+const CATEGORY_TO_UTILITY: Record<string, string> = {
+  utility: 'electric', // generic utility -> electric for now
+  cleaning: 'cleaning',
+  insurance: 'insurance',
+  maintenance: 'maintenance',
+  mortgage: 'mortgage',
+  supplies: 'supplies',
+  taxes: 'taxes',
+  management: 'management',
+  subscription: 'subscription',
+  improvement: 'improvement',
+  other: 'other',
+};
+
 export default function BenchmarkingContent() {
-  const demo = isDemoMode();
-  if (!demo) {
+  const { properties, expenses, isDemo, loading } = useDashboardData();
+
+  // Transform real expenses into MonthlyBill format for benchmarking
+  const { benchmarks, insights, summary, trends, heatmap, comparison, propertyNames, realProperties } = useMemo(() => {
+    // Demo mode - use demo data
+    if (isDemo) {
+      return {
+        benchmarks: DEMO_BENCHMARKS,
+        insights: DEMO_INSIGHTS,
+        summary: DEMO_PORTFOLIO_SUMMARY,
+        trends: DEMO_MONTHLY_TRENDS,
+        heatmap: DEMO_HEATMAP,
+        comparison: DEMO_UTILITY_COMPARISON,
+        propertyNames: DEMO_BENCHMARKS.map(b => b.property_name),
+        realProperties: DEMO_PROPERTIES,
+      };
+    }
+
+    // Real mode - transform expenses to MonthlyBill format
+    if (properties.length < 2 || expenses.length === 0) {
+      return { benchmarks: [], insights: [], summary: null, trends: [], heatmap: null, comparison: [], propertyNames: [], realProperties: properties };
+    }
+
+    // Group expenses by month and property
+    const monthlyBills: MonthlyBill[] = [];
+    const expensesByMonthPropCat = new Map<string, { total: number; count: number }>();
+
+    for (const expense of expenses) {
+      const date = new Date(expense.date);
+      const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const monthLabel = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+      const property = properties.find(p => p.id === expense.property_id);
+      if (!property) continue;
+
+      const utilityType = CATEGORY_TO_UTILITY[expense.category] || expense.category || 'other';
+      const key = `${month}-${expense.property_id}-${utilityType}`;
+
+      const existing = expensesByMonthPropCat.get(key);
+      if (existing) {
+        existing.total += Number(expense.amount) || 0;
+        existing.count += 1;
+      } else {
+        expensesByMonthPropCat.set(key, { total: Number(expense.amount) || 0, count: 1 });
+        monthlyBills.push({
+          month,
+          monthLabel,
+          property_id: expense.property_id,
+          property_name: property.name,
+          utility_type: utilityType as UtilityType,
+          amount: 0, // will be filled in next pass
+        });
+      }
+    }
+
+    // Fill in amounts
+    for (const bill of monthlyBills) {
+      const key = `${bill.month}-${bill.property_id}-${bill.utility_type}`;
+      const data = expensesByMonthPropCat.get(key);
+      bill.amount = data?.total || 0;
+    }
+
+    // Filter out rent for benchmarking
+    const nonRentBills = monthlyBills.filter(b => b.utility_type !== 'rent');
+
+    if (nonRentBills.length === 0) {
+      return { benchmarks: [], insights: [], summary: null, trends: [], heatmap: null, comparison: [], propertyNames: [], realProperties: properties };
+    }
+
+    const calculatedBenchmarks = calculateBenchmarks(nonRentBills);
+    const calculatedInsights = generateInsights(calculatedBenchmarks);
+    const calculatedSummary = getPortfolioSummary(calculatedBenchmarks);
+    const calculatedTrends = getMonthlyTrendByProperty(monthlyBills);
+    const calculatedHeatmap = getHeatmapData(calculatedBenchmarks);
+    const calculatedComparison = getUtilityComparisonData(calculatedBenchmarks);
+
+    return {
+      benchmarks: calculatedBenchmarks,
+      insights: calculatedInsights,
+      summary: calculatedSummary,
+      trends: calculatedTrends,
+      heatmap: calculatedHeatmap,
+      comparison: calculatedComparison,
+      propertyNames: calculatedBenchmarks.map(b => b.property_name),
+      realProperties: properties,
+    };
+  }, [properties, expenses, isDemo]);
+
+  // Loading state
+  if (loading) {
     return (
-      <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
-        <Target className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-        <p className="text-gray-500 text-sm">Add at least 2 properties with expenses to see benchmarking data.</p>
+      <div className="flex items-center justify-center py-16 bg-white rounded-2xl border border-gray-100">
+        <Loader2 className="w-8 h-8 text-teal-500 animate-spin" />
       </div>
     );
   }
-  const summary = DEMO_PORTFOLIO_SUMMARY;
-  const benchmarks = DEMO_BENCHMARKS;
-  const insights = DEMO_INSIGHTS;
-  const trends = DEMO_MONTHLY_TRENDS;
-  const heatmap = DEMO_HEATMAP;
-  const comparison = DEMO_UTILITY_COMPARISON;
-  const propertyNames = benchmarks.map(b => b.property_name);
+
+  // Not enough data state
+  if (!isDemo && (properties.length < 2 || benchmarks.length === 0)) {
+    return (
+      <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+        <Target className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+        <p className="text-gray-500 text-sm">
+          {properties.length < 2 
+            ? "Add at least 2 properties with expenses to see benchmarking data."
+            : "Add expenses to your properties to see benchmarking data."}
+        </p>
+      </div>
+    );
+  }
+
+  // No summary (shouldn't happen if we have benchmarks, but safety check)
+  if (!summary || !heatmap) {
+    return (
+      <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+        <Target className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+        <p className="text-gray-500 text-sm">Not enough expense data for benchmarking.</p>
+      </div>
+    );
+  }
 
   const radarData = useMemo(() => {
     const utilities = heatmap.utilities;
@@ -233,10 +355,11 @@ export default function BenchmarkingContent() {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
           {benchmarks.map((bm, i) => {
-            const property = DEMO_PROPERTIES.find(p => p.name === bm.property_name);
+            const property = realProperties.find((p: { name: string; bedrooms?: number }) => p.name === bm.property_name);
             const bedrooms = property?.bedrooms || 1;
             const costPerBed = bm.metrics.total_monthly_avg / bedrooms;
-            const avgCostPerBed = summary.total_monthly_avg / (DEMO_PROPERTIES.reduce((sum, p) => sum + p.bedrooms, 0) / DEMO_PROPERTIES.length);
+            const totalBedrooms = realProperties.reduce((sum: number, p: { bedrooms?: number }) => sum + (p.bedrooms || 1), 0);
+            const avgCostPerBed = summary.total_monthly_avg / (totalBedrooms / realProperties.length);
             const isEfficient = costPerBed < avgCostPerBed;
             return (
               <div key={bm.property_id} className={cn(
@@ -244,7 +367,7 @@ export default function BenchmarkingContent() {
                 isEfficient ? "bg-teal-500/5 border-teal-500/15" : "bg-amber-500/5 border-amber-500/15"
               )}>
                 <p className="font-medium text-sm">{bm.property_name}</p>
-                <p className="text-2xl font-bold mt-1" style={{ color: PROPERTY_COLORS[i] }}>
+                <p className="text-2xl font-bold mt-1" style={{ color: PROPERTY_COLORS[i % PROPERTY_COLORS.length] }}>
                   {fmt(Math.round(costPerBed))}
                   <span className="text-sm font-normal text-muted-foreground">/bedroom</span>
                 </p>
