@@ -1,24 +1,12 @@
 {
   "crons": [
     {
-      "path": "/api/email/cron?type=tips",
-      "schedule": "0 15 * * *"
-    },
-    {
-      "path": "/api/email/cron?type=check-in",
-      "schedule": "0 15 * * *"
+      "path": "/api/integrations/pms-sync",
+      "schedule": "0 */6 * * *"
     },
     {
       "path": "/api/email/cron?type=weekly-digest",
       "schedule": "0 14 * * 1"
-    },
-    {
-      "path": "/api/email/cron?type=monthly-report",
-      "schedule": "0 14 1 * *"
-    },
-    {
-      "path": "/api/integrations/pms-sync",
-      "schedule": "0 */6 * * *"
     }
   ]
 }
