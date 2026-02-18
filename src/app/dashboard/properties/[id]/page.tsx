@@ -119,18 +119,22 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
       />
 
       {/* Stats row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-5">
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-4 sm:p-6">
           <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-muted-foreground">Type</p>
           <p className="text-base sm:text-lg font-semibold mt-1 truncate">{getPropertyTypeLabel(property.property_type)}</p>
         </div>
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-4 sm:p-6">
-          <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-muted-foreground">Total Expenses</p>
-          <p className="text-base sm:text-lg font-semibold mt-1">{propertyExpenses.length}</p>
+          <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-muted-foreground">Revenue</p>
+          <p className="text-base sm:text-lg font-semibold mt-1">{formatCurrency(totalNetRevenue)}</p>
         </div>
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-4 sm:p-6 col-span-2 sm:col-span-1">
-          <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-muted-foreground">Current Month Spend</p>
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-4 sm:p-6">
+          <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-muted-foreground">Expenses</p>
           <p className="text-base sm:text-lg font-semibold mt-1">{formatCurrency(totalExpenses)}</p>
+        </div>
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-4 sm:p-6">
+          <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-muted-foreground">Net Profit</p>
+          <p className={cn("text-base sm:text-lg font-semibold mt-1", netProfit >= 0 ? "text-teal-600" : "text-rose-600")}>{netProfit >= 0 ? '' : '-'}{formatCurrency(Math.abs(netProfit))}</p>
         </div>
       </div>
 
@@ -203,22 +207,82 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
         </div>
       )}
 
-      {/* Expense Breakdown Summary */}
-      {topCategories.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-6">
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-4">Expense Breakdown</p>
-          <div className="flex flex-wrap gap-4">
-            {topCategories.map(([cat, amount]) => {
-              const config = EXPENSE_CATEGORY_CONFIG[cat as keyof typeof EXPENSE_CATEGORY_CONFIG];
+      {/* Expenses */}
+      {propertyExpenses.length > 0 && (
+        <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100">
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400 flex items-center gap-2">
+              <DollarSign className="w-4 h-4" /> Expenses
+            </h2>
+          </div>
+
+          {/* Expense stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-gray-100">
+            <div className="bg-white p-4">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">Total Expenses</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">{formatCurrency(totalExpenses)}</p>
+            </div>
+            <div className="bg-white p-4">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">Transactions</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">{propertyExpenses.length}</p>
+            </div>
+            <div className="bg-white p-4 col-span-2 sm:col-span-1">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">Top Category</p>
+              <p className="text-lg font-bold text-gray-900 mt-1">{topCategories.length > 0 ? (EXPENSE_CATEGORY_CONFIG[topCategories[0][0] as keyof typeof EXPENSE_CATEGORY_CONFIG]?.label || topCategories[0][0]) : '—'}</p>
+            </div>
+          </div>
+
+          {/* Category breakdown */}
+          {topCategories.length > 0 && (
+            <div className="px-6 py-3 border-b border-gray-100 flex flex-wrap gap-3">
+              {topCategories.map(([cat, amount]) => {
+                const config = EXPENSE_CATEGORY_CONFIG[cat as keyof typeof EXPENSE_CATEGORY_CONFIG];
+                const CatIcon = config?.icon;
+                return (
+                  <div key={cat} className="flex items-center gap-1.5 text-xs">
+                    {CatIcon && <CatIcon className="w-3.5 h-3.5 text-gray-400" />}
+                    <span className="text-gray-500">{config?.label}:</span>
+                    <span className="font-semibold text-gray-700">{formatCurrency(amount)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Expense transactions list */}
+          <div className="divide-y divide-gray-50">
+            {propertyExpenses.slice(0, 10).map((e, i) => {
+              const config = EXPENSE_CATEGORY_CONFIG[e.category as keyof typeof EXPENSE_CATEGORY_CONFIG];
               const CatIcon = config?.icon;
               return (
-                <div key={cat} className="flex items-center gap-2 text-sm">
-                  {CatIcon && <CatIcon className="w-4 h-4" />}
-                  <span className="text-muted-foreground">{config?.label}:</span>
-                  <span className="font-semibold">{formatCurrency(amount)}</span>
+                <div key={e.id || i} className="px-6 py-3.5 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
+                  <div className="min-w-0 flex-1 flex items-center gap-3">
+                    {CatIcon && (
+                      <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center shrink-0">
+                        <CatIcon className="w-4 h-4 text-gray-400" />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{e.vendor || e.description}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs text-gray-400">
+                          {e.date ? new Date(e.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
+                        </span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 capitalize">{config?.label || e.category}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-sm font-semibold text-gray-900 shrink-0 ml-4">{formatCurrency(e.amount)}</p>
                 </div>
               );
             })}
+            {propertyExpenses.length > 10 && (
+              <div className="px-6 py-3 text-center">
+                <Link href="/dashboard/expenses" className="text-xs font-medium text-teal-600 hover:text-teal-700">
+                  View all {propertyExpenses.length} expenses →
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}
