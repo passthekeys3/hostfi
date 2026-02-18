@@ -4,7 +4,8 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { 
   DollarSign, TrendingUp, Calendar, Upload, Plus, Building2, 
   ArrowUpRight, ArrowDownRight, FileSpreadsheet, X, ChevronDown,
-  Filter, Download, Check, Loader2, AlertCircle, Lock
+  Filter, Download, Check, Loader2, AlertCircle, Lock, Search,
+  ChevronUp, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
 import { DEMO_REVENUE, DEMO_PROPERTIES, DEMO_EXPENSES } from "@/lib/data";
@@ -19,6 +20,10 @@ import { canAccessFeature } from "@/lib/feature-gates";
 import Link from "next/link";
 
 type ModalView = null | 'add' | 'csv' | 'edit';
+type SortColumn = 'check_in' | 'amount' | 'guest_name' | 'platform';
+type SortDirection = 'asc' | 'desc';
+
+const ITEMS_PER_PAGE = 25;
 
 interface ImportApiResult {
   imported: number;
@@ -43,6 +48,31 @@ export default function RevenuePage() {
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportApiResult | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Sorting state
+  const [sortColumn, setSortColumn] = useState<SortColumn>('check_in');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset to page 1 when filters/search/sort change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterProperty, filterSource, sortColumn, sortDirection]);
+
+  // Handle column sort click
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection(column === 'check_in' ? 'desc' : 'asc');
+    }
+  };
 
   // Manual add form
   const [form, setForm] = useState({
@@ -134,13 +164,104 @@ export default function RevenuePage() {
     setEditingId(null);
   }, [editingId, refresh]);
 
-  const filtered = useMemo(() => {
-    return revenue.filter(r => {
+  // Filter, search, sort, and paginate revenue
+  const { paginatedRevenue, totalFilteredCount, totalPages } = useMemo(() => {
+    // Step 1: Apply filters
+    let result = revenue.filter(r => {
       if (filterProperty !== 'all' && r.property_id !== filterProperty) return false;
       if (filterSource !== 'all' && (r.platform || r.source) !== filterSource) return false;
       return true;
-    }).sort((a, b) => (b.payout_date || b.date || '').localeCompare(a.payout_date || a.date || ''));
-  }, [revenue, filterProperty, filterSource]);
+    });
+
+    // Step 2: Apply search
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter((r) => {
+        const guestName = (r.guest_name || '').toLowerCase();
+        const description = (r.description || '').toLowerCase();
+        const confirmationCode = (r.confirmation_code || '').toLowerCase();
+        const platform = (r.platform || r.source || '').toLowerCase();
+        return guestName.includes(query) || description.includes(query) || confirmationCode.includes(query) || platform.includes(query);
+      });
+    }
+
+    // Step 3: Apply sorting
+    result = [...result].sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortColumn) {
+        case 'check_in':
+          comparison = new Date(a.check_in || a.date || '').getTime() - new Date(b.check_in || b.date || '').getTime();
+          break;
+        case 'amount':
+          comparison = (a.amount ?? 0) - (b.amount ?? 0);
+          break;
+        case 'guest_name':
+          comparison = (a.guest_name || '').localeCompare(b.guest_name || '');
+          break;
+        case 'platform':
+          comparison = (a.platform || a.source || '').localeCompare(b.platform || b.source || '');
+          break;
+      }
+      
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+
+    const totalFilteredCount = result.length;
+    const totalPages = Math.ceil(totalFilteredCount / ITEMS_PER_PAGE);
+    
+    // Step 4: Apply pagination
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const paginatedRevenue = result.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+    return { paginatedRevenue, totalFilteredCount, totalPages };
+  }, [revenue, filterProperty, filterSource, searchQuery, sortColumn, sortDirection, currentPage]);
+
+  // Sort indicator component
+  const SortIndicator = ({ column }: { column: SortColumn }) => {
+    if (sortColumn !== column) return null;
+    return sortDirection === 'asc' 
+      ? <ChevronUp className="w-3 h-3 inline-block ml-1" />
+      : <ChevronDown className="w-3 h-3 inline-block ml-1" />;
+  };
+
+  // Sortable header component
+  const SortableHeader = ({ column, children, align = 'left' }: { column: SortColumn; children: React.ReactNode; align?: 'left' | 'right' }) => (
+    <th 
+      onClick={() => handleSort(column)}
+      className={cn(
+        "text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3 cursor-pointer hover:bg-gray-50 transition-colors select-none",
+        align === 'right' && 'text-right'
+      )}
+    >
+      {children}
+      <SortIndicator column={column} />
+    </th>
+  );
+
+  // Pagination range calculation
+  const getPaginationRange = () => {
+    const range: (number | 'ellipsis')[] = [];
+    
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) range.push(i);
+    } else {
+      range.push(1);
+      
+      if (currentPage > 3) range.push('ellipsis');
+      
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      
+      for (let i = start; i <= end; i++) range.push(i);
+      
+      if (currentPage < totalPages - 2) range.push('ellipsis');
+      
+      range.push(totalPages);
+    }
+    
+    return range;
+  };
 
   // Stats
   const totalGross = useMemo(() => revenue.reduce((s, r) => s + (r.amount ?? 0), 0), [revenue]);
@@ -576,74 +697,163 @@ export default function RevenuePage() {
         </div>
       )}
 
-      {/* Filters + Transaction Table */}
+      {/* Search and Filters + Transaction Table */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-            <Filter className="w-4 h-4 text-gray-400" /> All Transactions
-          </h2>
-          <div className="flex gap-2">
-            <div className="relative">
-              <select value={filterProperty} onChange={e => setFilterProperty(e.target.value)} className="appearance-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-xs font-medium text-gray-700 focus:ring-2 focus:ring-teal-500/20 focus:outline-none">
-                <option value="all">All Properties</option>
-                {allProperties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+        <div className="px-5 py-4 border-b border-gray-100 flex flex-col gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gray-400" /> All Transactions
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              <div className="relative">
+                <select value={filterProperty} onChange={e => setFilterProperty(e.target.value)} className="appearance-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-xs font-medium text-gray-700 focus:ring-2 focus:ring-teal-500/20 focus:outline-none">
+                  <option value="all">All Properties</option>
+                  {allProperties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
+              <div className="relative">
+                <select value={filterSource} onChange={e => setFilterSource(e.target.value)} className="appearance-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-xs font-medium text-gray-700 focus:ring-2 focus:ring-teal-500/20 focus:outline-none">
+                  <option value="all">All Platforms</option>
+                  {REVENUE_SOURCES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+              </div>
             </div>
-            <div className="relative">
-              <select value={filterSource} onChange={e => setFilterSource(e.target.value)} className="appearance-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-xs font-medium text-gray-700 focus:ring-2 focus:ring-teal-500/20 focus:outline-none">
-                <option value="all">All Platforms</option>
-                {REVENUE_SOURCES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            </div>
+          </div>
+          
+          {/* Search Input */}
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search guest, confirmation code, platform..."
+              className="w-full pl-9 pr-9 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                <th className="px-5 py-3">Date</th>
-                <th className="px-5 py-3">Property</th>
-                <th className="px-5 py-3 hidden sm:table-cell">Guest</th>
-                <th className="px-5 py-3">Platform</th>
-                <th className="px-5 py-3 text-right hidden sm:table-cell">Nights</th>
-                <th className="px-5 py-3 text-right">Amount</th>
-                <th className="px-5 py-3 text-right">Payout</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {filtered.map(r => {
-                const prop = allProperties.find(p => p.id === r.property_id);
-                const src = REVENUE_SOURCES.find(s => s.value === (r.platform || r.source));
-                return (
-                  <tr key={r.id} className="hover:bg-gray-50/50 transition-colors cursor-pointer" onClick={() => openEdit(r)}>
-                    {/* Using short month format intentionally for compact table display */}
-                    <td className="px-5 py-3 text-gray-600 whitespace-nowrap">
-                      {new Date(r.payout_date || r.date || r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </td>
-                    <td className="px-5 py-3">
-                      <p className="font-medium text-gray-900 truncate max-w-[150px]">{prop?.name || 'Unmatched'}</p>
-                    </td>
-                    <td className="px-5 py-3 text-gray-600 hidden sm:table-cell">{r.guest_name || '—'}</td>
-                    <td className="px-5 py-3">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-medium">
-                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: src?.color || '#6B7280' }} />
-                        {src?.label || r.source}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3 text-right text-gray-600 hidden sm:table-cell">{r.nights || (r.check_in && r.check_out ? Math.max(1, Math.round((new Date(r.check_out).getTime() - new Date(r.check_in).getTime()) / 86400000)) : '—')}</td>
-                    <td className="px-5 py-3 text-right text-gray-700">{formatCurrency(r.amount)}</td>
-                    <td className="px-5 py-3 text-right font-medium text-teal-600">{formatCurrency(r.payout_amount)}</td>
+        {totalFilteredCount === 0 ? (
+          <div className="py-12 text-center text-sm text-gray-400">
+            {searchQuery || filterProperty !== 'all' || filterSource !== 'all'
+              ? "No revenue entries match your filters"
+              : "No revenue entries yet"
+            }
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <SortableHeader column="check_in">Date</SortableHeader>
+                    <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">Property</th>
+                    <SortableHeader column="guest_name">Guest</SortableHeader>
+                    <SortableHeader column="platform">Platform</SortableHeader>
+                    <th className="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3 hidden sm:table-cell">Nights</th>
+                    <SortableHeader column="amount" align="right">Amount</SortableHeader>
+                    <th className="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">Payout</th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        {filtered.length === 0 && (
-          <div className="py-12 text-center text-sm text-gray-400">No revenue entries match your filters.</div>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {paginatedRevenue.map(r => {
+                    const prop = allProperties.find(p => p.id === r.property_id);
+                    const src = REVENUE_SOURCES.find(s => s.value === (r.platform || r.source));
+                    return (
+                      <tr key={r.id} className="hover:bg-gray-50/50 transition-colors cursor-pointer" onClick={() => openEdit(r)}>
+                        <td className="px-5 py-3 text-gray-600 whitespace-nowrap">
+                          {new Date(r.check_in || r.date || r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </td>
+                        <td className="px-5 py-3">
+                          <p className="font-medium text-gray-900 truncate max-w-[150px]">{prop?.name || 'Unmatched'}</p>
+                        </td>
+                        <td className="px-5 py-3 text-gray-600">{r.guest_name || '—'}</td>
+                        <td className="px-5 py-3">
+                          <span className="inline-flex items-center gap-1.5 text-xs font-medium">
+                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: src?.color || '#6B7280' }} />
+                            {src?.label || r.source}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3 text-right text-gray-600 hidden sm:table-cell">{r.nights || (r.check_in && r.check_out ? Math.max(1, Math.round((new Date(r.check_out).getTime() - new Date(r.check_in).getTime()) / 86400000)) : '—')}</td>
+                        <td className="px-5 py-3 text-right text-gray-700">{formatCurrency(r.amount)}</td>
+                        <td className="px-5 py-3 text-right font-medium text-teal-600">{formatCurrency(r.payout_amount)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-5 py-4 border-t border-gray-100">
+                <p className="text-sm text-gray-500">
+                  Showing <span className="font-medium tabular-nums">{totalFilteredCount > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}</span>-<span className="font-medium tabular-nums">{Math.min(currentPage * ITEMS_PER_PAGE, totalFilteredCount)}</span> of <span className="font-medium tabular-nums">{totalFilteredCount}</span> bookings
+                </p>
+                
+                <div className="flex items-center gap-1">
+                  {/* Previous button */}
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Previous page"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  
+                  {/* Page numbers */}
+                  {totalPages > 3 && (
+                    <div className="hidden sm:flex items-center gap-1">
+                      {getPaginationRange().map((page, index) => (
+                        page === 'ellipsis' ? (
+                          <span key={`ellipsis-${index}`} className="px-2 text-gray-400">…</span>
+                        ) : (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={cn(
+                              "min-w-[36px] h-9 px-3 rounded-lg text-sm font-medium transition-colors",
+                              currentPage === page
+                                ? "bg-gray-900 text-white"
+                                : "text-gray-600 hover:bg-gray-100"
+                            )}
+                          >
+                            {page}
+                          </button>
+                        )
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Mobile page indicator */}
+                  <span className="sm:hidden px-3 text-sm text-gray-600">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  
+                  {/* Next button */}
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Next page"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
       </>
