@@ -14,6 +14,7 @@ export const FEATURES: Record<string, FeatureConfig> = {
   'receipt-scanning':  { requiredPlan: 'pro', label: 'Unlimited Receipt Scanning' },
   'integrations':     { requiredPlan: 'pro', label: 'Integrations' },
   'anomaly-full':     { requiredPlan: 'pro', label: 'Advanced Anomaly Detection' },
+  'pnl-pdf':          { requiredPlan: 'pro', label: 'P&L PDF Export' },
   'benchmarking':     { requiredPlan: 'business', label: 'Benchmarking' },
   'slack':            { requiredPlan: 'business', label: 'Slack Two-Way Sync' },
 };

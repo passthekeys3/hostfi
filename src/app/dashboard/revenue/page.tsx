@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { 
   DollarSign, TrendingUp, Calendar, Upload, Plus, Building2, 
   ArrowUpRight, ArrowDownRight, FileSpreadsheet, X, ChevronDown,
-  Filter, Download, Check, Loader2, AlertCircle
+  Filter, Download, Check, Loader2, AlertCircle, Lock
 } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
 import { DEMO_REVENUE, DEMO_PROPERTIES, DEMO_EXPENSES } from "@/lib/data";
@@ -14,6 +14,9 @@ import { REVENUE_SOURCES, getRevenueBySource, type RevenueEntry, type RevenueSou
 import { parseRevenueCSV, SAMPLE_CSV } from "@/lib/revenue-csv-parser";
 import { StatCard } from "@/components/stat-card";
 import { downloadFile } from "@/lib/tax-export";
+import { usePlan } from "@/hooks/usePlan";
+import { canAccessFeature } from "@/lib/feature-gates";
+import Link from "next/link";
 
 type ModalView = null | 'add' | 'csv' | 'edit';
 
@@ -25,6 +28,8 @@ interface ImportApiResult {
 
 export default function RevenuePage() {
   const demo = isDemoMode();
+  const { plan } = usePlan();
+  const canExportPDF = canAccessFeature(plan, 'pnl-pdf');
   const { properties: realProperties, expenses: realExpenses, revenue: dashRevenue, loading: dashLoading, refresh } = useDashboardData();
   
   // Use dashboard hook data for real users, demo data for demo mode
@@ -462,9 +467,15 @@ export default function RevenuePage() {
             <button onClick={handlePnLCSV} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200">
               <Download className="w-3.5 h-3.5" /> CSV
             </button>
-            <button onClick={handlePnLPDF} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200">
-              <Download className="w-3.5 h-3.5" /> PDF
-            </button>
+            {canExportPDF ? (
+              <button onClick={handlePnLPDF} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200">
+                <Download className="w-3.5 h-3.5" /> PDF
+              </button>
+            ) : (
+              <Link href="/dashboard/billing" className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-50 rounded-lg border border-gray-200 hover:text-gray-600 transition-colors" title="Upgrade to Pro for PDF export">
+                <Lock className="w-3.5 h-3.5" /> PDF
+              </Link>
+            )}
           </div>
         </div>
         <div className="overflow-x-auto">
