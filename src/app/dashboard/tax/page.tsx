@@ -27,12 +27,8 @@ import {
   type TaxInsight,
   type ScheduleELineTotal,
 } from "@/lib/tax-mapping";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { generateTXF, generateScheduleEHTML, generateScheduleECSV, downloadFile } from "@/lib/tax-export";
-
-function formatCurrency(amount: number): string {
-  return '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
 
 const AVAILABLE_TAX_YEARS = [
   { key: '2026', label: '2026' },
@@ -235,7 +231,19 @@ function PropertyTaxCard({ summary }: { summary: PropertyTaxSummary }) {
 
 export default function TaxPage() {
   const demo = isDemoMode();
-  const { properties: realProperties, expenses: realExpenses } = useDashboardData();
+  const { properties: realProperties, expenses: realExpenses, loading } = useDashboardData();
+
+  if (loading) {
+    return (
+      <div className="space-y-8 animate-pulse">
+        <div className="h-8 w-48 bg-gray-200 rounded-lg" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1,2,3,4].map(i => <div key={i} className="h-28 bg-gray-100 rounded-2xl" />)}
+        </div>
+        <div className="h-64 bg-gray-100 rounded-2xl" />
+      </div>
+    );
+  }
   const [selectedYear, setSelectedYear] = useState(AVAILABLE_TAX_YEARS[0].key);
   
   // Filter expenses by year

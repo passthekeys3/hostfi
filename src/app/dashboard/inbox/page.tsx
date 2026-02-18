@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DEMO_INBOX_ITEMS, getPropertyName, type InboxItem } from "@/lib/demo-inbox";
 import { DEMO_PROPERTIES } from "@/lib/data";
 import { isDemoMode } from "@/lib/data/data-provider";
@@ -327,7 +327,8 @@ export default function InboxPage() {
   const [items, setItems] = useState(demo ? DEMO_INBOX_ITEMS : []);
 
   // Fetch real parsed emails
-  useState(() => {
+  const [inboxLoading, setInboxLoading] = useState(!demo);
+  useEffect(() => {
     if (demo) return;
     (async () => {
       try {
@@ -415,8 +416,9 @@ export default function InboxPage() {
           setItems(mapped);
         }
       } catch {}
+      setInboxLoading(false);
     })();
-  });
+  }, [demo]);
   const pendingItems = items.filter((i) => i.status === "pending_review");
   const processedItems = items.filter((i) => i.status !== "pending_review");
 

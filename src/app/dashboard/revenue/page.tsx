@@ -6,7 +6,7 @@ import {
   ArrowUpRight, ArrowDownRight, FileSpreadsheet, X, ChevronDown,
   Filter, Download, Check, Loader2, AlertCircle
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { DEMO_REVENUE, DEMO_PROPERTIES, DEMO_EXPENSES } from "@/lib/data";
 import { isDemoMode } from "@/lib/data/data-provider";
 import { useDashboardData } from "@/hooks/useDashboardData";
@@ -309,10 +309,20 @@ export default function RevenuePage() {
     reader.readAsText(file);
   }, []);
 
-  const fmt = (n: number | null | undefined) => (n ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
   // Show empty state for real users with no revenue data
   const showEmptyState = !demo && revenue.length === 0 && revenueLoaded;
+
+  if (dashLoading) {
+    return (
+      <div className="space-y-8 animate-pulse">
+        <div className="h-8 w-48 bg-gray-200 rounded-lg" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1,2,3,4].map(i => <div key={i} className="h-28 bg-gray-100 rounded-2xl" />)}
+        </div>
+        <div className="h-64 bg-gray-100 rounded-2xl" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 pb-24 lg:pb-6">
@@ -359,10 +369,10 @@ export default function RevenuePage() {
       <>
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-        <StatCard title="Gross Revenue" value={`$${fmt(totalGross)}`} accent="teal" icon={DollarSign} subtitle={`${totalBookings} bookings`} />
-        <StatCard title="Net Payouts" value={`$${fmt(totalNet)}`} accent="blue" icon={TrendingUp} subtitle={`$${fmt(totalFees)} in fees`} />
-        <StatCard title="Total Expenses" value={`$${fmt(totalExpenses)}`} accent="amber" icon={ArrowDownRight} subtitle="All properties" />
-        <StatCard title="Net Profit" value={`$${fmt(netProfit)}`} accent={netProfit >= 0 ? 'teal' : 'rose'} icon={netProfit >= 0 ? ArrowUpRight : ArrowDownRight} subtitle={`${((netProfit / totalNet) * 100).toFixed(1)}% margin`} />
+        <StatCard title="Gross Revenue" value={formatCurrency(totalGross)} accent="teal" icon={DollarSign} subtitle={`${totalBookings} bookings`} />
+        <StatCard title="Net Payouts" value={formatCurrency(totalNet)} accent="blue" icon={TrendingUp} subtitle={`${formatCurrency(totalFees)} in fees`} />
+        <StatCard title="Total Expenses" value={formatCurrency(totalExpenses)} accent="amber" icon={ArrowDownRight} subtitle="All properties" />
+        <StatCard title="Net Profit" value={formatCurrency(netProfit)} accent={netProfit >= 0 ? 'teal' : 'rose'} icon={netProfit >= 0 ? ArrowUpRight : ArrowDownRight} subtitle={`${((netProfit / totalNet) * 100).toFixed(1)}% margin`} />
       </div>
 
       {/* Property P&L */}
@@ -394,12 +404,12 @@ export default function RevenuePage() {
                       <p className="font-medium text-gray-900">{row.property.name}</p>
                       <p className="text-xs text-gray-400">{row.bookings} bookings</p>
                     </td>
-                    <td className="px-5 py-3.5 text-right text-gray-700">${fmt(row.gross)}</td>
-                    <td className="px-5 py-3.5 text-right text-gray-400 hidden sm:table-cell">-${fmt(row.gross - row.net)}</td>
-                    <td className="px-5 py-3.5 text-right text-gray-700">${fmt(row.net)}</td>
-                    <td className="px-5 py-3.5 text-right text-gray-700">-${fmt(row.expenses)}</td>
+                    <td className="px-5 py-3.5 text-right text-gray-700">{formatCurrency(row.gross)}</td>
+                    <td className="px-5 py-3.5 text-right text-gray-400 hidden sm:table-cell">-{formatCurrency(row.gross - row.net)}</td>
+                    <td className="px-5 py-3.5 text-right text-gray-700">{formatCurrency(row.net)}</td>
+                    <td className="px-5 py-3.5 text-right text-gray-700">-{formatCurrency(row.expenses)}</td>
                     <td className={cn("px-5 py-3.5 text-right font-semibold", row.profit >= 0 ? "text-teal-600" : "text-rose-600")}>
-                      {row.profit >= 0 ? '' : '-'}${fmt(Math.abs(row.profit))}
+                      {row.profit >= 0 ? '' : '-'}{formatCurrency(Math.abs(row.profit))}
                     </td>
                     <td className={cn("px-5 py-3.5 text-right hidden sm:table-cell", margin >= 0 ? "text-teal-600" : "text-rose-600")}>
                       {margin.toFixed(1)}%
@@ -412,12 +422,12 @@ export default function RevenuePage() {
               <tr><td colSpan={7} className="h-3 border-t border-gray-200" /></tr>
               <tr className="bg-gray-50/50 font-semibold text-sm">
                 <td className="px-5 py-3">Total</td>
-                <td className="px-5 py-3 text-right">${fmt(totalGross)}</td>
-                <td className="px-5 py-3 text-right hidden sm:table-cell text-gray-400">-${fmt(totalFees)}</td>
-                <td className="px-5 py-3 text-right">${fmt(totalNet)}</td>
-                <td className="px-5 py-3 text-right">-${fmt(totalExpenses)}</td>
+                <td className="px-5 py-3 text-right">{formatCurrency(totalGross)}</td>
+                <td className="px-5 py-3 text-right hidden sm:table-cell text-gray-400">-{formatCurrency(totalFees)}</td>
+                <td className="px-5 py-3 text-right">{formatCurrency(totalNet)}</td>
+                <td className="px-5 py-3 text-right">-{formatCurrency(totalExpenses)}</td>
                 <td className={cn("px-5 py-3 text-right", netProfit >= 0 ? "text-teal-600" : "text-rose-600")}>
-                  {netProfit >= 0 ? '' : '-'}${fmt(Math.abs(netProfit))}
+                  {netProfit >= 0 ? '' : '-'}{formatCurrency(Math.abs(netProfit))}
                 </td>
                 <td className={cn("px-5 py-3 text-right hidden sm:table-cell", netProfit >= 0 ? "text-teal-600" : "text-rose-600")}>
                   {((netProfit / totalNet) * 100).toFixed(1)}%
@@ -441,7 +451,7 @@ export default function RevenuePage() {
                   <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: src.color }} />
                   <span className="text-xs font-medium text-gray-600">{src.label}</span>
                 </div>
-                <p className="text-lg font-bold text-gray-900">${fmt(amount)}</p>
+                <p className="text-lg font-bold text-gray-900">{formatCurrency(amount)}</p>
                 <p className="text-xs text-gray-400">{pct.toFixed(1)}% of net</p>
               </div>
             );
@@ -463,15 +473,15 @@ export default function RevenuePage() {
                 <div className="space-y-1">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Gross</span>
-                    <span className="font-medium text-gray-900">${fmt(d.gross)}</span>
+                    <span className="font-medium text-gray-900">{formatCurrency(d.gross)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Fees</span>
-                    <span className="text-gray-400">-${fmt(d.fees)}</span>
+                    <span className="text-gray-400">-{formatCurrency(d.fees)}</span>
                   </div>
                   <div className="flex justify-between text-sm pt-1 border-t border-gray-50">
                     <span className="text-gray-500 font-medium">Net</span>
-                    <span className="font-semibold text-teal-600">${fmt(d.net)}</span>
+                    <span className="font-semibold text-teal-600">{formatCurrency(d.net)}</span>
                   </div>
                 </div>
               </div>
@@ -537,8 +547,8 @@ export default function RevenuePage() {
                       </span>
                     </td>
                     <td className="px-5 py-3 text-right text-gray-600 hidden sm:table-cell">{r.nights || (r.check_in && r.check_out ? Math.max(1, Math.round((new Date(r.check_out).getTime() - new Date(r.check_in).getTime()) / 86400000)) : '—')}</td>
-                    <td className="px-5 py-3 text-right text-gray-700">${fmt(r.amount)}</td>
-                    <td className="px-5 py-3 text-right font-medium text-teal-600">${fmt(r.payout_amount)}</td>
+                    <td className="px-5 py-3 text-right text-gray-700">{formatCurrency(r.amount)}</td>
+                    <td className="px-5 py-3 text-right font-medium text-teal-600">{formatCurrency(r.payout_amount)}</td>
                   </tr>
                 );
               })}
@@ -821,8 +831,8 @@ export default function RevenuePage() {
                                     </td>
                                     <td className="px-3 py-2 text-gray-700">{e.guest_name || '—'}</td>
                                     <td className="px-3 py-2 text-gray-700">{prop?.name || 'No match'}</td>
-                                    <td className="px-3 py-2 text-right">${fmt(e.amount || 0)}</td>
-                                    <td className="px-3 py-2 text-right text-teal-600">${fmt(e.payout_amount || 0)}</td>
+                                    <td className="px-3 py-2 text-right">{formatCurrency(e.amount || 0)}</td>
+                                    <td className="px-3 py-2 text-right text-teal-600">{formatCurrency(e.payout_amount || 0)}</td>
                                   </tr>
                                 );
                               })}
