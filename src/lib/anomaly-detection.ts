@@ -1,6 +1,6 @@
 // Utility Cost Anomaly Detection Engine
 
-import { type MonthlyBill, type UtilityType, DEMO_ANALYTICS_DATA } from './demo-analytics';
+import { type MonthlyBill, type UtilityType, UTILITY_LABELS } from './types';
 import { type LucideIcon, TrendingUp, BarChart3, Droplets, DollarSign, Mountain } from 'lucide-react';
 
 export type AnomalyType = 'spike' | 'unusual_pattern' | 'possible_leak' | 'rate_increase' | 'new_high';
@@ -212,9 +212,8 @@ export function detectAnomalies(
   return anomalies;
 }
 
-// Run anomaly detection on all demo data
-export function detectDemoAnomalies(): AnomalyResult[] {
-  const data = DEMO_ANALYTICS_DATA;
+// Run anomaly detection on provided data
+export function detectAnomaliesFromData(data: MonthlyBill[]): AnomalyResult[] {
   const months = [...new Set(data.map(b => b.month))].sort();
   const latestMonth = months[months.length - 1];
   const anomalies: AnomalyResult[] = [];

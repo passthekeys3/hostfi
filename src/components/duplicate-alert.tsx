@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AlertTriangle, ChevronDown, ChevronUp, X, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { getDemoDuplicates, type DuplicateGroup } from "@/lib/duplicate-detection";
-import { DEMO_PROPERTIES } from "@/lib/data";
+import { findDuplicates, type DuplicateGroup } from "@/lib/duplicate-detection";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 interface DuplicateAlertProps {
@@ -16,9 +15,9 @@ export function DuplicateAlert({ className }: DuplicateAlertProps) {
   const [dismissed, setDismissed] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [resolvedGroups, setResolvedGroups] = useState<Set<string>>(new Set());
-  const { isDemo, properties } = useDashboardData();
+  const { properties, expenses } = useDashboardData();
 
-  const allDuplicates = isDemo ? getDemoDuplicates() : [];
+  const allDuplicates = useMemo(() => findDuplicates(expenses), [expenses]);
   const duplicates = allDuplicates.filter(g => !resolvedGroups.has(g.id));
 
   if (dismissed || duplicates.length === 0) {
@@ -31,7 +30,19 @@ export function DuplicateAlert({ className }: DuplicateAlertProps) {
     setResolvedGroups(prev => new Set([...prev, groupId]));
   };
 
-  const handleRemoveDuplicate = (groupId: string) => {
+  const handleRemoveDuplicate = async (groupId: string, expenseIdToRemove?: string) => {
+    // If we have an expense ID to remove, delete it from Supabase
+    if (expenseIdToRemove) {
+      try {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        if (supabase) {
+          await supabase.from('expenses').delete().eq('id', expenseIdToRemove);
+        }
+      } catch (error) {
+        console.error('Failed to delete duplicate:', error);
+      }
+    }
     setResolvedGroups(prev => new Set([...prev, groupId]));
   };
 
@@ -109,14 +120,14 @@ export function DuplicateAlert({ className }: DuplicateAlertProps) {
               {/* Side by side expenses */}
               <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-amber-100">
                 {group.expenses.map((expense, idx) => {
-                  const property = DEMO_PROPERTIES.find(p => p.id === expense.property_id);
+                  const property = properties.find(p => p.id === expense.property_id);
                   return (
                     <div key={expense.id} className="p-4">
                       <div className="flex items-start justify-between">
                         <div>
                           <p className="text-sm font-medium">{expense.description}</p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            {property?.name} · {formatDate(expense.date)}
+                            {property?.name || 'Unknown Property'} · {formatDate(expense.date)}
                           </p>
                           {expense.vendor && (
                             <p className="text-xs text-muted-foreground">
@@ -153,7 +164,7 @@ export function DuplicateAlert({ className }: DuplicateAlertProps) {
                   Keep Both
                 </button>
                 <button
-                  onClick={() => handleRemoveDuplicate(group.id)}
+                  onClick={() => handleRemoveDuplicate(group.id, group.expenses[1]?.id)}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-900 text-white rounded-lg transition-colors hover:bg-gray-800"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -162,10 +173,6 @@ export function DuplicateAlert({ className }: DuplicateAlertProps) {
               </div>
             </div>
           ))}
-
-          <p className="text-xs text-amber-700/70 text-center pt-2">
-            Demo mode: changes won&apos;t be saved
-          </p>
         </div>
       )}
     </div>

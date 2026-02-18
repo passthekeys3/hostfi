@@ -10,10 +10,8 @@ const SpendByPropertyChart = dynamic(() => import("@/components/analytics-charts
 const UtilityBreakdownChart = dynamic(() => import("@/components/analytics-charts").then(m => m.UtilityBreakdownChart), { ssr: false, loading: () => <div className="h-64 bg-gray-100 rounded-xl animate-pulse" /> });
 const MoMComparisonChart = dynamic(() => import("@/components/analytics-charts").then(m => m.MoMComparisonChart), { ssr: false, loading: () => <div className="h-64 bg-gray-100 rounded-xl animate-pulse" /> });
 const PropertyCostTable = dynamic(() => import("@/components/analytics-charts").then(m => m.PropertyCostTable), { ssr: false, loading: () => <div className="h-48 bg-gray-100 rounded-xl animate-pulse" /> });
-import { DEMO_ANALYTICS_DATA, DEMO_PROPERTIES } from "@/lib/data";
-import { isDemoMode } from "@/lib/data/data-provider";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { type MonthlyBill, type UtilityType, UTILITY_LABELS, ALL_EXPENSE_TYPES } from "@/lib/demo-analytics";
+import { type MonthlyBill, type UtilityType } from "@/lib/types";
 import { DollarSign, TrendingUp, Receipt, Building2, BarChart3 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
@@ -29,13 +27,10 @@ export default function AnalyticsPage() {
   const [dateRange, setDateRange] = useState("12");
   const [propertyFilter, setPropertyFilter] = useState("all");
   const [utilityFilter, setUtilityFilter] = useState("all");
-  const demo = isDemoMode();
   const { properties, expenses, loading } = useDashboardData();
 
   // Transform real expenses into MonthlyBill format for charts
   const analyticsData: MonthlyBill[] = useMemo(() => {
-    if (demo) return DEMO_ANALYTICS_DATA;
-    
     return expenses.map(exp => {
       const month = exp.date.slice(0, 7); // YYYY-MM
       const property = properties.find(p => p.id === exp.property_id);
@@ -48,7 +43,7 @@ export default function AnalyticsPage() {
         amount: exp.amount,
       };
     });
-  }, [demo, expenses, properties]);
+  }, [expenses, properties]);
 
   const filteredData = useMemo(() => {
     let data = analyticsData;
@@ -76,9 +71,8 @@ export default function AnalyticsPage() {
   }, [filteredData]);
 
   const propertyList = useMemo(() => {
-    if (demo) return DEMO_PROPERTIES.map(p => ({ id: p.id, name: p.name }));
     return properties.map(p => ({ id: p.id, name: p.name }));
-  }, [demo, properties]);
+  }, [properties]);
 
   if (loading) {
     return (
@@ -94,7 +88,7 @@ export default function AnalyticsPage() {
     );
   }
 
-  if (!demo && expenses.length === 0) {
+  if (expenses.length === 0) {
     return (
       <div className="space-y-6">
         <div>

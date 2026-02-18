@@ -1,5 +1,5 @@
 import { type PropertyTaxSummary } from './tax-mapping';
-import { DEMO_REVENUE, getRevenueForProperty } from './demo-revenue';
+import type { RevenueEntry } from './types';
 
 /**
  * Generate TurboTax TXF (Tax Exchange Format) file
@@ -32,7 +32,7 @@ const TXF_SCHEDULE_E_MAP: Record<number, { refNum: number; description: string }
   19: { refNum: 2454, description: 'Other Expenses' },
 };
 
-export function generateTXF(summaries: PropertyTaxSummary[], taxYear: string): string {
+export function generateTXF(summaries: PropertyTaxSummary[], taxYear: string, revenueByProperty: Record<string, RevenueEntry[]> = {}): string {
   const lines: string[] = [];
   
   // TXF Header
@@ -45,7 +45,7 @@ export function generateTXF(summaries: PropertyTaxSummary[], taxYear: string): s
     const propertyLabel = summary.property.name;
     
     // Add revenue (Line 5 - Rents received)
-    const revenue = getRevenueForProperty(summary.property.id);
+    const revenue = revenueByProperty[summary.property.id] || [];
     const totalRevenue = revenue.reduce((sum, r) => sum + r.payout_amount, 0);
     
     if (totalRevenue > 0) {
@@ -84,7 +84,7 @@ export function generateTXF(summaries: PropertyTaxSummary[], taxYear: string): s
 /**
  * Generate a printable Schedule E report as HTML
  */
-export function generateScheduleEHTML(summaries: PropertyTaxSummary[], taxYear: string): string {
+export function generateScheduleEHTML(summaries: PropertyTaxSummary[], taxYear: string, revenueByProperty: Record<string, RevenueEntry[]> = {}): string {
   const fmt = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   let html = `
@@ -141,7 +141,7 @@ export function generateScheduleEHTML(summaries: PropertyTaxSummary[], taxYear: 
 
   // Portfolio summary
   const totalRevenue = summaries.reduce((sum, s) => {
-    const rev = getRevenueForProperty(s.property.id);
+    const rev = revenueByProperty[s.property.id] || [];
     return sum + rev.reduce((r, e) => r + e.payout_amount, 0);
   }, 0);
   const totalDeductions = summaries.reduce((sum, s) => sum + s.totalDeductions, 0);
@@ -168,7 +168,7 @@ export function generateScheduleEHTML(summaries: PropertyTaxSummary[], taxYear: 
 
   // Per-property sections
   for (const summary of summaries) {
-    const revenue = getRevenueForProperty(summary.property.id);
+    const revenue = revenueByProperty[summary.property.id] || [];
     const propRevenue = revenue.reduce((sum, r) => sum + r.payout_amount, 0);
     const propNet = propRevenue - summary.totalDeductions;
     const propType = summary.property.property_type === 'arbitrage' ? 'Rental Arbitrage' :
@@ -240,13 +240,13 @@ export function generateScheduleEHTML(summaries: PropertyTaxSummary[], taxYear: 
 /**
  * Generate CSV export of Schedule E data
  */
-export function generateScheduleECSV(summaries: PropertyTaxSummary[], taxYear: string): string {
+export function generateScheduleECSV(summaries: PropertyTaxSummary[], taxYear: string, revenueByProperty: Record<string, RevenueEntry[]> = {}): string {
   const rows: string[] = [];
   rows.push('Property,Property Type,Line Number,Description,Amount,Tax Year');
 
   for (const summary of summaries) {
     const propType = summary.property.property_type;
-    const revenue = getRevenueForProperty(summary.property.id);
+    const revenue = revenueByProperty[summary.property.id] || [];
     const totalRevenue = revenue.reduce((sum, r) => sum + r.payout_amount, 0);
 
     // Revenue

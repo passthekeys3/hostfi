@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateRequest } from '@/lib/auth';
 import { createRateLimiter } from '@/lib/rate-limit';
-import type { RevenueEntry } from '@/lib/demo-revenue';
+import type { RevenueEntry } from '@/lib/types';
 
 const isRateLimited = createRateLimiter('revenue-import', 5, 60_000);
 

@@ -5,17 +5,12 @@ import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   Legend, LineChart, Line, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
 } from "recharts";
-import { DEMO_PROPERTIES } from "@/lib/data";
-import {
-  DEMO_BENCHMARKS, DEMO_INSIGHTS, DEMO_PORTFOLIO_SUMMARY,
-  DEMO_MONTHLY_TRENDS, DEMO_HEATMAP, DEMO_UTILITY_COMPARISON,
-} from "@/lib/demo-benchmarks";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import {
   calculateBenchmarks, generateInsights, getPortfolioSummary,
   getMonthlyTrendByProperty, getHeatmapData, getUtilityComparisonData,
 } from "@/lib/benchmarking";
-import { UTILITY_LABELS, type UtilityType, type MonthlyBill } from "@/lib/demo-analytics";
+import { UTILITY_LABELS, type UtilityType, type MonthlyBill } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Trophy, AlertTriangle, Lightbulb, TrendingUp, DollarSign, Target, Crown, PiggyBank, Coins, Bed, Loader2 } from "lucide-react";
 
@@ -58,25 +53,11 @@ const CATEGORY_TO_UTILITY: Record<string, string> = {
 };
 
 export default function BenchmarkingContent() {
-  const { properties, expenses, isDemo, loading } = useDashboardData();
+  const { properties, expenses, loading } = useDashboardData();
 
   // Transform real expenses into MonthlyBill format for benchmarking
   const { benchmarks, insights, summary, trends, heatmap, comparison, propertyNames, realProperties } = useMemo(() => {
-    // Demo mode - use demo data
-    if (isDemo) {
-      return {
-        benchmarks: DEMO_BENCHMARKS,
-        insights: DEMO_INSIGHTS,
-        summary: DEMO_PORTFOLIO_SUMMARY,
-        trends: DEMO_MONTHLY_TRENDS,
-        heatmap: DEMO_HEATMAP,
-        comparison: DEMO_UTILITY_COMPARISON,
-        propertyNames: DEMO_BENCHMARKS.map(b => b.property_name),
-        realProperties: DEMO_PROPERTIES,
-      };
-    }
-
-    // Real mode - transform expenses to MonthlyBill format
+    // Transform expenses to MonthlyBill format
     if (properties.length < 2 || expenses.length === 0) {
       return { benchmarks: [], insights: [], summary: null, trends: [], heatmap: null, comparison: [], propertyNames: [], realProperties: properties };
     }
@@ -143,7 +124,7 @@ export default function BenchmarkingContent() {
       propertyNames: calculatedBenchmarks.map(b => b.property_name),
       realProperties: properties,
     };
-  }, [properties, expenses, isDemo]);
+  }, [properties, expenses]);
 
   // Loading state
   if (loading) {
@@ -155,7 +136,7 @@ export default function BenchmarkingContent() {
   }
 
   // Not enough data state
-  if (!isDemo && (properties.length < 2 || benchmarks.length === 0)) {
+  if (properties.length < 2 || benchmarks.length === 0) {
     return (
       <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
         <Target className="w-10 h-10 text-gray-300 mx-auto mb-3" />

@@ -127,8 +127,23 @@ export async function POST(request: NextRequest) {
       attachmentDescriptions
     );
 
+    // Fetch user's properties for matching
+    let properties: Array<{ id: string; address_line1: string; city: string; state: string; zip: string }> = [];
+    try {
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (supabaseUrl && serviceKey) {
+        const { createClient } = await import('@supabase/supabase-js');
+        const admin = createClient(supabaseUrl, serviceKey);
+        const { data } = await admin.from('properties').select('id, address_line1, city, state, zip');
+        if (data) properties = data;
+      }
+    } catch (err) {
+      console.error('Failed to fetch properties for bill matching:', err);
+    }
+
     // Match to property
-    const match = matchBillToProperty(parsed, email.sender);
+    const match = matchBillToProperty(parsed, email.sender, properties as Parameters<typeof matchBillToProperty>[2]);
 
     // Strip raw_extraction from response
     const { raw_extraction: _raw, ...safeParsed } = parsed;

@@ -1,38 +1,96 @@
 /**
  * Data Provider — Unified data access layer
  * 
- * Automatically returns demo data when Supabase is not configured,
- * or queries real data from Supabase when available.
+ * All data is fetched from Supabase. No demo mode — users sign up for free.
  */
 
-import {
-  DEMO_PROPERTIES,
-  DEMO_EXPENSES,
-  DEMO_RECURRING_EXPENSES,
-  DEMO_REVENUE,
-  DEMO_ALERTS,
-  DEMO_ANOMALIES,
-  DEMO_ANALYTICS_DATA,
-  DEMO_BENCHMARKS,
-  DEMO_PORTFOLIO_SUMMARY,
-  DEMO_INSIGHTS,
-  DEMO_MONTHLY_TRENDS,
-  DEMO_HEATMAP,
-  DEMO_UTILITY_COMPARISON,
-  DEMO_MONTHLY_REPORTS,
-  AVAILABLE_MONTHS,
-  DEMO_BILLS,
-  DEMO_UTILITY_ACCOUNTS,
-  type Property,
-  type DemoExpense,
-  type RecurringExpense,
-  type RevenueEntry,
-  type Alert,
-  type MonthlyBill,
-  type MonthlyReportData,
-} from './demo-data';
+import type { AnomalyResult } from '../anomaly-detection';
 
-import { type AnomalyResult } from '../anomaly-detection';
+// Types
+// Re-export types from the canonical types file
+export type { Property, Expense } from '@/lib/types';
+import type { Property, Expense } from '@/lib/types';
+
+export interface RecurringExpense {
+  id: string;
+  property_id: string;
+  user_id?: string;
+  category: string;
+  description: string;
+  amount: number;
+  frequency: 'monthly' | 'quarterly' | 'annual';
+  next_due: string;
+  vendor?: string;
+  auto_pay: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface RevenueEntry {
+  id: string;
+  property_id: string;
+  user_id?: string;
+  platform?: string;
+  source?: string;
+  amount: number;
+  payout_amount?: number;
+  platform_fee?: number;
+  date: string;
+  check_in?: string;
+  check_out?: string;
+  nights?: number;
+  guest_name?: string;
+  confirmation_code?: string;
+  payout_date?: string;
+  description?: string;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface Alert {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  severity: 'info' | 'warning' | 'critical';
+  read: boolean;
+  created_at: string;
+  property_id?: string;
+  expense_id?: string;
+}
+
+export interface MonthlyBill {
+  property_id: string;
+  property_name: string;
+  utility_type: string;
+  amount: number;
+  month: string;
+  year: number;
+}
+
+export interface MonthlyReportData {
+  month: string;
+  totalExpenses: number;
+  totalRevenue: number;
+  netProfit: number;
+  expensesByCategory: Record<string, number>;
+  propertySummaries: Array<{
+    property: Property;
+    expenses: number;
+    revenue: number;
+    netProfit: number;
+  }>;
+  insights: Array<{ title: string; description: string; type: 'positive' | 'negative' | 'neutral' }>;
+  anomalies: Array<{ title: string; description: string; severity: string }>;
+}
+
+// Available months for reports
+export const AVAILABLE_MONTHS = [
+  { key: '2026-01', label: 'January 2026' },
+  { key: '2025-12', label: 'December 2025' },
+  { key: '2025-11', label: 'November 2025' },
+];
 
 // ============================================================================
 // Configuration Check
@@ -56,48 +114,11 @@ export function isSupabaseConfigured(): boolean {
   return true;
 }
 
-/**
- * Returns true if the app is running in demo mode.
- * Demo mode is either:
- * 1. Supabase is not configured at all
- * 2. User explicitly entered demo mode via login page (localStorage flag)
- */
-export function isDemoMode(): boolean {
-  if (!isSupabaseConfigured()) return true;
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('hostfi_demo_mode') === 'true';
-  }
-  return false;
-}
-
-/**
- * Enter demo mode explicitly
- */
-export function enterDemoMode(): void {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('hostfi_demo_mode', 'true');
-  }
-}
-
-/**
- * Exit demo mode (e.g. on real signup/login)
- */
-export function exitDemoMode(): void {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('hostfi_demo_mode');
-  }
-}
-
 // ============================================================================
 // Properties
 // ============================================================================
 
 export async function getProperties(userId?: string): Promise<Property[]> {
-  if (isDemoMode()) {
-    return DEMO_PROPERTIES;
-  }
-  
-  // Real Supabase query
   try {
     const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
@@ -111,10 +132,6 @@ export async function getProperties(userId?: string): Promise<Property[]> {
 }
 
 export async function getPropertyById(propertyId: string): Promise<Property | null> {
-  if (isDemoMode()) {
-    return DEMO_PROPERTIES.find(p => p.id === propertyId) || null;
-  }
-  
   try {
     const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
@@ -131,34 +148,26 @@ export async function getPropertyById(propertyId: string): Promise<Property | nu
 // Expenses
 // ============================================================================
 
-export async function getExpenses(userId?: string): Promise<DemoExpense[]> {
-  if (isDemoMode()) {
-    return DEMO_EXPENSES;
-  }
-  
+export async function getExpenses(userId?: string): Promise<Expense[]> {
   try {
     const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
     if (!supabase) return [];
     const { data } = await supabase.from('expenses').select('*').order('date', { ascending: false });
-    return (data as DemoExpense[]) || [];
+    return (data as Expense[]) || [];
   } catch (error) {
     console.error('Failed to fetch expenses:', error);
     return [];
   }
 }
 
-export async function getExpensesByPropertyId(propertyId: string): Promise<DemoExpense[]> {
-  if (isDemoMode()) {
-    return DEMO_EXPENSES.filter(e => e.property_id === propertyId);
-  }
-  
+export async function getExpensesByPropertyId(propertyId: string): Promise<Expense[]> {
   try {
     const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
     if (!supabase) return [];
     const { data } = await supabase.from('expenses').select('*').eq('property_id', propertyId).order('date', { ascending: false });
-    return (data as DemoExpense[]) || [];
+    return (data as Expense[]) || [];
   } catch (error) {
     console.error('Failed to fetch expenses by property:', error);
     return [];
@@ -166,10 +175,6 @@ export async function getExpensesByPropertyId(propertyId: string): Promise<DemoE
 }
 
 export async function getRecurringExpenses(userId?: string): Promise<RecurringExpense[]> {
-  if (isDemoMode()) {
-    return DEMO_RECURRING_EXPENSES;
-  }
-  
   try {
     const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
@@ -187,10 +192,6 @@ export async function getRecurringExpenses(userId?: string): Promise<RecurringEx
 // ============================================================================
 
 export async function getRevenue(userId?: string): Promise<RevenueEntry[]> {
-  if (isDemoMode()) {
-    return DEMO_REVENUE;
-  }
-  
   try {
     const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
@@ -204,10 +205,6 @@ export async function getRevenue(userId?: string): Promise<RevenueEntry[]> {
 }
 
 export async function getRevenueByPropertyId(propertyId: string): Promise<RevenueEntry[]> {
-  if (isDemoMode()) {
-    return DEMO_REVENUE.filter(r => r.property_id === propertyId);
-  }
-  
   try {
     const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
@@ -225,16 +222,12 @@ export async function getRevenueByPropertyId(propertyId: string): Promise<Revenu
 // ============================================================================
 
 export async function getAlerts(userId?: string): Promise<Alert[]> {
-  if (isDemoMode()) {
-    return DEMO_ALERTS;
-  }
+  // TODO: Implement real alerts from database
   return [];
 }
 
 export async function getAnomalies(userId?: string): Promise<AnomalyResult[]> {
-  if (isDemoMode()) {
-    return DEMO_ANOMALIES;
-  }
+  // Anomalies are fetched via useDashboardData from anomaly_logs table
   return [];
 }
 
@@ -243,9 +236,7 @@ export async function getAnomalies(userId?: string): Promise<AnomalyResult[]> {
 // ============================================================================
 
 export async function getAnalyticsData(userId?: string): Promise<MonthlyBill[]> {
-  if (isDemoMode()) {
-    return DEMO_ANALYTICS_DATA;
-  }
+  // Analytics are computed from expenses data
   return [];
 }
 
@@ -254,15 +245,14 @@ export async function getAnalyticsData(userId?: string): Promise<MonthlyBill[]> 
 // ============================================================================
 
 export function getBenchmarkingData() {
-  // Benchmarking is calculated from analytics data, so we use the same demo data
-  // In production, this would be calculated from real analytics data
+  // Benchmarking is calculated from real analytics data
   return {
-    benchmarks: DEMO_BENCHMARKS,
-    portfolioSummary: DEMO_PORTFOLIO_SUMMARY,
-    insights: DEMO_INSIGHTS,
-    monthlyTrends: DEMO_MONTHLY_TRENDS,
-    heatmap: DEMO_HEATMAP,
-    utilityComparison: DEMO_UTILITY_COMPARISON,
+    benchmarks: [],
+    portfolioSummary: null,
+    insights: [],
+    monthlyTrends: [],
+    heatmap: [],
+    utilityComparison: [],
   };
 }
 
@@ -271,15 +261,11 @@ export function getBenchmarkingData() {
 // ============================================================================
 
 export async function getMonthlyReportData(monthKey: string): Promise<MonthlyReportData | null> {
-  if (isDemoMode()) {
-    return DEMO_MONTHLY_REPORTS[monthKey] || DEMO_MONTHLY_REPORTS[AVAILABLE_MONTHS[0].key];
-  }
+  // Reports are generated from real expense/revenue data
   return null;
 }
 
 export function getAvailableReportMonths() {
-  // In demo mode, return hardcoded months
-  // In production, query distinct months from expenses table
   return AVAILABLE_MONTHS;
 }
 
@@ -288,16 +274,10 @@ export function getAvailableReportMonths() {
 // ============================================================================
 
 export async function getBills(userId?: string) {
-  if (isDemoMode()) {
-    return DEMO_BILLS;
-  }
   return [];
 }
 
 export async function getUtilityAccounts(userId?: string) {
-  if (isDemoMode()) {
-    return DEMO_UTILITY_ACCOUNTS;
-  }
   return [];
 }
 
@@ -340,19 +320,3 @@ export async function getDashboardStats(userId?: string): Promise<DashboardStats
     newAnomalies: anomalies.filter(a => a.status === 'new').length,
   };
 }
-
-// ============================================================================
-// Re-export demo data for direct access when needed
-// ============================================================================
-
-export {
-  DEMO_PROPERTIES,
-  DEMO_EXPENSES,
-  DEMO_REVENUE,
-  DEMO_ALERTS,
-  DEMO_ANOMALIES,
-  DEMO_ANALYTICS_DATA,
-  DEMO_BENCHMARKS,
-  DEMO_MONTHLY_REPORTS,
-  AVAILABLE_MONTHS,
-};

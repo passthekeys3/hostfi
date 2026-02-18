@@ -1,12 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { DEMO_RECURRING_EXPENSES } from "@/lib/demo-expenses";
 import type { RecurringExpense } from "@/lib/types";
 import { getCategoryConfig, EXPENSE_CATEGORY_CONFIG, FREQUENCY_LABELS, getCategoryColorClasses, ALL_EXPENSE_CATEGORIES, type ExpenseCategory, type ExpenseFrequency } from "@/lib/expense-categories";
-import { DEMO_PROPERTIES } from "@/lib/data";
-import { isDemoMode } from "@/lib/data/data-provider";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { Plus, ArrowLeft, RefreshCw, X, Loader2 } from "lucide-react";
@@ -23,10 +20,23 @@ interface EditState {
 }
 
 export default function RecurringExpensesPage() {
-  const demo = isDemoMode();
-  const { properties: realProperties, loading, refresh } = useDashboardData();
-  const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>(demo ? DEMO_RECURRING_EXPENSES : []);
-  const properties = demo ? DEMO_PROPERTIES : realProperties;
+  const { properties, loading, refresh } = useDashboardData();
+  const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>([]);
+
+  // Fetch recurring expenses from Supabase
+  useEffect(() => {
+    (async () => {
+      try {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        if (!supabase) return;
+        const { data } = await supabase.from('recurring_expenses').select('*').order('created_at', { ascending: false });
+        if (data) setRecurringExpenses(data as RecurringExpense[]);
+      } catch (error) {
+        console.error('Failed to fetch recurring expenses:', error);
+      }
+    })();
+  }, []);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editState, setEditState] = useState<EditState | null>(null);
@@ -67,9 +77,16 @@ export default function RecurringExpensesPage() {
   };
 
   const saveEdit = useCallback(async () => {
-    if (!editState || !editingId || demo) {
-      // For demo mode, just update local state
-      if (editState && editingId) {
+    if (!editState || !editingId) {
+      closeEdit();
+      return;
+    }
+    setSaving(true);
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      if (!supabase) {
+        // Update local state if no supabase
         setRecurringExpenses(prev => prev.map(e => 
           e.id === editingId 
             ? {
@@ -85,23 +102,36 @@ export default function RecurringExpensesPage() {
               }
             : e
         ));
+        closeEdit();
+        return;
       }
-      closeEdit();
-      return;
-    }
-    setSaving(true);
-    try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
-      if (!supabase) return;
-      const { error } = await supabase.from('expenses').update({
+      const { error } = await supabase.from('recurring_expenses').update({
         description: editState.description,
         category: editState.category,
         amount: parseFloat(editState.amount),
         vendor: editState.vendor,
         property_id: editState.property_id,
+        frequency: editState.frequency,
+        next_due_date: editState.next_due_date,
+        is_active: editState.is_active,
       }).eq('id', editingId);
       if (error) throw error;
+      // Update local state
+      setRecurringExpenses(prev => prev.map(e => 
+        e.id === editingId 
+          ? {
+              ...e,
+              description: editState.description,
+              category: editState.category,
+              amount: parseFloat(editState.amount) || e.amount,
+              vendor: editState.vendor,
+              property_id: editState.property_id,
+              frequency: editState.frequency,
+              next_due_date: editState.next_due_date,
+              is_active: editState.is_active,
+            }
+          : e
+      ));
       closeEdit();
       if (refresh) refresh();
     } catch (err) {
@@ -110,25 +140,24 @@ export default function RecurringExpensesPage() {
     } finally {
       setSaving(false);
     }
-  }, [editState, editingId, demo, refresh]);
+  }, [editState, editingId, refresh]);
 
   const deleteExpense = useCallback(async () => {
     if (!editingId) return;
     if (!confirm('Delete this recurring expense? This cannot be undone.')) return;
     
-    if (demo) {
-      setRecurringExpenses(prev => prev.filter(e => e.id !== editingId));
-      closeEdit();
-      return;
-    }
-    
     setSaving(true);
     try {
       const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
-      if (!supabase) return;
-      const { error } = await supabase.from('expenses').delete().eq('id', editingId);
+      if (!supabase) {
+        setRecurringExpenses(prev => prev.filter(e => e.id !== editingId));
+        closeEdit();
+        return;
+      }
+      const { error } = await supabase.from('recurring_expenses').delete().eq('id', editingId);
       if (error) throw error;
+      setRecurringExpenses(prev => prev.filter(e => e.id !== editingId));
       closeEdit();
       if (refresh) refresh();
     } catch (err) {
@@ -136,30 +165,27 @@ export default function RecurringExpensesPage() {
     } finally {
       setSaving(false);
     }
-  }, [editingId, demo, refresh]);
+  }, [editingId, refresh]);
 
   const togglePause = useCallback(async () => {
     if (!editState || !editingId) return;
     const newIsActive = !editState.is_active;
     setEditState({ ...editState, is_active: newIsActive });
+    setRecurringExpenses(prev => prev.map(e => 
+      e.id === editingId ? { ...e, is_active: newIsActive } : e
+    ));
     
-    if (demo) {
-      setRecurringExpenses(prev => prev.map(e => 
-        e.id === editingId ? { ...e, is_active: newIsActive } : e
-      ));
-      return;
-    }
     try {
       const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
       if (supabase) {
-        await supabase.from('expenses').update({ is_active: newIsActive }).eq('id', editingId);
+        await supabase.from('recurring_expenses').update({ is_active: newIsActive }).eq('id', editingId);
         if (refresh) refresh();
       }
     } catch (err) {
       console.error('Failed to toggle pause:', err);
     }
-  }, [editState, editingId, demo, refresh]);
+  }, [editState, editingId, refresh]);
 
   if (loading) {
     return (

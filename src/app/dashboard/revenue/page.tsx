@@ -8,10 +8,8 @@ import {
   ChevronUp, ChevronDown, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
-import { DEMO_REVENUE, DEMO_PROPERTIES, DEMO_EXPENSES } from "@/lib/data";
-import { isDemoMode } from "@/lib/data/data-provider";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { REVENUE_SOURCES, getRevenueBySource, type RevenueEntry, type RevenueSource } from "@/lib/demo-revenue";
+import { REVENUE_SOURCES, getRevenueBySource, type RevenueEntry, type RevenueSource } from "@/lib/revenue";
 import { parseRevenueCSV, SAMPLE_CSV } from "@/lib/revenue-csv-parser";
 import { StatCard } from "@/components/stat-card";
 import { downloadFile } from "@/lib/tax-export";
@@ -32,13 +30,12 @@ interface ImportApiResult {
 }
 
 export default function RevenuePage() {
-  const demo = isDemoMode();
   const { plan } = usePlan();
   const canExportPDF = canAccessFeature(plan, 'pnl-pdf');
   const { properties: realProperties, expenses: realExpenses, revenue: dashRevenue, loading: dashLoading, refresh } = useDashboardData();
   
-  // Use dashboard hook data for real users, demo data for demo mode
-  const revenue: RevenueEntry[] = demo ? DEMO_REVENUE : (dashRevenue as RevenueEntry[] || []);
+  // Use dashboard hook data
+  const revenue: RevenueEntry[] = (dashRevenue as RevenueEntry[] || []);
   const revenueLoaded = !dashLoading;
   const [modal, setModal] = useState<ModalView>(null);
   const [filterProperty, setFilterProperty] = useState<string>('all');
@@ -267,8 +264,8 @@ export default function RevenuePage() {
   const totalGross = useMemo(() => revenue.reduce((s, r) => s + (r.amount ?? 0), 0), [revenue]);
   const totalNet = useMemo(() => revenue.reduce((s, r) => s + (r.payout_amount ?? r.amount ?? 0), 0), [revenue]);
   const totalFees = useMemo(() => revenue.reduce((s, r) => s + (r.platform_fee ?? 0), 0), [revenue]);
-  const allExpenses = demo ? DEMO_EXPENSES : realExpenses;
-  const allProperties = demo ? DEMO_PROPERTIES : realProperties;
+  const allExpenses = realExpenses;
+  const allProperties = realProperties;
   const totalExpenses = useMemo(() => allExpenses.reduce((s, e) => s + e.amount, 0), [allExpenses]);
   const netProfit = totalNet - totalExpenses;
   const totalBookings = revenue.length;
@@ -399,44 +396,41 @@ export default function RevenuePage() {
     const checkOut = form.check_out;
     const nights = Math.max(1, Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000));
 
-    if (!demo) {
-      try {
-        const { createClient } = await import("@/lib/supabase/client");
-        const supabase = createClient();
-        if (supabase) {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            const { error } = await supabase.from("revenue").insert({
-              user_id: user.id,
-              property_id: form.property_id,
-              platform: form.source,
-              source: 'manual',
-              date: checkIn,
-              description: 'Manual entry',
-              guest_name: form.guest_name || null,
-              amount,
-              payout_amount: amount - fee,
-              platform_fee: fee,
-              check_in: checkIn,
-              check_out: checkOut,
-              nights,
-              payout_date: form.payout_date || checkOut,
-              confirmation_code: form.confirmation_code || null,
-            });
-            if (error) { console.error("Revenue insert error:", error.message); }
-            else if (refresh) { refresh(); setModal(null); setForm({ property_id: '', source: 'airbnb', guest_name: '', amount: '', platform_fee: '', check_in: '', check_out: '', confirmation_code: '', payout_date: '' }); return; }
-          }
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      if (supabase) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { error } = await supabase.from("revenue").insert({
+            user_id: user.id,
+            property_id: form.property_id,
+            platform: form.source,
+            source: 'manual',
+            date: checkIn,
+            description: 'Manual entry',
+            guest_name: form.guest_name || null,
+            amount,
+            payout_amount: amount - fee,
+            platform_fee: fee,
+            check_in: checkIn,
+            check_out: checkOut,
+            nights,
+            payout_date: form.payout_date || checkOut,
+            confirmation_code: form.confirmation_code || null,
+          });
+          if (error) { console.error("Revenue insert error:", error.message); }
+          else if (refresh) { refresh(); setModal(null); setForm({ property_id: '', source: 'airbnb', guest_name: '', amount: '', platform_fee: '', check_in: '', check_out: '', confirmation_code: '', payout_date: '' }); return; }
         }
-      } catch (error) {
-        console.error("Revenue insert failed:", error);
       }
+    } catch (error) {
+      console.error("Revenue insert failed:", error);
     }
 
-    // For demo mode, just close modal (data won't persist anyway)
     if (refresh) refresh();
     setModal(null);
     setForm({ property_id: '', source: 'airbnb', guest_name: '', amount: '', platform_fee: '', check_in: '', check_out: '', confirmation_code: '', payout_date: '' });
-  }, [form, demo, refresh]);
+  }, [form, refresh]);
 
   const handleCSVParse = useCallback(() => {
     const result = parseRevenueCSV(csvText);
@@ -503,7 +497,7 @@ export default function RevenuePage() {
   }, []);
 
   // Show empty state for real users with no revenue data
-  const showEmptyState = !demo && revenue.length === 0 && revenueLoaded;
+  const showEmptyState = revenue.length === 0 && revenueLoaded;
 
   if (dashLoading) {
     return (
@@ -797,7 +791,7 @@ export default function RevenuePage() {
                   const src = REVENUE_SOURCES.find(s => s.value === (r.platform || r.source));
                   return (
                     <tr key={r.id} onClick={() => openEdit(r)} className={cn("group transition-colors duration-150 hover:bg-gray-50/60 cursor-pointer", index !== paginatedRevenue.length - 1 && "border-b border-gray-100")}>
-                      <td className="px-5 py-3 text-sm text-muted-foreground">{formatDate(r.check_in || r.date || r.created_at)}</td>
+                      <td className="px-5 py-3 text-sm text-muted-foreground">{formatDate(r.check_in || r.date || r.created_at || "")}</td>
                       <td className="px-5 py-3">
                         <p className="font-medium text-sm truncate max-w-[150px]">{prop?.name || 'Unmatched'}</p>
                       </td>
@@ -832,7 +826,7 @@ export default function RevenuePage() {
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">{r.guest_name || prop?.name || 'Revenue Entry'}</p>
-                      <p className="text-xs text-muted-foreground truncate mt-0.5">{prop?.name} · {formatDate(r.check_in || r.date || r.created_at)}</p>
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">{prop?.name} · {formatDate(r.check_in || r.date || r.created_at || "")}</p>
                     </div>
                     <div className="text-right shrink-0 pl-2">
                       <p className="font-semibold text-sm tabular-nums text-teal-600">{formatCurrency(r.payout_amount)}</p>

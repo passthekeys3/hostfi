@@ -14,8 +14,6 @@ import {
   Building2,
   DollarSign,
 } from "lucide-react";
-import { DEMO_PROPERTIES, DEMO_EXPENSES } from "@/lib/data";
-import { isDemoMode } from "@/lib/data/data-provider";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { getCategoryConfig, EXPENSE_CATEGORY_CONFIG, getCategoryColorClasses } from "@/lib/expense-categories";
 import { 
@@ -229,7 +227,6 @@ function PropertyTaxCard({ summary }: { summary: PropertyTaxSummary }) {
 }
 
 export default function TaxPage() {
-  const demo = isDemoMode();
   const { properties: realProperties, expenses: realExpenses, loading } = useDashboardData();
   const [selectedYear, setSelectedYear] = useState(AVAILABLE_TAX_YEARS[0].key);
   const [showCPAModal, setShowCPAModal] = useState(false);
@@ -249,11 +246,10 @@ export default function TaxPage() {
   }
   
   // Filter expenses by year
-  const allExpenses = demo ? DEMO_EXPENSES : realExpenses;
-  const yearExpenses = allExpenses.filter(exp => exp.date.startsWith(selectedYear));
+  const yearExpenses = realExpenses.filter(exp => exp.date.startsWith(selectedYear));
   
   // Generate summaries for each property (excluding primary residence)
-  const allProperties = demo ? DEMO_PROPERTIES : realProperties;
+  const allProperties = realProperties;
   const allPropertySummaries = allProperties
     .filter(p => p.property_type !== 'primary')
     .map(property => generatePropertyTaxSummary(property, yearExpenses));

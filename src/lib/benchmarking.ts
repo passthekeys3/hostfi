@@ -1,41 +1,8 @@
 // Cross-Property Utility Benchmarking Engine
 
-import { type MonthlyBill, type UtilityType, UTILITY_LABELS } from './demo-analytics';
+import { type MonthlyBill, type UtilityType, UTILITY_LABELS, type PropertyBenchmark, type BenchmarkInsight, type PortfolioSummary, type UtilityMetric } from './types';
 
-export interface UtilityMetric {
-  monthly_avg: number;
-  trend: 'up' | 'down' | 'stable';
-  trend_percent: number;
-  rank: number;
-  vs_portfolio_avg: number;
-}
-
-export interface PropertyBenchmark {
-  property_id: string;
-  property_name: string;
-  metrics: {
-    total_monthly_avg: number;
-    total_annual: number;
-    by_utility: Record<string, UtilityMetric>;
-  };
-}
-
-export interface BenchmarkInsight {
-  id: string;
-  type: 'outlier' | 'savings_opportunity' | 'efficiency_leader' | 'trending_up';
-  message: string;
-  property_name: string;
-  utility_type?: string;
-  potential_savings?: number;
-  severity: 'info' | 'warning' | 'opportunity';
-}
-
-export interface PortfolioSummary {
-  total_monthly_avg: number;
-  most_efficient: { property_name: string; monthly_avg: number };
-  least_efficient: { property_name: string; monthly_avg: number };
-  biggest_savings: { property_name: string; utility_type: string; annual_savings: number };
-}
+export type { PropertyBenchmark, BenchmarkInsight, PortfolioSummary, UtilityMetric };
 
 export function calculateBenchmarks(data: MonthlyBill[]): PropertyBenchmark[] {
   const properties = [...new Set(data.map(b => b.property_id))];

@@ -11,7 +11,7 @@ import ReceiptUpload from "@/components/receipt-upload";
 function NewExpenseForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { properties, isDemo } = useDashboardData();
+  const { properties } = useDashboardData();
   const preselectedCategory = searchParams.get("category") as ExpenseCategory | null;
 
   const [selectedCategory, setSelectedCategory] = useState<ExpenseCategory | null>(preselectedCategory);
@@ -47,11 +47,6 @@ function NewExpenseForm() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
-    if (isDemo) {
-      setTimeout(() => router.push("/dashboard/expenses"), 500);
-      return;
-    }
 
     try {
       const form = new FormData(e.currentTarget);
@@ -135,12 +130,6 @@ function NewExpenseForm() {
           <Info className="w-4 h-4 shrink-0" /> {error}
         </div>
       )}
-      {isDemo && (
-        <div className="max-w-2xl mb-4 px-4 py-3 bg-amber-500/5 border border-amber-500/15 rounded-xl text-sm text-muted-foreground flex items-center gap-2">
-          <Info className="w-4 h-4 shrink-0" /> Demo Mode — Data won&apos;t be saved
-        </div>
-      )}
-
       {/* Receipt Scanner Section */}
       <div className="max-w-2xl">
         <button

@@ -2,19 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { type Plan } from "@/lib/feature-gates";
-import { isDemoMode } from "@/lib/data/data-provider";
 
 export function usePlan(): { plan: Plan; loading: boolean } {
   const [plan, setPlan] = useState<Plan>('free');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (isDemoMode()) {
-      setPlan('business'); // demo gets full access
-      setLoading(false);
-      return;
-    }
-
     (async () => {
       try {
         const { createClient } = await import("@/lib/supabase/client");

@@ -22,12 +22,12 @@ export interface Property {
   user_id: string;
   name: string;
   address_line1: string;
-  address_line2: string | null;
+  address_line2?: string | null;
   city: string;
   state: string;
   zip: string;
   property_type: 'str' | 'ltr' | 'primary' | 'arbitrage';
-  status: 'active' | 'inactive';
+  status?: 'active' | 'inactive';
   bedrooms: number;
   bathrooms: number;
   sqft?: number;
@@ -194,49 +194,265 @@ export interface BillMapping {
 }
 
 // ============================================================================
-// Demo data
+// Analytics Types (for charts and benchmarking)
 // ============================================================================
 
-export const DEMO_PROPERTIES: Property[] = [
-  {
-    id: '1', user_id: 'demo', name: 'Venice Beach Unit',
-    address_line1: '1234 Abbot Kinney Blvd', address_line2: 'Unit A',
-    city: 'Venice', state: 'CA', zip: '90291',
-    property_type: 'str', status: 'active',
-    bedrooms: 4, bathrooms: 2, sqft: 1800,
-    created_at: '2024-01-15T00:00:00Z', updated_at: '2024-01-15T00:00:00Z',
-  },
-  {
-    id: '2', user_id: 'demo', name: 'Silver Lake Duplex',
-    address_line1: '4567 Sunset Blvd', address_line2: null,
-    city: 'Los Angeles', state: 'CA', zip: '90026',
-    property_type: 'ltr', status: 'active',
-    bedrooms: 2, bathrooms: 1, sqft: 950,
-    created_at: '2024-02-01T00:00:00Z', updated_at: '2024-02-01T00:00:00Z',
-  },
-  {
-    id: '3', user_id: 'demo', name: 'Joshua Tree Cabin',
-    address_line1: '789 Desert View Rd', address_line2: null,
-    city: 'Joshua Tree', state: 'CA', zip: '92252',
-    property_type: 'str', status: 'active',
-    bedrooms: 3, bathrooms: 2, sqft: 1400,
-    created_at: '2024-03-10T00:00:00Z', updated_at: '2024-03-10T00:00:00Z',
-  },
+export type UtilityType = 'electric' | 'gas' | 'water' | 'internet' | 'trash' | 'rent' | 'insurance' | 'cleaning' | 'maintenance' | 'mortgage' | 'supplies' | 'taxes' | 'management' | 'subscription' | 'improvement' | 'other';
+
+export const UTILITY_LABELS: Record<UtilityType, string> = {
+  electric: 'Electric',
+  gas: 'Gas',
+  water: 'Water',
+  internet: 'Internet',
+  trash: 'Trash',
+  rent: 'Rent',
+  insurance: 'Insurance',
+  cleaning: 'Cleaning',
+  maintenance: 'Maintenance',
+  mortgage: 'Mortgage',
+  supplies: 'Supplies',
+  taxes: 'Taxes',
+  management: 'Management',
+  subscription: 'Subscription',
+  improvement: 'Improvement',
+  other: 'Other',
+};
+
+export const ALL_EXPENSE_TYPES: UtilityType[] = [
+  'electric', 'gas', 'water', 'internet', 'trash', 'rent', 'insurance',
+  'cleaning', 'maintenance', 'mortgage', 'supplies', 'taxes', 'management',
+  'subscription', 'improvement', 'other'
 ];
 
-export const DEMO_UTILITY_ACCOUNTS: (UtilityAccount & { property?: Property })[] = [
-  { id: 'ua1', property_id: '1', user_id: 'demo', provider_name: 'LADWP', account_number: '1234567', utility_type: 'electric', autopay: true, created_at: '2024-01-15T00:00:00Z', updated_at: '2024-01-15T00:00:00Z', property: DEMO_PROPERTIES[0] },
-  { id: 'ua2', property_id: '1', user_id: 'demo', provider_name: 'SoCalGas', account_number: '7654321', utility_type: 'gas', autopay: false, created_at: '2024-01-15T00:00:00Z', updated_at: '2024-01-15T00:00:00Z', property: DEMO_PROPERTIES[0] },
-  { id: 'ua3', property_id: '2', user_id: 'demo', provider_name: 'LADWP', account_number: '9876543', utility_type: 'electric', autopay: true, created_at: '2024-02-01T00:00:00Z', updated_at: '2024-02-01T00:00:00Z', property: DEMO_PROPERTIES[1] },
-  { id: 'ua4', property_id: '2', user_id: 'demo', provider_name: 'Spectrum', account_number: '5551234', utility_type: 'internet', autopay: true, created_at: '2024-02-01T00:00:00Z', updated_at: '2024-02-01T00:00:00Z', property: DEMO_PROPERTIES[1] },
-  { id: 'ua5', property_id: '3', user_id: 'demo', provider_name: 'SCE', account_number: '3216549', utility_type: 'electric', autopay: false, created_at: '2024-03-10T00:00:00Z', updated_at: '2024-03-10T00:00:00Z', property: DEMO_PROPERTIES[2] },
-];
+export interface MonthlyBill {
+  month: string;
+  monthLabel: string;
+  property_id: string;
+  property_name: string;
+  utility_type: UtilityType;
+  amount: number;
+}
 
-export const DEMO_BILLS: (Bill & { utility_account?: UtilityAccount & { property?: Property } })[] = [
-  { id: 'b1', utility_account_id: 'ua1', user_id: 'demo', amount: 142.50, due_date: '2026-02-15', billing_period_start: '2026-01-01', billing_period_end: '2026-01-31', status: 'pending', payment_method: null, source: 'manual', raw_email_id: null, confidence_score: null, created_at: '2026-02-01T00:00:00Z', paid_at: null, utility_account: DEMO_UTILITY_ACCOUNTS[0] },
-  { id: 'b2', utility_account_id: 'ua2', user_id: 'demo', amount: 67.30, due_date: '2026-02-12', billing_period_start: '2026-01-01', billing_period_end: '2026-01-31', status: 'overdue', payment_method: null, source: 'manual', raw_email_id: null, confidence_score: null, created_at: '2026-01-28T00:00:00Z', paid_at: null, utility_account: DEMO_UTILITY_ACCOUNTS[1] },
-  { id: 'b3', utility_account_id: 'ua3', user_id: 'demo', amount: 198.00, due_date: '2026-02-20', billing_period_start: '2026-01-01', billing_period_end: '2026-01-31', status: 'pending', payment_method: 'autopay', source: 'manual', raw_email_id: null, confidence_score: null, created_at: '2026-02-05T00:00:00Z', paid_at: null, utility_account: DEMO_UTILITY_ACCOUNTS[2] },
-  { id: 'b4', utility_account_id: 'ua4', user_id: 'demo', amount: 89.99, due_date: '2026-02-10', billing_period_start: '2026-01-15', billing_period_end: '2026-02-14', status: 'paid', payment_method: 'autopay', source: 'manual', raw_email_id: null, confidence_score: null, created_at: '2026-01-25T00:00:00Z', paid_at: '2026-02-10T00:00:00Z', utility_account: DEMO_UTILITY_ACCOUNTS[3] },
-  { id: 'b5', utility_account_id: 'ua5', user_id: 'demo', amount: 210.75, due_date: '2026-02-18', billing_period_start: '2026-01-01', billing_period_end: '2026-01-31', status: 'pending', payment_method: null, source: 'email_parse', raw_email_id: null, confidence_score: 0.95, created_at: '2026-02-03T00:00:00Z', paid_at: null, utility_account: DEMO_UTILITY_ACCOUNTS[4] },
-  { id: 'b6', utility_account_id: 'ua1', user_id: 'demo', amount: 135.20, due_date: '2026-01-15', billing_period_start: '2025-12-01', billing_period_end: '2025-12-31', status: 'paid', payment_method: 'manual', source: 'manual', raw_email_id: null, confidence_score: null, created_at: '2026-01-02T00:00:00Z', paid_at: '2026-01-14T00:00:00Z', utility_account: DEMO_UTILITY_ACCOUNTS[0] },
-];
+// Chart data helper functions
+export function getMonthlyTotals(data: MonthlyBill[]) {
+  const months = [...new Set(data.map(b => b.month))].sort();
+  return months.map(m => {
+    const monthBills = data.filter(b => b.month === m);
+    return {
+      month: m,
+      monthLabel: monthBills[0]?.monthLabel || m,
+      total: Math.round(monthBills.reduce((s, b) => s + b.amount, 0) * 100) / 100,
+    };
+  });
+}
+
+export function getUtilityBreakdown(data: MonthlyBill[]) {
+  const UTILITY_COLORS: Record<string, string> = {
+    electric: '#FBBF24',
+    gas: '#F97316',
+    water: '#3B82F6',
+    internet: '#8B5CF6',
+    trash: '#78716C',
+    insurance: '#06B6D4',
+    cleaning: '#10B981',
+    maintenance: '#6366F1',
+    mortgage: '#14B8A6',
+    supplies: '#EC4899',
+    taxes: '#EF4444',
+    management: '#8B5CF6',
+    subscription: '#F59E0B',
+    improvement: '#84CC16',
+    other: '#9CA3AF',
+  };
+  
+  const byType = new Map<string, number>();
+  for (const b of data) {
+    byType.set(b.utility_type, (byType.get(b.utility_type) || 0) + b.amount);
+  }
+  return [...byType.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([type, value]) => ({
+      type,
+      name: UTILITY_LABELS[type as UtilityType] || type,
+      value: Math.round(value * 100) / 100,
+      color: UTILITY_COLORS[type] || UTILITY_COLORS.other,
+    }));
+}
+
+export function getMoMComparison(data: MonthlyBill[]) {
+  const months = [...new Set(data.map(b => b.month))].sort();
+  if (months.length < 2) return [];
+  const currentMonth = months[months.length - 1];
+  const previousMonth = months[months.length - 2];
+  const utilities = [...new Set(data.map(b => b.utility_type))];
+
+  return utilities.map(ut => {
+    const current = data.filter(b => b.month === currentMonth && b.utility_type === ut).reduce((s, b) => s + b.amount, 0);
+    const previous = data.filter(b => b.month === previousMonth && b.utility_type === ut).reduce((s, b) => s + b.amount, 0);
+    const change = previous > 0 ? Math.round(((current - previous) / previous) * 100) : 0;
+    return { type: ut, utility: UTILITY_LABELS[ut] || ut, current: Math.round(current), previous: Math.round(previous), change };
+  }).filter(row => row.current > 0 || row.previous > 0);
+}
+
+export function getPropertyTable(data: MonthlyBill[]) {
+  const months = [...new Set(data.map(b => b.month))].sort();
+  const properties = [...new Set(data.map(b => b.property_id))];
+  const currentMonth = months[months.length - 1];
+
+  return properties.map(pid => {
+    const propData = data.filter(b => b.property_id === pid);
+    const name = propData[0]?.property_name || pid;
+    const total = propData.reduce((s, b) => s + b.amount, 0);
+    const avgMonthly = Math.round((total / months.length) * 100) / 100;
+    const highest = Math.round(Math.max(...propData.map(b => b.amount)) * 100) / 100;
+    const currentTotal = Math.round(propData.filter(b => b.month === currentMonth).reduce((s, b) => s + b.amount, 0) * 100) / 100;
+    const recentMonths = months.slice(-3);
+    const olderMonths = months.slice(0, Math.max(months.length - 3, 0));
+    const recentAvg = propData.filter(b => recentMonths.includes(b.month)).reduce((s, b) => s + b.amount, 0) / Math.max(recentMonths.length, 1);
+    const olderAvg = olderMonths.length > 0 ? propData.filter(b => olderMonths.includes(b.month)).reduce((s, b) => s + b.amount, 0) / olderMonths.length : recentAvg;
+    const trendPct = olderAvg > 0 ? Math.round(((recentAvg - olderAvg) / olderAvg) * 100) : 0;
+    return { property_id: pid, property_name: name, avgMonthly, highestBill: highest, currentMonth: currentTotal, trendPct };
+  });
+}
+
+// ============================================================================
+// Inbox / Bill Parsing Types
+// ============================================================================
+
+export interface ParsedBill {
+  provider_name: string;
+  utility_type: string;
+  amount: number;
+  due_date: string | null;
+  billing_period_start: string | null;
+  billing_period_end: string | null;
+  account_number: string | null;
+  service_address: string | null;
+  confidence: number;
+  raw_extraction?: unknown;
+}
+
+export interface MatchResult {
+  property_id: string | null;
+  utility_account_id: string | null;
+  match_type: 'exact_mapping' | 'address' | 'account_number' | 'none';
+  confidence: number;
+  candidates: Array<{ property_id: string; score: number; reason: string }>;
+}
+
+export interface InboxItem {
+  id: string;
+  sender_email: string;
+  subject: string;
+  body_preview: string;
+  received_at: string;
+  status: 'pending_review' | 'confirmed' | 'rejected';
+  parsed: ParsedBill;
+  match: MatchResult;
+}
+
+// ============================================================================
+// Revenue Types
+// ============================================================================
+
+export type RevenueSource = 'airbnb' | 'vrbo' | 'booking_com' | 'direct' | 'other';
+
+export interface RevenueEntry {
+  id: string;
+  user_id: string;
+  property_id: string;
+  platform: RevenueSource;
+  description: string | null;
+  guest_name: string | null;
+  amount: number;
+  payout_amount: number;
+  platform_fee: number;
+  check_in: string;
+  check_out: string;
+  nights: number;
+  payout_date: string;
+  confirmation_code: string | null;
+  created_at: string;
+  source: 'manual' | 'csv_import' | 'api';
+  // Aliases for backward compatibility
+  date?: string;
+}
+
+// ============================================================================
+// Benchmarking Types
+// ============================================================================
+
+export interface UtilityMetric {
+  monthly_avg: number;
+  trend: 'up' | 'down' | 'stable';
+  trend_percent: number;
+  rank: number;
+  vs_portfolio_avg: number;
+}
+
+export interface PropertyBenchmark {
+  property_id: string;
+  property_name: string;
+  metrics: {
+    total_monthly_avg: number;
+    total_annual: number;
+    by_utility: Record<string, UtilityMetric>;
+  };
+}
+
+export interface BenchmarkInsight {
+  id: string;
+  type: 'outlier' | 'savings_opportunity' | 'efficiency_leader' | 'trending_up';
+  message: string;
+  property_name: string;
+  utility_type?: string;
+  potential_savings?: number;
+  severity: 'info' | 'warning' | 'opportunity';
+}
+
+export interface PortfolioSummary {
+  total_monthly_avg: number;
+  most_efficient: { property_name: string; monthly_avg: number };
+  least_efficient: { property_name: string; monthly_avg: number };
+  biggest_savings: { property_name: string; utility_type: string; annual_savings: number };
+}
+
+// ============================================================================
+// Reports Types
+// ============================================================================
+
+export interface PropertySummary {
+  property: Property;
+  totalSpend: number;
+  topCategory: string;
+  topCategoryAmount: number;
+  momChange: number;
+  momDirection: 'up' | 'down' | 'flat';
+}
+
+export interface ReportInsight {
+  type: 'positive' | 'warning' | 'negative';
+  message: string;
+}
+
+export interface ReportAnomaly {
+  propertyName: string;
+  category: string;
+  message: string;
+  severity: 'low' | 'medium' | 'high';
+}
+
+export interface MonthlyReportData {
+  month: string;
+  totalSpend: number;
+  momChange: number;
+  momDirection: 'up' | 'down' | 'flat';
+  propertySummaries: PropertySummary[];
+  insights: ReportInsight[];
+  anomalies: ReportAnomaly[];
+  taxImpact?: { message: string };
+  projectedAnnualSpend: number;
+  lastYearAnnualSpend: number;
+}
+
+// Types only - no demo data. Use useDashboardData() hook to fetch real data.

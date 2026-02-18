@@ -1,5 +1,4 @@
-import type { ParsedBill, MatchResult } from "@/lib/demo-inbox";
-import { DEMO_PROPERTIES, DEMO_UTILITY_ACCOUNTS } from "@/lib/types";
+import type { ParsedBill, MatchResult, Property, UtilityAccount } from "@/lib/types";
 
 // Simple string similarity (Dice coefficient)
 function similarity(a: string, b: string): number {
@@ -27,20 +26,17 @@ function similarity(a: string, b: string): number {
   return (2 * matches) / (sa.length - 1 + sb.length - 1);
 }
 
-// Demo bill mappings (sender_email → property_id)
-const DEMO_MAPPINGS: Record<string, string> = {
-  "statements@landlord.com": "1",
-};
-
 export function matchBillToProperty(
   parsed: ParsedBill,
-  senderEmail: string
+  senderEmail: string,
+  properties: Property[],
+  utilityAccounts: UtilityAccount[] = [],
+  billMappings: Record<string, string> = {}
 ): MatchResult {
   const candidates: Array<{ property_id: string; score: number; reason: string }> = [];
-  const properties = DEMO_PROPERTIES;
 
   // 1. Exact mapping lookup
-  const mappedProperty = DEMO_MAPPINGS[senderEmail];
+  const mappedProperty = billMappings[senderEmail];
   if (mappedProperty) {
     return {
       property_id: mappedProperty,
@@ -53,7 +49,7 @@ export function matchBillToProperty(
 
   // 2. Account number matching
   if (parsed.account_number) {
-    const matchedAccount = DEMO_UTILITY_ACCOUNTS.find(
+    const matchedAccount = utilityAccounts.find(
       (ua) => ua.account_number === parsed.account_number
     );
     if (matchedAccount) {

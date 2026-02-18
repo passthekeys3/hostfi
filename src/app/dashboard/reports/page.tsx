@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { UpgradeGate } from "@/components/upgrade-gate";
 import { 
   FileText, 
@@ -16,11 +16,93 @@ import {
   Calendar,
   ChevronDown,
 } from "lucide-react";
-import { DEMO_PROPERTIES, AVAILABLE_MONTHS } from "@/lib/data";
-import { isDemoMode } from "@/lib/data/data-provider";
+import { AVAILABLE_MONTHS } from "@/lib/data";
+import { useDashboardData } from "@/hooks/useDashboardData";
 import { getCategoryConfig, EXPENSE_CATEGORY_CONFIG } from "@/lib/expense-categories";
-import { getMonthlyReport, type MonthlyReportData } from "@/lib/demo-reports";
+import type { MonthlyReportData, PropertySummary, ReportInsight, ReportAnomaly, Expense, Property } from "@/lib/types";
 import { cn, formatCurrency } from "@/lib/utils";
+
+// Generate monthly report from real data
+function generateMonthlyReport(monthKey: string, expenses: Expense[], properties: Property[]): MonthlyReportData | null {
+  if (expenses.length === 0 || properties.length === 0) return null;
+  
+  const [year, month] = monthKey.split('-').map(Number);
+  const currentMonthExpenses = expenses.filter(e => {
+    const d = new Date(e.date);
+    return d.getFullYear() === year && d.getMonth() + 1 === month;
+  });
+  
+  const prevMonth = month === 1 ? 12 : month - 1;
+  const prevYear = month === 1 ? year - 1 : year;
+  const prevMonthExpenses = expenses.filter(e => {
+    const d = new Date(e.date);
+    return d.getFullYear() === prevYear && d.getMonth() + 1 === prevMonth;
+  });
+  
+  const totalSpend = currentMonthExpenses.reduce((s, e) => s + e.amount, 0);
+  const prevTotalSpend = prevMonthExpenses.reduce((s, e) => s + e.amount, 0);
+  const momChange = prevTotalSpend > 0 ? Math.round(((totalSpend - prevTotalSpend) / prevTotalSpend) * 100) : 0;
+  const momDirection: 'up' | 'down' | 'flat' = momChange > 5 ? 'up' : momChange < -5 ? 'down' : 'flat';
+  
+  const propertySummaries: PropertySummary[] = properties.map(prop => {
+    const propExpenses = currentMonthExpenses.filter(e => e.property_id === prop.id);
+    const prevPropExpenses = prevMonthExpenses.filter(e => e.property_id === prop.id);
+    const propTotal = propExpenses.reduce((s, e) => s + e.amount, 0);
+    const prevPropTotal = prevPropExpenses.reduce((s, e) => s + e.amount, 0);
+    const propMomChange = prevPropTotal > 0 ? Math.round(((propTotal - prevPropTotal) / prevPropTotal) * 100) : 0;
+    
+    // Get top category
+    const byCategory: Record<string, number> = {};
+    propExpenses.forEach(e => { byCategory[e.category] = (byCategory[e.category] || 0) + e.amount; });
+    const topCat = Object.entries(byCategory).sort((a, b) => b[1] - a[1])[0];
+    
+    return {
+      property: prop,
+      totalSpend: propTotal,
+      topCategory: topCat?.[0] || 'none',
+      topCategoryAmount: topCat?.[1] || 0,
+      momChange: Math.abs(propMomChange),
+      momDirection: (propMomChange > 5 ? 'up' : propMomChange < -5 ? 'down' : 'flat') as 'up' | 'down' | 'flat',
+    };
+  }).filter(s => s.totalSpend > 0);
+  
+  const insights: ReportInsight[] = [];
+  if (momDirection === 'down') {
+    insights.push({ type: 'positive', message: `Total spending decreased ${Math.abs(momChange)}% from last month.` });
+  } else if (momDirection === 'up') {
+    insights.push({ type: 'warning', message: `Total spending increased ${momChange}% from last month.` });
+  }
+  
+  const anomalies: ReportAnomaly[] = [];
+  propertySummaries.forEach(s => {
+    if (s.momDirection === 'up' && s.momChange > 30) {
+      anomalies.push({
+        propertyName: s.property.name,
+        category: s.topCategory,
+        message: `Spending spike of ${s.momChange}% detected`,
+        severity: s.momChange > 50 ? 'high' : 'medium',
+      });
+    }
+  });
+  
+  const projectedAnnualSpend = totalSpend * 12;
+  const ytdExpenses = expenses.filter(e => new Date(e.date).getFullYear() === year);
+  const lastYearAnnualSpend = ytdExpenses.reduce((s, e) => s + e.amount, 0);
+  
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  
+  return {
+    month: `${monthNames[month - 1]} ${year}`,
+    totalSpend,
+    momChange: Math.abs(momChange),
+    momDirection,
+    propertySummaries,
+    insights,
+    anomalies,
+    projectedAnnualSpend,
+    lastYearAnnualSpend,
+  };
+}
 
 function TrendIndicator({ change, direction }: { change: number; direction: 'up' | 'down' | 'flat' }) {
   if (direction === 'flat') {
@@ -69,10 +151,30 @@ function InsightCard({ insight }: { insight: { type: 'positive' | 'warning' | 'n
 }
 
 export default function ReportsPage() {
-  const demo = isDemoMode();
-  const months = demo ? AVAILABLE_MONTHS : [];
+  const { properties, expenses, loading } = useDashboardData();
+  
+  // Generate available months from actual expense data
+  const months = useMemo(() => {
+    if (expenses.length === 0) return AVAILABLE_MONTHS;
+    const monthSet = new Set<string>();
+    expenses.forEach(e => {
+      const date = new Date(e.date);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      monthSet.add(key);
+    });
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    return [...monthSet].sort().reverse().slice(0, 12).map(key => {
+      const [y, m] = key.split('-').map(Number);
+      return { key, label: `${monthNames[m - 1]} ${y}` };
+    });
+  }, [expenses]);
+  
   const [selectedMonth, setSelectedMonth] = useState(months[0]?.key || '');
-  const report = demo ? getMonthlyReport(selectedMonth) : null;
+  
+  const report = useMemo(() => {
+    if (!selectedMonth) return null;
+    return generateMonthlyReport(selectedMonth, expenses, properties);
+  }, [selectedMonth, expenses, properties]);
 
   const handlePrint = () => {
     window.print();
@@ -80,10 +182,6 @@ export default function ReportsPage() {
 
   const [emailSent, setEmailSent] = useState(false);
   const handleEmailReport = async () => {
-    if (demo) {
-      alert('Email reports are available for signed-in users.');
-      return;
-    }
     setEmailSent(true);
     try {
       const res = await fetch('/api/email/report', {

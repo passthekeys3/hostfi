@@ -2,9 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { DEMO_ALERTS, DEMO_ANOMALIES } from "@/lib/data";
-import { isDemoMode } from "@/lib/data/data-provider";
-import { ALERT_TYPE_CONFIG, filterAlerts, type AlertFilter } from "@/lib/demo-alerts";
+import { ALERT_TYPE_CONFIG, filterAlerts, type AlertFilter, type Alert } from "@/lib/alerts";
 import { ANOMALY_TYPE_CONFIG, SEVERITY_CONFIG, type AnomalyResult } from "@/lib/anomaly-detection";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { createClient } from "@/lib/supabase/client";
@@ -52,8 +50,8 @@ export default function AlertsPage() {
 
 function AlertsPageContent() {
   const searchParams = useSearchParams();
-  const { anomalies: dashboardAnomalies, isDemo, refresh } = useDashboardData();
-  const [alerts, setAlerts] = useState(isDemo ? DEMO_ALERTS : []);
+  const { anomalies: dashboardAnomalies, refresh } = useDashboardData();
+  const [alerts, setAlerts] = useState<Alert[]>([]);
   const [anomalies, setAnomalies] = useState<AnomalyResult[]>([]);
   const initialFilter = (searchParams.get('filter') as ExtendedFilter) || 'all';
   const [filter, setFilter] = useState<ExtendedFilter>(
@@ -70,12 +68,8 @@ function AlertsPageContent() {
 
   // Sync anomalies from dashboard data
   useEffect(() => {
-    if (isDemo) {
-      setAnomalies(DEMO_ANOMALIES);
-    } else {
-      setAnomalies(dashboardAnomalies);
-    }
-  }, [dashboardAnomalies, isDemo]);
+    setAnomalies(dashboardAnomalies);
+  }, [dashboardAnomalies]);
 
   const filtered = filter === 'anomalies' ? [] : filterAlerts(alerts, filter === 'all' ? 'all' : filter as AlertFilter);
   const filteredAnomalies = filter === 'anomalies' || filter === 'all' ? anomalies : [];
@@ -95,22 +89,20 @@ function AlertsPageContent() {
     // Update local state immediately
     setAnomalies(prev => prev.map(a => a.id === id ? { ...a, status } : a));
     
-    // Persist to database if not in demo mode
-    if (!isDemo) {
-      try {
-        const supabase = createClient();
-        if (supabase) {
-          await supabase
-            .from('anomaly_logs')
-            .update({ 
-              status, 
-              resolved_at: status === 'resolved' ? new Date().toISOString() : null 
-            })
-            .eq('id', id);
-        }
-      } catch (err) {
-        console.error('Failed to update anomaly status:', err);
+    // Persist to database
+    try {
+      const supabase = createClient();
+      if (supabase) {
+        await supabase
+          .from('anomaly_logs')
+          .update({ 
+            status, 
+            resolved_at: status === 'resolved' ? new Date().toISOString() : null 
+          })
+          .eq('id', id);
       }
+    } catch (err) {
+      console.error('Failed to update anomaly status:', err);
     }
   }
   
@@ -118,19 +110,17 @@ function AlertsPageContent() {
     // Update local state immediately
     setAnomalies(prev => prev.filter(a => a.id !== id));
     
-    // Persist to database if not in demo mode
-    if (!isDemo) {
-      try {
-        const supabase = createClient();
-        if (supabase) {
-          await supabase
-            .from('anomaly_logs')
-            .update({ status: 'dismissed' })
-            .eq('id', id);
-        }
-      } catch (err) {
-        console.error('Failed to dismiss anomaly:', err);
+    // Persist to database
+    try {
+      const supabase = createClient();
+      if (supabase) {
+        await supabase
+          .from('anomaly_logs')
+          .update({ status: 'dismissed' })
+          .eq('id', id);
       }
+    } catch (err) {
+      console.error('Failed to dismiss anomaly:', err);
     }
   }
 

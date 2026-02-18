@@ -30,7 +30,6 @@ export default function LoginPage() {
       router.push("/dashboard");
       return;
     }
-    localStorage.removeItem('hostfi_demo_mode');
     localStorage.removeItem('hostfi_onboarding_complete');
     sessionStorage.setItem('hostfi_tab_alive', '1');
     // Apply remember-me preference for Google sign-in too
@@ -53,11 +52,6 @@ export default function LoginPage() {
       setError(error.message);
       setGoogleLoading(false);
     }
-  };
-
-  const handleDemoMode = () => {
-    localStorage.setItem('hostfi_demo_mode', 'true');
-    router.push("/dashboard");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -92,7 +86,6 @@ export default function LoginPage() {
           body: JSON.stringify({ type: 'welcome', userId: result.data.user.id }),
         }).catch(() => {});
       }
-      localStorage.removeItem('hostfi_demo_mode');
       localStorage.removeItem('hostfi_onboarding_complete');
       // Set tab-alive marker for session-only mode detection
       sessionStorage.setItem('hostfi_tab_alive', '1');
@@ -119,7 +112,7 @@ export default function LoginPage() {
               {mode === "login" ? "Welcome Back" : "Create Your Account"}
             </h1>
             <p className="text-sm text-gray-500 mt-2">
-              {mode === "login" ? "Sign in to manage your properties" : "Start tracking your property expenses"}
+              {mode === "login" ? "Sign in to manage your properties" : "Start tracking your property expenses — it's free"}
             </p>
           </div>
 
@@ -200,19 +193,9 @@ export default function LoginPage() {
           <p className="text-center text-sm text-gray-500">
             {mode === "login" ? "Don't have an account? " : "Already have an account? "}
             <button onClick={() => setMode(mode === "login" ? "signup" : "login")} className="text-teal-600 hover:text-teal-700 font-medium transition-colors">
-              {mode === "login" ? "Sign Up" : "Sign In"}
+              {mode === "login" ? "Sign Up Free" : "Sign In"}
             </button>
           </p>
-
-          {/* Demo Mode */}
-          <div className="pt-2 border-t border-gray-100">
-            <button
-              onClick={handleDemoMode}
-              className="w-full py-3 text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              Try Demo Mode →
-            </button>
-          </div>
         </div>
 
         {/* Footer */}

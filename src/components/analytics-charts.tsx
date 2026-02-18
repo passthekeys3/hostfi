@@ -6,10 +6,10 @@ import {
   BarChart, Bar, PieChart, Pie, Cell, Legend,
 } from "recharts";
 import {
-  type MonthlyBill,
+  type MonthlyBill, type UtilityType,
   UTILITY_LABELS, ALL_EXPENSE_TYPES,
   getMonthlyTotals, getUtilityBreakdown, getMoMComparison, getPropertyTable,
-} from "@/lib/demo-analytics";
+} from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const PROPERTY_COLORS = ['#14B8A6', '#3B82F6', '#F59E0B', '#8B5CF6', '#EC4899'];

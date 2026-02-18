@@ -20,7 +20,7 @@ interface Property {
 interface Expense {
   id: string;
   date: string;
-  vendor: string | null;
+  vendor?: string | null;
   amount: number;
   category: string;
   description?: string | null;

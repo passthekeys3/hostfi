@@ -6,26 +6,19 @@ import { cn } from "@/lib/utils";
 import { LayoutDashboard, Building2, Receipt, Settings, Menu, X, Inbox, BarChart3, Bell, GitCompareArrows, FileText, Calculator, Upload, MessageSquare, DollarSign, Link2, CreditCard, LogOut, Lock, Handshake } from "lucide-react";
 import { usePlan } from "@/hooks/usePlan";
 import { canAccessFeature } from "@/lib/feature-gates";
-import { useState, useEffect, useMemo, useRef } from "react";
-import { DEMO_ALERTS } from "@/lib/data";
-import { DEMO_INBOX_ITEMS } from "@/lib/demo-inbox";
-import { isDemoMode } from "@/lib/data/data-provider";
+import { useState, useEffect, useRef } from "react";
 
-function getMainNav(demo: boolean) {
-  const inboxCount = demo ? DEMO_INBOX_ITEMS.filter(i => i.status === "pending_review").length : 0;
-  const unreadAlertCount = demo ? DEMO_ALERTS.filter(a => !a.read).length : 0;
-  return [
-    { href: "/dashboard", label: "Overview", icon: LayoutDashboard, badge: 0 },
-    { href: "/dashboard/inbox", label: "Inbox", icon: Inbox, badge: inboxCount },
-    { href: "/dashboard/properties", label: "Properties", icon: Building2, badge: 0 },
-    { href: "/dashboard/expenses", label: "Expenses", icon: Receipt, badge: 0 },
-    { href: "/dashboard/revenue", label: "Revenue", icon: DollarSign, badge: 0 },
-    { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3, badge: 0 },
-    { href: "/dashboard/tax", label: "Tax Prep", icon: Calculator, badge: 0, feature: 'tax-prep' },
-    { href: "/dashboard/ask", label: "Ask AI", icon: MessageSquare, badge: 0, feature: 'ask-ai' },
-    { href: "/dashboard/alerts", label: "Alerts", icon: Bell, badge: unreadAlertCount, badgeColor: 'red' as const },
-  ];
-}
+const mainNav = [
+  { href: "/dashboard", label: "Overview", icon: LayoutDashboard, badge: 0 },
+  { href: "/dashboard/inbox", label: "Inbox", icon: Inbox, badge: 0 },
+  { href: "/dashboard/properties", label: "Properties", icon: Building2, badge: 0 },
+  { href: "/dashboard/expenses", label: "Expenses", icon: Receipt, badge: 0 },
+  { href: "/dashboard/revenue", label: "Revenue", icon: DollarSign, badge: 0 },
+  { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3, badge: 0 },
+  { href: "/dashboard/tax", label: "Tax Prep", icon: Calculator, badge: 0, feature: 'tax-prep' },
+  { href: "/dashboard/ask", label: "Ask AI", icon: MessageSquare, badge: 0, feature: 'ask-ai' },
+  { href: "/dashboard/alerts", label: "Alerts", icon: Bell, badge: 0, badgeColor: 'red' as const },
+];
 
 const bottomNav = [
   { href: "/dashboard/reports", label: "Reports", icon: FileText, badge: 0, feature: 'reports' },
@@ -37,15 +30,11 @@ const bottomNav = [
   { href: "/dashboard/settings", label: "Settings", icon: Settings, badge: 0 },
 ];
 
-function SidebarUser({ demo }: { demo: boolean }) {
+function SidebarUser() {
   const [user, setUser] = useState<{ email?: string; name?: string; plan?: string } | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    if (demo) {
-      setUser({ email: 'demo@hostfi.ai', name: 'Demo User', plan: 'Demo' });
-      return;
-    }
     (async () => {
       try {
         const { createClient } = await import("@/lib/supabase/client");
@@ -63,14 +52,9 @@ function SidebarUser({ demo }: { demo: boolean }) {
         console.error("Failed to load user profile:", error);
       }
     })();
-  }, [demo]);
+  }, []);
 
   const handleLogout = async () => {
-    if (demo) {
-      localStorage.removeItem('hostfi_demo_mode');
-      router.push('/login');
-      return;
-    }
     try {
       const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
@@ -92,7 +76,6 @@ function SidebarUser({ demo }: { demo: boolean }) {
           <p className="text-xs font-medium text-gray-900 truncate">{user?.name || 'Loading...'}</p>
           <p className="text-[10px] text-gray-400">{planLabel}</p>
         </div>
-        {demo && <span className="text-[9px] font-medium text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">Demo</span>}
         <button
           onClick={handleLogout}
           aria-label="Log out"
@@ -108,8 +91,6 @@ function SidebarUser({ demo }: { demo: boolean }) {
 export function Sidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const demo = isDemoMode();
-  const mainNav = getMainNav(demo);
   const { plan } = usePlan();
 
   // Close sidebar on route change (mobile)
@@ -222,7 +203,7 @@ export function Sidebar() {
           </ul>
         </nav>
         
-        <SidebarUser demo={demo} />
+        <SidebarUser />
       </aside>
     </>
   );

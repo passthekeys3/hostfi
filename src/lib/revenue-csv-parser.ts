@@ -1,5 +1,4 @@
-import type { RevenueEntry, RevenueSource } from './demo-revenue';
-import { DEMO_PROPERTIES } from './types';
+import type { RevenueEntry, RevenueSource, Property } from './types';
 
 interface ParsedRow {
   [key: string]: string;
@@ -31,10 +30,10 @@ function detectPlatform(headers: string[]): RevenueSource {
   return 'other';
 }
 
-function matchProperty(row: ParsedRow): string | null {
+function matchProperty(row: ParsedRow, properties: Property[]): string | null {
   const listing = (row['listing'] || row['listing name'] || row['property'] || row['property name'] || '').toLowerCase();
 
-  for (const prop of DEMO_PROPERTIES) {
+  for (const prop of properties) {
     const name = prop.name.toLowerCase();
     const city = prop.city.toLowerCase();
     if (listing.includes(name) || listing.includes(city) || name.includes(listing)) {
@@ -69,7 +68,7 @@ export interface CSVParseResult {
   unmatchedCount: number;
 }
 
-export function parseRevenueCSV(text: string): CSVParseResult {
+export function parseRevenueCSV(text: string, properties: Property[] = []): CSVParseResult {
   const rows = parseCSV(text);
   const errors: string[] = [];
 
@@ -85,7 +84,7 @@ export function parseRevenueCSV(text: string): CSVParseResult {
     const amount = parseAmount(row['amount'] || row['gross earnings'] || row['total'] || row['gross amount'] || '0');
     const payout = parseAmount(row['host payout'] || row['payout'] || row['net amount'] || row['net earnings'] || '0');
     const fee = parseAmount(row['host service fee'] || row['service fee'] || row['platform fee'] || '0');
-    const propertyId = matchProperty(row);
+    const propertyId = matchProperty(row, properties);
 
     if (!propertyId) unmatchedCount++;
 

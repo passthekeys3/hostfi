@@ -1,5 +1,4 @@
 import type { Expense } from './types';
-import { DEMO_EXPENSES } from './demo-expenses';
 
 export interface DuplicateGroup {
   id: string;
@@ -87,9 +86,4 @@ export function findDuplicates(expenses: Expense[]): DuplicateGroup[] {
   }
 
   return groups;
-}
-
-// Pre-computed duplicates for demo mode
-export function getDemoDuplicates(): DuplicateGroup[] {
-  return findDuplicates(DEMO_EXPENSES);
 }

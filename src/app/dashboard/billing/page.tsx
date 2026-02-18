@@ -113,12 +113,6 @@ export default function BillingPage() {
   useEffect(() => {
     (async () => {
       try {
-        const { isDemoMode } = await import("@/lib/data/data-provider");
-        if (isDemoMode()) {
-          setUserPlan({ plan: "business", subscriptionStatus: "active", stripeConfigured: true });
-          setLoading(false);
-          return;
-        }
         const { createClient } = await import("@/lib/supabase/client");
         const supabase = createClient();
         if (!supabase) { setLoading(false); return; }

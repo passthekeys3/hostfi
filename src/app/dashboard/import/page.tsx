@@ -5,8 +5,6 @@ import Link from "next/link";
 import { Upload, FileText, Check, AlertCircle, ChevronRight, Download, ArrowLeft, Info, Table, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/utils";
-import { DEMO_PROPERTIES } from "@/lib/data";
-import { isDemoMode } from "@/lib/data/data-provider";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { EXPENSE_CATEGORY_CONFIG, type ExpenseCategory } from "@/lib/expense-categories";
 import {
@@ -48,9 +46,7 @@ export default function ImportPage() {
   const [importError, setImportError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const demo = isDemoMode();
-  const { properties: realProperties } = useDashboardData();
-  const allProperties = demo ? DEMO_PROPERTIES : realProperties;
+  const { properties: allProperties } = useDashboardData();
   const propertyNames = allProperties.map(p => p.name);
 
   const handleFile = useCallback((file: File) => {

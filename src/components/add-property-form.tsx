@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Info, AlertCircle, Lock } from "lucide-react";
-import { isDemoMode } from "@/lib/data/data-provider";
 import { AddressAutocomplete, type AddressData } from "@/components/address-autocomplete";
 import { PROPERTY_LIMITS, type Plan } from "@/lib/feature-gates";
 
@@ -20,7 +19,6 @@ export function AddPropertyForm() {
   const [error, setError] = useState<string | null>(null);
   const [atLimit, setAtLimit] = useState(false);
   const [limitInfo, setLimitInfo] = useState<{ count: number; max: number; plan: string } | null>(null);
-  const demo = isDemoMode();
 
   const cityRef = useRef<HTMLInputElement>(null);
   const stateRef = useRef<HTMLInputElement>(null);
@@ -28,7 +26,6 @@ export function AddPropertyForm() {
 
   // Check property limit
   useEffect(() => {
-    if (demo) return;
     (async () => {
       try {
         const { createClient } = await import("@/lib/supabase/client");
@@ -47,7 +44,7 @@ export function AddPropertyForm() {
         console.error("Failed to check property limit:", error);
       }
     })();
-  }, [demo]);
+  }, []);
 
   const handleAddressSelect = (address: AddressData) => {
     if (cityRef.current) cityRef.current.value = address.city;
@@ -59,11 +56,6 @@ export function AddPropertyForm() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
-    if (demo) {
-      setTimeout(() => { router.push("/dashboard/properties"); }, 500);
-      return;
-    }
 
     try {
       const form = new FormData(e.currentTarget);
@@ -110,11 +102,6 @@ export function AddPropertyForm() {
 
   return (
     <>
-      {demo && (
-        <div className="max-w-xl mb-4 px-4 py-3 bg-amber-500/5 border border-amber-500/15 rounded-xl text-sm text-muted-foreground flex items-center gap-2">
-          <Info className="w-4 h-4 shrink-0" /> Demo Mode — Data won&apos;t be saved
-        </div>
-      )}
       {atLimit && limitInfo && (
         <div className="max-w-xl mb-4 px-4 py-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800 space-y-2">
           <div className="flex items-center gap-2 font-semibold">

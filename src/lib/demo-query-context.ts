@@ -1,7 +1,6 @@
-import { DEMO_EXPENSES, type DemoExpense } from './demo-expenses';
-import { DEMO_PROPERTIES } from './types';
+import type { Expense, Property } from './types';
 
-function summarizeExpenses(expenses: DemoExpense[]): string {
+function summarizeExpenses(expenses: Expense[], properties: Property[]): string {
   const totalSpend = expenses.reduce((sum, e) => sum + e.amount, 0);
   const byCategory: Record<string, { total: number; count: number }> = {};
   const byProperty: Record<string, { total: number; count: number; name: string }> = {};
@@ -16,7 +15,7 @@ function summarizeExpenses(expenses: DemoExpense[]): string {
     byCategory[e.category].count++;
 
     // By property
-    const prop = DEMO_PROPERTIES.find(p => p.id === e.property_id);
+    const prop = properties.find(p => p.id === e.property_id);
     const propName = prop?.name || `Property ${e.property_id}`;
     if (!byProperty[e.property_id]) byProperty[e.property_id] = { total: 0, count: 0, name: propName };
     byProperty[e.property_id].total += e.amount;
@@ -38,7 +37,7 @@ function summarizeExpenses(expenses: DemoExpense[]): string {
 
   return `
 PROPERTY PORTFOLIO:
-${DEMO_PROPERTIES.map(p => `- ${p.name} (ID: ${p.id}): ${p.property_type.toUpperCase()}, ${p.bedrooms}bd/${p.bathrooms}ba, ${p.city}, ${p.state} ${p.zip}`).join('\n')}
+${properties.map(p => `- ${p.name} (ID: ${p.id}): ${p.property_type.toUpperCase()}, ${p.bedrooms}bd/${p.bathrooms}ba, ${p.city}, ${p.state} ${p.zip}`).join('\n')}
 
 EXPENSE SUMMARY (${expenses.length} total expenses, $${totalSpend.toLocaleString('en-US', { minimumFractionDigits: 2 })} total):
 
@@ -59,14 +58,14 @@ ${Object.entries(byMonth).sort().map(([month, total]) => `- ${month}: $${total.t
 
 RAW EXPENSE DATA:
 ${expenses.map(e => {
-  const prop = DEMO_PROPERTIES.find(p => p.id === e.property_id);
+  const prop = properties.find(p => p.id === e.property_id);
   return `- ${e.date} | ${prop?.name || e.property_id} | ${e.category} | ${e.description} | $${e.amount} | ${e.vendor || 'N/A'} | ${e.status} | ${e.frequency}`;
 }).join('\n')}
 `.trim();
 }
 
-export function buildQueryContext(): string {
-  return summarizeExpenses(DEMO_EXPENSES);
+export function buildQueryContext(expenses: Expense[], properties: Property[]): string {
+  return summarizeExpenses(expenses, properties);
 }
 
 export const EXAMPLE_QUESTIONS = [

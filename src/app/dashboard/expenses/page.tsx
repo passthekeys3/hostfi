@@ -6,7 +6,6 @@ import { formatCurrency, formatDate, cn, getStatusColor } from "@/lib/utils";
 import { Receipt, Plus, X, Loader2, Search, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { isDemoMode } from "@/lib/data/data-provider";
 
 interface EditState {
   description: string;
@@ -44,8 +43,6 @@ export default function ExpensesPage() {
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  
-  const demo = isDemoMode();
 
   // Reset to page 1 when filters/search change
   useEffect(() => {
@@ -73,7 +70,7 @@ export default function ExpensesPage() {
   };
 
   const saveEdit = useCallback(async () => {
-    if (!editState || !editingId || demo) return;
+    if (!editState || !editingId) return;
     setSaving(true);
     try {
       const { createClient } = await import("@/lib/supabase/client");
@@ -100,10 +97,10 @@ export default function ExpensesPage() {
     } finally {
       setSaving(false);
     }
-  }, [editState, editingId, demo, refresh]);
+  }, [editState, editingId, refresh]);
 
   const deleteExpense = useCallback(async () => {
-    if (!editingId || demo) return;
+    if (!editingId) return;
     if (!confirm('Delete this expense? This cannot be undone.')) return;
     setSaving(true);
     try {
@@ -119,7 +116,7 @@ export default function ExpensesPage() {
     } finally {
       setSaving(false);
     }
-  }, [editingId, demo, refresh]);
+  }, [editingId, refresh]);
 
   // Handle column sort click
   const handleSort = (column: SortColumn) => {

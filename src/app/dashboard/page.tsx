@@ -3,10 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { StatCard } from "@/components/stat-card";
-import { getSourceIcon } from "@/lib/demo-expenses";
 import { getCategoryConfig, getCategoryColorClasses } from "@/lib/expense-categories";
 import { formatCurrency, formatDate, cn, getStatusColor } from "@/lib/utils";
-import { DollarSign, Building2, Receipt, Plus, Search, StickyNote, CheckCircle2, Circle, ArrowRight, Sparkles, Link2 } from "lucide-react";
+import { DollarSign, Building2, Receipt, Plus, Search, CheckCircle2, ArrowRight, Sparkles, Link2 } from "lucide-react";
 import { AnomalySummary } from "@/components/anomaly-summary";
 import { OnboardingGate } from "@/components/onboarding-gate";
 import { DuplicateAlert } from "@/components/duplicate-alert";
@@ -142,7 +141,7 @@ function WelcomeChecklist({
 }
 
 export default function DashboardPage() {
-  const { properties, expenses, anomalies, isDemo, loading } = useDashboardData();
+  const { properties, expenses, anomalies, loading } = useDashboardData();
   const [welcomeDismissed, setWelcomeDismissed] = useState(false);
 
   // Check localStorage for dismissed state
@@ -177,8 +176,8 @@ export default function DashboardPage() {
     );
   }
 
-  // Show welcome checklist for new real users (not demo, has 0 properties OR 0 expenses)
-  const isNewUser = !isDemo && (properties.length === 0 || expenses.length === 0);
+  // Show welcome checklist for new users (has 0 properties OR 0 expenses)
+  const isNewUser = properties.length === 0 || expenses.length === 0;
   const showWelcome = isNewUser && !welcomeDismissed;
 
   const currentMonthExpenses = currentMonthStr ? expenses.filter((e) => e.date?.startsWith(currentMonthStr)) : [];
@@ -241,7 +240,6 @@ export default function DashboardPage() {
           icon={DollarSign}
           accent="teal"
           href="/dashboard/analytics"
-          trend={isDemo ? { value: "12% from last month", positive: false } : undefined}
         />
         <StatCard
           title="Properties"
@@ -286,8 +284,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Desktop table */}
-        <div className="hidden lg:block bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm"
-        >
+        <div className="hidden lg:block bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
@@ -322,11 +319,8 @@ export default function DashboardPage() {
                         <div>
                           <p className="font-medium text-sm text-foreground flex items-center gap-1.5">
                             {expense.description}
-                            {("demo_notes" in expense && expense.demo_notes) && (
-                              <StickyNote className="w-3 h-3 text-amber-500" />
-                            )}
                           </p>
-                          <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">{catConfig.label}{expense.source ? <> · {(() => { const SourceIcon = getSourceIcon(expense.source); return <SourceIcon className="w-3 h-3 inline" />; })()}</> : null}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">{catConfig.label}</p>
                         </div>
                       </div>
                     </td>
@@ -375,9 +369,6 @@ export default function DashboardPage() {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate flex items-center gap-1.5">
                       {expense.description}
-                      {("demo_notes" in expense && expense.demo_notes) && (
-                        <StickyNote className="w-3 h-3 text-amber-500 shrink-0" />
-                      )}
                     </p>
                     <p className="text-xs text-muted-foreground truncate mt-0.5">{property?.name} · {formatDate(expense.date)}</p>
                   </div>
@@ -397,7 +388,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Empty state for Recent Expenses */}
-        {recentExpenses.length === 0 && !isDemo && (
+        {recentExpenses.length === 0 && (
           <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
             <Receipt className="w-8 h-8 text-gray-300 mx-auto mb-2" />
             <p className="text-gray-500 text-sm">No expenses yet</p>

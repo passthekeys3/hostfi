@@ -1,4 +1,4 @@
-import type { ParsedBill } from "@/lib/demo-inbox";
+import type { ParsedBill } from "@/lib/types";
 
 const SYSTEM_PROMPT = `You are a utility bill parser. Extract structured data from bill emails.
 

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Send, MessageSquare, Sparkles, Loader2, User, Bot, AlertCircle } from "lucide-react";
-import { EXAMPLE_QUESTIONS } from "@/lib/demo-query-context";
+import { EXAMPLE_QUESTIONS } from "@/lib/example-questions";
 import { UpgradeGate } from "@/components/upgrade-gate";
 
 interface Message {

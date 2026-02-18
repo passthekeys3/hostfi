@@ -1,12 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { DEMO_INBOX_ITEMS, getPropertyName, type InboxItem } from "@/lib/demo-inbox";
-import { DEMO_PROPERTIES } from "@/lib/data";
-import { isDemoMode } from "@/lib/data/data-provider";
+import type { InboxItem } from "@/lib/types";
+import type { Property } from "@/lib/data/data-provider";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
-const _demoProperties = isDemoMode() ? DEMO_PROPERTIES : [];
+// Helper function to get property name from properties list
+function getPropertyName(propertyId: string | null, properties: Property[]): string {
+  if (!propertyId) return 'Unassigned';
+  const prop = properties.find(p => p.id === propertyId);
+  return prop?.name || 'Unknown Property';
+}
 import { formatCurrency } from "@/lib/utils";
 import {
   Flame, Droplets, Zap, Wifi, Trash2, Home, Shield, HelpCircle,
@@ -71,7 +75,7 @@ function MatchBadge({ type }: { type: string }) {
   );
 }
 
-function InboxCard({ item, onConfirm, onReject, onUpdate, properties }: { item: InboxItem; onConfirm: (propertyOverride?: string | null) => void; onReject: () => void; onUpdate: (updates: Partial<InboxItem['parsed']> & { property_id?: string | null }) => void; properties: { id: string; name: string }[] }) {
+function InboxCard({ item, onConfirm, onReject, onUpdate, properties, allProperties }: { item: InboxItem; onConfirm: (propertyOverride?: string | null) => void; onReject: () => void; onUpdate: (updates: Partial<InboxItem['parsed']> & { property_id?: string | null }) => void; properties: { id: string; name: string }[]; allProperties: Property[] }) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [assignedProperty, setAssignedProperty] = useState(item.match.property_id);
@@ -125,7 +129,7 @@ function InboxCard({ item, onConfirm, onReject, onUpdate, properties }: { item: 
               {item.match.match_type !== "none" ? (
                 <div className="flex items-center gap-1.5 text-xs">
                   <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-foreground font-medium">{getPropertyName(assignedProperty)}</span>
+                  <span className="text-foreground font-medium">{getPropertyName(assignedProperty, allProperties)}</span>
                   <MatchBadge type={item.match.match_type} />
                 </div>
               ) : (
@@ -324,15 +328,12 @@ function InboxCard({ item, onConfirm, onReject, onUpdate, properties }: { item: 
 }
 
 export default function InboxPage() {
-  const demo = isDemoMode();
-  const { properties: realProperties } = useDashboardData();
-  const allProperties = demo ? _demoProperties : realProperties;
-  const [items, setItems] = useState(demo ? DEMO_INBOX_ITEMS : []);
+  const { properties: allProperties } = useDashboardData();
+  const [items, setItems] = useState<InboxItem[]>([]);
 
   // Fetch real parsed emails
-  const [inboxLoading, setInboxLoading] = useState(!demo);
+  const [inboxLoading, setInboxLoading] = useState(true);
   useEffect(() => {
-    if (demo) return;
     (async () => {
       try {
         const { createClient } = await import("@/lib/supabase/client");
@@ -423,12 +424,11 @@ export default function InboxPage() {
       }
       setInboxLoading(false);
     })();
-  }, [demo]);
+  }, [allProperties]);
   const pendingItems = items.filter((i) => i.status === "pending_review");
   const processedItems = items.filter((i) => i.status !== "pending_review");
 
   const persistStatus = async (id: string, status: "approved" | "dismissed", item?: InboxItem, propertyId?: string | null) => {
-    if (demo) return;
     try {
       const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
@@ -511,7 +511,7 @@ export default function InboxPage() {
     }));
 
     // Persist property assignment to Supabase
-    if (!demo && updates.property_id !== undefined) {
+    if (updates.property_id !== undefined) {
       (async () => {
         try {
           const { createClient } = await import("@/lib/supabase/client");
@@ -556,6 +556,7 @@ export default function InboxPage() {
               key={item.id}
               item={item}
               properties={allProperties}
+              allProperties={allProperties}
               onConfirm={(propertyOverride) => handleConfirm(item.id, propertyOverride)}
               onReject={() => handleReject(item.id)}
               onUpdate={(updates) => handleUpdate(item.id, updates)}
@@ -596,19 +597,17 @@ export default function InboxPage() {
                   onClick={() => {
                     // Move back to pending so user can re-confirm
                     setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, status: "pending_review" as const } : i)));
-                    if (!demo) {
-                      (async () => {
-                        try {
-                          const { createClient } = await import("@/lib/supabase/client");
-                          const supabase = createClient();
-                          if (supabase) {
-                            await supabase.from("parsed_emails").update({ status: "pending" }).eq("id", item.id);
-                          }
-                        } catch (error) {
-                          console.error("Failed to reset item status:", error);
+                    (async () => {
+                      try {
+                        const { createClient } = await import("@/lib/supabase/client");
+                        const supabase = createClient();
+                        if (supabase) {
+                          await supabase.from("parsed_emails").update({ status: "pending" }).eq("id", item.id);
                         }
-                      })();
-                    }
+                      } catch (error) {
+                        console.error("Failed to reset item status:", error);
+                      }
+                    })();
                   }}
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors underline"
                 >

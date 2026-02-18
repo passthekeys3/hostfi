@@ -7,7 +7,7 @@ import { Plus, Building2 } from "lucide-react";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 export default function PropertiesPage() {
-  const { properties, expenses, isDemo, loading } = useDashboardData();
+  const { properties, expenses, loading } = useDashboardData();
   const [cmStr, setCmStr] = useState('');
   useEffect(() => {
     const n = new Date();

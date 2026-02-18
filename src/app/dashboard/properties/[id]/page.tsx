@@ -3,8 +3,16 @@
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getExpensesByCategory } from "@/lib/demo-expenses";
 import { EXPENSE_CATEGORY_CONFIG } from "@/lib/expense-categories";
+
+// Helper to group expenses by category
+function getExpensesByCategory(expenses: { category: string; amount: number }[]): Record<string, number> {
+  const byCategory: Record<string, number> = {};
+  for (const e of expenses) {
+    byCategory[e.category] = (byCategory[e.category] || 0) + e.amount;
+  }
+  return byCategory;
+}
 import { cn, getPropertyTypeLabel, formatCurrency } from "@/lib/utils";
 import { ArrowLeft, MapPin, Plus, Bed, Bath, Ruler, Building2, Landmark, Mail, TrendingUp, DollarSign, Calendar } from "lucide-react";
 import { PropertyExportBar } from "@/components/property-export-bar";
@@ -12,7 +20,7 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 
 export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { properties, expenses, revenue, isDemo, loading } = useDashboardData();
+  const { properties, expenses, revenue, loading } = useDashboardData();
   
   // Monthly spend data - computed client-side to avoid hydration mismatch
   const [monthlySpend, setMonthlySpend] = useState<{ months: string[]; data: number[]; max: number }>({ months: [], data: [], max: 1 });
