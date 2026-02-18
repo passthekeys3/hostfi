@@ -2,7 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { EXPENSE_CATEGORY_CONFIG, type ExpenseCategory } from '@/lib/expense-categories';
 import { authenticateRequest } from '@/lib/auth';
 import { createRateLimiter } from '@/lib/rate-limit';
+import { createClient } from '@supabase/supabase-js';
 import type { Expense } from '@/lib/types';
+
+function getServiceClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key);
+}
 
 const isRateLimited = createRateLimiter('expenses-import', 5, 60_000);
 
@@ -144,6 +152,31 @@ export async function POST(request: NextRequest) {
       result.expenses.push(newExpense);
       importedForDuplicateCheck.push(expense);
       result.imported++;
+    }
+
+    // Persist to Supabase
+    if (result.expenses.length > 0) {
+      const supabase = getServiceClient();
+      if (supabase) {
+        const rows = result.expenses.map(e => ({
+          user_id: e.user_id,
+          property_id: e.property_id || null,
+          category: e.category,
+          description: e.description,
+          vendor: e.vendor,
+          amount: e.amount,
+          date: e.date,
+          frequency: e.frequency,
+          source: 'csv_import',
+          status: e.status,
+          notes: e.notes,
+        }));
+        const { error } = await supabase.from('expenses').insert(rows);
+        if (error) {
+          console.error('Expense import DB error:', error.message);
+          return NextResponse.json({ success: false, error: 'Failed to save imported expenses' }, { status: 500 });
+        }
+      }
     }
 
     return NextResponse.json(result);
