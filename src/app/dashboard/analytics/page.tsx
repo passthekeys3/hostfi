@@ -15,10 +15,7 @@ import { isDemoMode } from "@/lib/data/data-provider";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { type MonthlyBill, type UtilityType, UTILITY_LABELS, ALL_EXPENSE_TYPES } from "@/lib/demo-analytics";
 import { DollarSign, TrendingUp, Receipt, Building2, BarChart3 } from "lucide-react";
-
-function fmt(n: number) {
-  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-}
+import { formatCurrency } from "@/lib/utils";
 
 function formatMonthLabel(ym: string): string {
   const [y, m] = ym.split('-');
@@ -129,10 +126,10 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-        <StatCard title="Total Spend" value={fmt(stats.totalSpend)} subtitle={`Last ${dateRange} months`} icon={DollarSign} />
-        <StatCard title="Avg Monthly" value={fmt(stats.avgMonthly)} subtitle="Per month average" icon={TrendingUp} />
-        <StatCard title="Highest Bill" value={fmt(stats.highestBill?.amount || 0)} subtitle={stats.highestBill?.property_name || ''} icon={Receipt} />
-        <StatCard title="Most Expensive" value={stats.mostExpensive?.name || 'N/A'} subtitle={fmt(stats.mostExpensive?.total || 0) + ' total'} icon={Building2} />
+        <StatCard title="Total Spend" value={formatCurrency(stats.totalSpend)} subtitle={`Last ${dateRange} months`} icon={DollarSign} />
+        <StatCard title="Avg Monthly" value={formatCurrency(stats.avgMonthly)} subtitle="Per month average" icon={TrendingUp} />
+        <StatCard title="Highest Bill" value={formatCurrency(stats.highestBill?.amount || 0)} subtitle={stats.highestBill?.property_name || ''} icon={Receipt} />
+        <StatCard title="Most Expensive" value={stats.mostExpensive?.name || 'N/A'} subtitle={formatCurrency(stats.mostExpensive?.total || 0) + ' total'} icon={Building2} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -91,12 +91,17 @@ export default function RecurringExpensesPage() {
     }
     setSaving(true);
     try {
-      // Real API call would go here
       const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
       if (!supabase) return;
-      // Update recurring_expenses table if it exists
-      // For now, just close the modal
+      const { error } = await supabase.from('expenses').update({
+        description: editState.description,
+        category: editState.category,
+        amount: parseFloat(editState.amount),
+        vendor: editState.vendor,
+        property_id: editState.property_id,
+      }).eq('id', editingId);
+      if (error) throw error;
       closeEdit();
       if (refresh) refresh();
     } catch (err) {
@@ -122,7 +127,8 @@ export default function RecurringExpensesPage() {
       const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
       if (!supabase) return;
-      // Delete from recurring_expenses table if it exists
+      const { error } = await supabase.from('expenses').delete().eq('id', editingId);
+      if (error) throw error;
       closeEdit();
       if (refresh) refresh();
     } catch (err) {
@@ -143,8 +149,17 @@ export default function RecurringExpensesPage() {
       ));
       return;
     }
-    // Real API call would go here
-  }, [editState, editingId, demo]);
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      if (supabase) {
+        await supabase.from('expenses').update({ is_active: newIsActive }).eq('id', editingId);
+        if (refresh) refresh();
+      }
+    } catch (err) {
+      console.error('Failed to toggle pause:', err);
+    }
+  }, [editState, editingId, demo, refresh]);
 
   if (loading) {
     return (
@@ -231,7 +246,7 @@ export default function RecurringExpensesPage() {
       {/* Edit Recurring Expense Modal */}
       {showEditModal && editState && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/40 backdrop-blur-sm" onClick={closeEdit}>
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
+          <div role="dialog" aria-modal="true" className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <h3 className="text-base font-semibold text-gray-900">Edit Recurring Expense</h3>
               <button onClick={closeEdit} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">

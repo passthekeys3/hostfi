@@ -20,11 +20,7 @@ import { DEMO_PROPERTIES, AVAILABLE_MONTHS } from "@/lib/data";
 import { isDemoMode } from "@/lib/data/data-provider";
 import { getCategoryConfig, EXPENSE_CATEGORY_CONFIG } from "@/lib/expense-categories";
 import { getMonthlyReport, type MonthlyReportData } from "@/lib/demo-reports";
-import { cn } from "@/lib/utils";
-
-function formatCurrency(amount: number): string {
-  return '$' + amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-}
+import { cn, formatCurrency } from "@/lib/utils";
 
 function TrendIndicator({ change, direction }: { change: number; direction: 'up' | 'down' | 'flat' }) {
   if (direction === 'flat') {

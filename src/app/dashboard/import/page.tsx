@@ -308,7 +308,7 @@ export default function ImportPage() {
 
           {/* Preview */}
           <div className="bg-white rounded-xl border border-gray-100 overflow-hidden -mx-4 sm:mx-0" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)' }}>
-            <div className="px-4 py-3 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
+            <div className="px-5 py-3 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
               <Table className="w-4 h-4 text-muted-foreground" />
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Preview (first 5 rows)</p>
             </div>
@@ -407,7 +407,7 @@ export default function ImportPage() {
           </div>
 
           {importError && (
-            <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 flex items-center gap-2">
+            <div className="px-5 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               {importError}
             </div>
@@ -419,12 +419,12 @@ export default function ImportPage() {
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-gray-50 z-10">
                   <tr className="border-b border-gray-100">
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Date</th>
-                    <th className="text-right px-4 py-3 font-medium text-muted-foreground">Amount</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Description</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Property</th>
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Category</th>
+                    <th className="text-left px-5 py-3 font-medium text-muted-foreground">Status</th>
+                    <th className="text-left px-5 py-3 font-medium text-muted-foreground">Date</th>
+                    <th className="text-right px-5 py-3 font-medium text-muted-foreground">Amount</th>
+                    <th className="text-left px-5 py-3 font-medium text-muted-foreground">Description</th>
+                    <th className="text-left px-5 py-3 font-medium text-muted-foreground">Property</th>
+                    <th className="text-left px-5 py-3 font-medium text-muted-foreground">Category</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -432,7 +432,7 @@ export default function ImportPage() {
                     const catConfig = expense.category ? EXPENSE_CATEGORY_CONFIG[expense.category] : null;
                     return (
                       <tr key={idx} className={cn("border-b border-gray-50", expense.hasIssue && "bg-red-50/30")}>
-                        <td className="px-4 py-3">
+                        <td className="px-5 py-3">
                           {expense.hasIssue ? (
                             <span className="inline-flex items-center gap-1 text-xs text-red-600">
                               <AlertCircle className="w-3.5 h-3.5" />
@@ -450,13 +450,13 @@ export default function ImportPage() {
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap">{expense.date || '-'}</td>
-                        <td className="px-4 py-3 text-right font-medium tabular-nums">
+                        <td className="px-5 py-3 whitespace-nowrap">{expense.date || '-'}</td>
+                        <td className="px-5 py-3 text-right font-medium tabular-nums">
                           {expense.amount ? formatCurrency(expense.amount) : '-'}
                         </td>
-                        <td className="px-4 py-3 max-w-[200px] truncate">{expense.description || '-'}</td>
-                        <td className="px-4 py-3 whitespace-nowrap">{expense.property || '-'}</td>
-                        <td className="px-4 py-3">
+                        <td className="px-5 py-3 max-w-[200px] truncate">{expense.description || '-'}</td>
+                        <td className="px-5 py-3 whitespace-nowrap">{expense.property || '-'}</td>
+                        <td className="px-5 py-3">
                           {catConfig ? (
                             <span className="text-xs">{catConfig.label}</span>
                           ) : (

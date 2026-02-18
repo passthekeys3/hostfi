@@ -372,7 +372,7 @@ export default function RevenuePage() {
         <StatCard title="Gross Revenue" value={formatCurrency(totalGross)} accent="teal" icon={DollarSign} subtitle={`${totalBookings} bookings`} />
         <StatCard title="Net Payouts" value={formatCurrency(totalNet)} accent="blue" icon={TrendingUp} subtitle={`${formatCurrency(totalFees)} in fees`} />
         <StatCard title="Total Expenses" value={formatCurrency(totalExpenses)} accent="amber" icon={ArrowDownRight} subtitle="All properties" />
-        <StatCard title="Net Profit" value={formatCurrency(netProfit)} accent={netProfit >= 0 ? 'teal' : 'rose'} icon={netProfit >= 0 ? ArrowUpRight : ArrowDownRight} subtitle={`${((netProfit / totalNet) * 100).toFixed(1)}% margin`} />
+        <StatCard title="Net Profit" value={formatCurrency(netProfit)} accent={netProfit >= 0 ? 'teal' : 'rose'} icon={netProfit >= 0 ? ArrowUpRight : ArrowDownRight} subtitle={totalNet > 0 ? `${((netProfit / totalNet) * 100).toFixed(1)}% margin` : "No revenue yet"} />
       </div>
 
       {/* Property P&L */}
@@ -430,7 +430,7 @@ export default function RevenuePage() {
                   {netProfit >= 0 ? '' : '-'}{formatCurrency(Math.abs(netProfit))}
                 </td>
                 <td className={cn("px-5 py-3 text-right hidden sm:table-cell", netProfit >= 0 ? "text-teal-600" : "text-rose-600")}>
-                  {((netProfit / totalNet) * 100).toFixed(1)}%
+                  {totalNet > 0 ? `${((netProfit / totalNet) * 100).toFixed(1)}%` : '—'}
                 </td>
               </tr>
             </tfoot>
@@ -566,7 +566,7 @@ export default function RevenuePage() {
       {/* Add Revenue Modal */}
       {modal === 'add' && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/40 backdrop-blur-sm" onClick={() => setModal(null)}>
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
+          <div role="dialog" aria-modal="true" className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <h3 className="text-base font-semibold text-gray-900">Add Revenue</h3>
               <button onClick={() => setModal(null)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
@@ -635,7 +635,7 @@ export default function RevenuePage() {
       {/* Edit Revenue Modal */}
       {modal === 'edit' && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/40 backdrop-blur-sm" onClick={() => { setModal(null); setEditingId(null); }}>
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
+          <div role="dialog" aria-modal="true" className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <h3 className="text-base font-semibold text-gray-900">Edit Revenue</h3>
               <button onClick={() => { setModal(null); setEditingId(null); }} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
@@ -711,7 +711,7 @@ export default function RevenuePage() {
       {/* CSV Import Modal */}
       {modal === 'csv' && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/40 backdrop-blur-sm" onClick={() => { if (!isImporting) { setModal(null); setCsvResult(null); setCsvText(''); setImportResult(null); setImportError(null); } }}>
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
+          <div role="dialog" aria-modal="true" className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
                 <FileSpreadsheet className="w-4 h-4 text-teal-500" /> Import CSV

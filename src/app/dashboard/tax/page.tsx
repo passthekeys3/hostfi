@@ -231,6 +231,10 @@ function PropertyTaxCard({ summary }: { summary: PropertyTaxSummary }) {
 export default function TaxPage() {
   const demo = isDemoMode();
   const { properties: realProperties, expenses: realExpenses, loading } = useDashboardData();
+  const [selectedYear, setSelectedYear] = useState(AVAILABLE_TAX_YEARS[0].key);
+  const [showCPAModal, setShowCPAModal] = useState(false);
+  const [cpaEmail, setCpaEmail] = useState('');
+  const [cpaSent, setCpaSent] = useState(false);
 
   if (loading) {
     return (
@@ -243,7 +247,6 @@ export default function TaxPage() {
       </div>
     );
   }
-  const [selectedYear, setSelectedYear] = useState(AVAILABLE_TAX_YEARS[0].key);
   
   // Filter expenses by year
   const allExpenses = demo ? DEMO_EXPENSES : realExpenses;
@@ -289,10 +292,6 @@ export default function TaxPage() {
     const txf = generateTXF(propertySummaries, selectedYear);
     downloadFile(txf, `hostfi-schedule-e-${selectedYear}.txf`, 'application/x-tax-exchange');
   };
-
-  const [showCPAModal, setShowCPAModal] = useState(false);
-  const [cpaEmail, setCpaEmail] = useState('');
-  const [cpaSent, setCpaSent] = useState(false);
 
   const handleShareCPA = () => {
     setShowCPAModal(true);

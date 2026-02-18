@@ -382,7 +382,7 @@ export default function InboxPage() {
                 matchType = "address";
                 matchConfidence = addressMatch.confidence;
                 // Persist the auto-match to Supabase
-                supabase.from("parsed_emails").update({ property_id: addressMatch.id }).eq("id", row.id as string).then();
+                supabase.from("parsed_emails").update({ property_id: addressMatch.id }).eq("id", row.id as string).then(({ error }) => { if (error) console.error('Auto-match save failed:', error); });
               }
             }
 
