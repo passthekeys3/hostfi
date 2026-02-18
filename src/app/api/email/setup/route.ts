@@ -22,7 +22,7 @@ export async function GET() {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !serviceKey) {
-      return NextResponse.json({ email: 'demo_user@in.hostfi.ai', demo: true });
+      return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
     }
 
     const { createClient } = await import('@supabase/supabase-js');
@@ -58,7 +58,7 @@ export async function POST(req: Request) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !serviceKey) {
-      return NextResponse.json({ email: 'demo_user@in.hostfi.ai', demo: true });
+      return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
     }
 
     const { createClient } = await import('@supabase/supabase-js');

@@ -68,19 +68,23 @@ export async function POST(request: NextRequest) {
   }
 
   // Extract the recipient email to find the user
+  // Supports both formats: {prefix}@in.hostfi.ai (current) and legacy expenses-{id}@hostfi.ai
   const toAddresses = payload.ToFull?.map(t => t.Email.toLowerCase()) || [];
-  const billingEmail = toAddresses.find(email => email.startsWith('expenses-'));
+  const inboundEmail = toAddresses.find(email => email.includes('@in.hostfi.ai'));
 
-  if (!billingEmail) {
-    console.log('[parse-email] No billing email found in recipients');
+  if (!inboundEmail) {
+    console.log('[parse-email] No @in.hostfi.ai email found in recipients:', toAddresses);
     return NextResponse.json({ error: 'No matching billing email' }, { status: 404 });
   }
 
-  // Look up user by billing email
+  // Extract the prefix (everything before @in.hostfi.ai)
+  const prefix = inboundEmail.split('@')[0];
+
+  // Look up user by inbound email prefix
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('id')
-    .eq('billing_email', billingEmail)
+    .eq('inbound_email_prefix', prefix)
     .single();
 
   if (profileError || !profile) {

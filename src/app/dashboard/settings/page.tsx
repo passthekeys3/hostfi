@@ -38,7 +38,7 @@ export default function SettingsPage() {
           setBillingEmail("");
         }
       })
-      .catch(() => setBillingEmail("demo_user@in.hostfi.ai"));
+      .catch(() => setBillingEmail(""));
   }, []);
 
   const generateEmail = async () => {
