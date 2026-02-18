@@ -1,19 +1,10 @@
 "use client";
 
-import { use, useState, useEffect } from "react";
+import { use, useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { notFound } from "next/navigation";
 import { EXPENSE_CATEGORY_CONFIG } from "@/lib/expense-categories";
-
-// Helper to group expenses by category
-function getExpensesByCategory(expenses: { category: string; amount: number }[]): Record<string, number> {
-  const byCategory: Record<string, number> = {};
-  for (const e of expenses) {
-    byCategory[e.category] = (byCategory[e.category] || 0) + e.amount;
-  }
-  return byCategory;
-}
 import { cn, getPropertyTypeLabel, formatCurrency } from "@/lib/utils";
 import { ArrowLeft, MapPin, Plus, Bed, Bath, Ruler, Building2, Landmark, Mail, TrendingUp, DollarSign, Calendar, Pencil, X, Trash2 } from "lucide-react";
 import { PropertyExportBar } from "@/components/property-export-bar";
@@ -26,46 +17,51 @@ const PROPERTY_TYPES = [
   { value: "arbitrage", label: "Rental Arbitrage" },
 ];
 
-const PROPERTY_STATUSES = [
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
-];
+function getExpensesByCategory(expenses: { category: string; amount: number }[]): Record<string, number> {
+  const byCategory: Record<string, number> = {};
+  for (const e of expenses) {
+    byCategory[e.category] = (byCategory[e.category] || 0) + e.amount;
+  }
+  return byCategory;
+}
 
 export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
   const { properties, expenses, revenue, loading, refresh } = useDashboardData();
-  
-  // Monthly spend data - computed client-side to avoid hydration mismatch
+
+  // ALL hooks before any early returns
   const [monthlySpend, setMonthlySpend] = useState<{ months: string[]; data: number[]; max: number }>({ months: [], data: [], max: 1 });
-  
-  // Edit modal state
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
-  
-  // Edit form fields
+
+  // Edit form state
   const [editName, setEditName] = useState("");
-  const [editType, setEditType] = useState("");
+  const [editType, setEditType] = useState("str");
   const [editAddress, setEditAddress] = useState("");
   const [editAddress2, setEditAddress2] = useState("");
   const [editCity, setEditCity] = useState("");
   const [editState, setEditState] = useState("");
   const [editZip, setEditZip] = useState("");
-  const [editBedrooms, setEditBedrooms] = useState(1);
-  const [editBathrooms, setEditBathrooms] = useState(1);
-  const [editSqft, setEditSqft] = useState<number | "">("");
+  const [editBedrooms, setEditBedrooms] = useState("1");
+  const [editBathrooms, setEditBathrooms] = useState("1");
+  const [editSqft, setEditSqft] = useState("");
   const [editStatus, setEditStatus] = useState("active");
 
-  // Build last 5 months of spend data from real expenses (client-side only)
-  // Use stable deps: id and expenses array
+  // Compute filtered data with stable deps
+  const property = useMemo(() => properties.find(p => p.id === id), [properties, id]);
+  const propertyExpenses = useMemo(() => expenses.filter(e => e.property_id === id), [expenses, id]);
+  const propertyRevenue = useMemo(
+    () => (revenue || []).filter(r => r.property_id === id).sort((a, b) => (b.check_in || b.date || '').localeCompare(a.check_in || a.date || '')),
+    [revenue, id]
+  );
+
+  // Monthly spend chart — stable deps
   useEffect(() => {
-    const property = properties.find(p => p.id === id);
     if (!property) return;
-    
-    const propertyExpenses = expenses.filter(e => e.property_id === id);
-    
     const now = new Date();
     const monthLabels: string[] = [];
     const spendData: number[] = [];
@@ -79,29 +75,28 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
       spendData.push(Math.round(monthTotal * 100) / 100);
     }
     setMonthlySpend({ months: monthLabels, data: spendData, max: Math.max(...spendData, 1) });
-  }, [id, properties, expenses]);
+  }, [property, propertyExpenses]);
 
-  // Initialize edit form when property loads or modal opens
+  // Populate edit form when property loads or modal opens
   useEffect(() => {
-    const property = properties.find(p => p.id === id);
     if (property && showEditModal) {
-      setEditName(property.name || "");
-      setEditType(property.property_type || "str");
-      setEditAddress(property.address_line1 || "");
+      setEditName(property.name);
+      setEditType(property.property_type);
+      setEditAddress(property.address_line1);
       setEditAddress2(property.address_line2 || "");
-      setEditCity(property.city || "");
-      setEditState(property.state || "");
-      setEditZip(property.zip || "");
-      setEditBedrooms(property.bedrooms || 1);
-      setEditBathrooms(property.bathrooms || 1);
-      setEditSqft(property.sqft || "");
+      setEditCity(property.city);
+      setEditState(property.state);
+      setEditZip(property.zip);
+      setEditBedrooms(String(property.bedrooms));
+      setEditBathrooms(String(property.bathrooms));
+      setEditSqft(property.sqft ? String(property.sqft) : "");
       setEditStatus(property.status || "active");
       setEditError(null);
       setShowDeleteConfirm(false);
     }
-  }, [id, properties, showEditModal]);
+  }, [property, showEditModal]);
 
-  // Loading skeleton
+  // EARLY RETURNS after all hooks
   if (loading) {
     return (
       <div className="space-y-10 animate-pulse">
@@ -114,117 +109,66 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
     );
   }
 
-  const property = properties.find((p) => p.id === id);
   if (!property) return notFound();
 
-  const propertyExpenses = expenses.filter(e => e.property_id === id);
   const expensesByCategory = getExpensesByCategory(propertyExpenses);
   const totalExpenses = propertyExpenses.reduce((sum, e) => sum + e.amount, 0);
-
-  // Revenue for this property
-  const propertyRevenue = (revenue || []).filter(r => r.property_id === id)
-    .sort((a, b) => (b.check_in || b.date || '').localeCompare(a.check_in || a.date || ''));
   const totalRevenue = propertyRevenue.reduce((sum, r) => sum + (r.amount ?? 0), 0);
   const totalNetRevenue = propertyRevenue.reduce((sum, r) => sum + (r.payout_amount ?? r.amount ?? 0), 0);
   const totalFees = propertyRevenue.reduce((sum, r) => sum + (r.platform_fee ?? 0), 0);
   const netProfit = totalNetRevenue - totalExpenses;
-  
   const { months, data: spendData, max: maxSpend } = monthlySpend;
-
-  const topCategories = Object.entries(expensesByCategory)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 3);
+  const topCategories = Object.entries(expensesByCategory).sort(([, a], [, b]) => b - a).slice(0, 3);
 
   const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     setEditLoading(true);
     setEditError(null);
-    
     try {
       const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
-      if (!supabase) {
-        setEditError("Database not configured.");
-        setEditLoading(false);
-        return;
-      }
-      
+      if (!supabase) { setEditError("Database not configured."); setEditLoading(false); return; }
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setEditError("You must be logged in.");
-        setEditLoading(false);
-        return;
-      }
-      
-      const { error } = await supabase
-        .from("properties")
-        .update({
-          name: editName,
-          property_type: editType,
-          address_line1: editAddress,
-          address_line2: editAddress2 || null,
-          city: editCity,
-          state: editState,
-          zip: editZip,
-          bedrooms: editBedrooms,
-          bathrooms: editBathrooms,
-          sqft: editSqft || null,
-          status: editStatus,
-        })
-        .eq("id", id)
-        .eq("user_id", user.id);
-      
-      if (error) {
-        setEditError(error.message);
-        setEditLoading(false);
-        return;
-      }
-      
-      if (refresh) await refresh();
+      if (!user) { setEditError("Not authenticated."); setEditLoading(false); return; }
+
+      const { error } = await supabase.from("properties").update({
+        name: editName,
+        property_type: editType,
+        address_line1: editAddress,
+        address_line2: editAddress2 || null,
+        city: editCity,
+        state: editState,
+        zip: editZip,
+        bedrooms: parseInt(editBedrooms) || 1,
+        bathrooms: parseFloat(editBathrooms) || 1,
+        sqft: editSqft ? parseInt(editSqft) : null,
+        status: editStatus,
+      }).eq("id", id).eq("user_id", user.id);
+
+      if (error) { setEditError(error.message); setEditLoading(false); return; }
+      refresh?.();
       setShowEditModal(false);
-    } catch (err) {
-      setEditError("Something went wrong. Please try again.");
+    } catch {
+      setEditError("Something went wrong.");
     } finally {
       setEditLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    setEditLoading(true);
-    setEditError(null);
-    
+    setDeleteLoading(true);
     try {
       const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
-      if (!supabase) {
-        setEditError("Database not configured.");
-        setEditLoading(false);
-        return;
-      }
-      
+      if (!supabase) return;
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setEditError("You must be logged in.");
-        setEditLoading(false);
-        return;
-      }
-      
-      const { error } = await supabase
-        .from("properties")
-        .delete()
-        .eq("id", id)
-        .eq("user_id", user.id);
-      
-      if (error) {
-        setEditError(error.message);
-        setEditLoading(false);
-        return;
-      }
-      
+      if (!user) return;
+      const { error } = await supabase.from("properties").delete().eq("id", id).eq("user_id", user.id);
+      if (error) { setEditError(error.message); setDeleteLoading(false); return; }
       router.push("/dashboard/properties");
-    } catch (err) {
-      setEditError("Something went wrong. Please try again.");
-      setEditLoading(false);
+    } catch {
+      setEditError("Failed to delete.");
+      setDeleteLoading(false);
     }
   };
 
@@ -239,17 +183,17 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
         <div className="flex-1 min-w-0">
           <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight truncate">{property.name}</h1>
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
               <span className={cn("w-2 h-2 rounded-full", property.status === 'active' ? 'bg-teal-500' : 'bg-gray-300')} />
               <span className="text-xs text-muted-foreground capitalize">{property.status}</span>
+              <button
+                onClick={() => setShowEditModal(true)}
+                className="ml-2 p-2 hover:bg-gray-100 rounded-lg transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+                title="Edit property"
+              >
+                <Pencil className="w-4 h-4 text-gray-400" />
+              </button>
             </div>
-            <button
-              onClick={() => setShowEditModal(true)}
-              className="p-2 hover:bg-gray-100 rounded-xl transition-colors duration-150 min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0"
-              title="Edit property"
-            >
-              <Pencil className="w-4 h-4 text-gray-500" />
-            </button>
           </div>
           <div className="flex items-start gap-1.5 text-muted-foreground mt-2 text-sm">
             <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
@@ -294,7 +238,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
         totalExpenses={totalExpenses}
       />
 
-      {/* Stats row - removed duplicate Type, replaced with Bookings */}
+      {/* Stats row — no duplicate Type, replaced with Bookings */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-5">
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-4 sm:p-6">
           <p className="text-[11px] sm:text-xs font-medium uppercase tracking-wide text-muted-foreground">Bookings</p>
@@ -322,8 +266,6 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
               <TrendingUp className="w-4 h-4" /> Revenue
             </h2>
           </div>
-
-          {/* Revenue stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-gray-100">
             <div className="bg-white p-4">
               <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">Gross Revenue</p>
@@ -344,17 +286,12 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
               </p>
             </div>
           </div>
-
-          {/* Bookings list */}
           <div className="divide-y divide-gray-50">
             {propertyRevenue.slice(0, 10).map((r, i) => (
               <div key={r.id || i} className="px-6 py-3.5 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {r.guest_name || 'Guest'}
-                  </p>
+                  <p className="text-sm font-medium text-gray-900 truncate">{r.guest_name || 'Guest'}</p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    {/* Using short month format intentionally for compact booking date display */}
                     <span className="text-xs text-gray-400">
                       {r.check_in ? new Date(r.check_in + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
                       {r.check_out ? ` → ${new Date(r.check_out + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}
@@ -374,9 +311,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
             ))}
             {propertyRevenue.length > 10 && (
               <div className="px-6 py-3 text-center">
-                <Link href="/dashboard/revenue" className="text-xs font-medium text-teal-600 hover:text-teal-700">
-                  View all {propertyRevenue.length} bookings →
-                </Link>
+                <Link href="/dashboard/revenue" className="text-xs font-medium text-teal-600 hover:text-teal-700">View all {propertyRevenue.length} bookings →</Link>
               </div>
             )}
           </div>
@@ -391,8 +326,6 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
               <DollarSign className="w-4 h-4" /> Expenses
             </h2>
           </div>
-
-          {/* Expense stats */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-gray-100">
             <div className="bg-white p-4">
               <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">Total Expenses</p>
@@ -407,8 +340,6 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
               <p className="text-lg font-bold text-gray-900 mt-1">{topCategories.length > 0 ? (EXPENSE_CATEGORY_CONFIG[topCategories[0][0] as keyof typeof EXPENSE_CATEGORY_CONFIG]?.label || topCategories[0][0]) : '—'}</p>
             </div>
           </div>
-
-          {/* Category breakdown */}
           {topCategories.length > 0 && (
             <div className="px-6 py-3 border-b border-gray-100 flex flex-wrap gap-3">
               {topCategories.map(([cat, amount]) => {
@@ -424,8 +355,6 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
               })}
             </div>
           )}
-
-          {/* Expense transactions list */}
           <div className="divide-y divide-gray-50">
             {propertyExpenses.slice(0, 10).map((e, i) => {
               const config = EXPENSE_CATEGORY_CONFIG[e.category as keyof typeof EXPENSE_CATEGORY_CONFIG];
@@ -454,9 +383,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
             })}
             {propertyExpenses.length > 10 && (
               <div className="px-6 py-3 text-center">
-                <Link href="/dashboard/expenses" className="text-xs font-medium text-teal-600 hover:text-teal-700">
-                  View all {propertyExpenses.length} expenses →
-                </Link>
+                <Link href="/dashboard/expenses" className="text-xs font-medium text-teal-600 hover:text-teal-700">View all {propertyExpenses.length} expenses →</Link>
               </div>
             )}
           </div>
@@ -494,200 +421,111 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
           <h2 className="text-xs font-semibold uppercase tracking-widest text-gray-400">Data Sources</h2>
           <Link href="/dashboard/integrations" className="text-xs text-accent hover:underline font-medium">Manage →</Link>
         </div>
-        <p className="text-sm text-muted-foreground mb-4">
-          Connect integrations to automatically track expenses for this property.
-        </p>
+        <p className="text-sm text-muted-foreground mb-4">Connect integrations to automatically track expenses for this property.</p>
         <div className="flex flex-wrap gap-2">
-          <Link href="/dashboard/integrations" className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors">
+          <Link href="/dashboard/integrations" className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors min-h-[44px]">
             <Landmark className="w-3.5 h-3.5" /> Connect Bank
           </Link>
-          <Link href="/dashboard/settings" className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors">
+          <Link href="/dashboard/settings" className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors min-h-[44px]">
             <Mail className="w-3.5 h-3.5" /> Forward Bills
           </Link>
-          <Link href="/dashboard/expenses/new" className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors">
+          <Link href="/dashboard/expenses/new" className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-100 transition-colors min-h-[44px]">
             <Plus className="w-3.5 h-3.5" /> Add Manually
           </Link>
         </div>
       </div>
 
-      {/* Edit Property Modal */}
+      {/* Edit Modal */}
       {showEditModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-black/50" onClick={() => setShowEditModal(false)} />
           <div className="relative bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 space-y-5">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Edit Property</h2>
-              <button onClick={() => setShowEditModal(false)} className="p-2 hover:bg-gray-100 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center">
+              <button onClick={() => setShowEditModal(false)} className="p-2 hover:bg-gray-100 rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            
+
             {editError && (
-              <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
-                {editError}
-              </div>
+              <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{editError}</div>
             )}
-            
+
             <form onSubmit={handleEdit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Property Name</label>
-                <input
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  required
-                  className={inputClass}
-                />
+                <label className="block text-sm font-medium mb-1.5">Property Name</label>
+                <input value={editName} onChange={e => setEditName(e.target.value)} required className={inputClass} />
               </div>
-              
               <div>
-                <label className="block text-sm font-medium mb-2">Property Type</label>
-                <select
-                  value={editType}
-                  onChange={(e) => setEditType(e.target.value)}
-                  className={inputClass}
-                >
-                  {PROPERTY_TYPES.map((t) => (
-                    <option key={t.value} value={t.value}>{t.label}</option>
-                  ))}
+                <label className="block text-sm font-medium mb-1.5">Type</label>
+                <select value={editType} onChange={e => setEditType(e.target.value)} className={inputClass}>
+                  {PROPERTY_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </div>
-              
               <div>
-                <label className="block text-sm font-medium mb-2">Status</label>
-                <select
-                  value={editStatus}
-                  onChange={(e) => setEditStatus(e.target.value)}
-                  className={inputClass}
-                >
-                  {PROPERTY_STATUSES.map((s) => (
-                    <option key={s.value} value={s.value}>{s.label}</option>
-                  ))}
+                <label className="block text-sm font-medium mb-1.5">Status</label>
+                <select value={editStatus} onChange={e => setEditStatus(e.target.value)} className={inputClass}>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
                 </select>
               </div>
-              
               <div>
-                <label className="block text-sm font-medium mb-2">Address</label>
-                <input
-                  value={editAddress}
-                  onChange={(e) => setEditAddress(e.target.value)}
-                  required
-                  className={inputClass}
-                />
+                <label className="block text-sm font-medium mb-1.5">Address</label>
+                <input value={editAddress} onChange={e => setEditAddress(e.target.value)} required className={inputClass} />
               </div>
-              
               <div>
-                <label className="block text-sm font-medium mb-2">Address Line 2</label>
-                <input
-                  value={editAddress2}
-                  onChange={(e) => setEditAddress2(e.target.value)}
-                  placeholder="Unit, Apt, etc."
-                  className={inputClass}
-                />
+                <label className="block text-sm font-medium mb-1.5">Address Line 2</label>
+                <input value={editAddress2} onChange={e => setEditAddress2(e.target.value)} placeholder="Unit, Apt, etc." className={inputClass} />
               </div>
-              
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-sm font-medium mb-2">City</label>
-                  <input
-                    value={editCity}
-                    onChange={(e) => setEditCity(e.target.value)}
-                    required
-                    className={inputClass}
-                  />
+                  <label className="block text-sm font-medium mb-1.5">City</label>
+                  <input value={editCity} onChange={e => setEditCity(e.target.value)} required className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">State</label>
-                  <input
-                    value={editState}
-                    onChange={(e) => setEditState(e.target.value)}
-                    required
-                    maxLength={2}
-                    className={inputClass}
-                  />
+                  <label className="block text-sm font-medium mb-1.5">State</label>
+                  <input value={editState} onChange={e => setEditState(e.target.value)} required maxLength={2} className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">ZIP</label>
-                  <input
-                    value={editZip}
-                    onChange={(e) => setEditZip(e.target.value)}
-                    required
-                    className={inputClass}
-                  />
+                  <label className="block text-sm font-medium mb-1.5">ZIP</label>
+                  <input value={editZip} onChange={e => setEditZip(e.target.value)} required className={inputClass} />
                 </div>
               </div>
-              
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Bedrooms</label>
-                  <input
-                    type="number"
-                    min={1}
-                    value={editBedrooms}
-                    onChange={(e) => setEditBedrooms(parseInt(e.target.value) || 1)}
-                    required
-                    className={inputClass}
-                  />
+                  <label className="block text-sm font-medium mb-1.5">Beds</label>
+                  <input type="number" min={1} value={editBedrooms} onChange={e => setEditBedrooms(e.target.value)} className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Bathrooms</label>
-                  <input
-                    type="number"
-                    min={1}
-                    step={0.5}
-                    value={editBathrooms}
-                    onChange={(e) => setEditBathrooms(parseFloat(e.target.value) || 1)}
-                    required
-                    className={inputClass}
-                  />
+                  <label className="block text-sm font-medium mb-1.5">Baths</label>
+                  <input type="number" min={1} step={0.5} value={editBathrooms} onChange={e => setEditBathrooms(e.target.value)} className={inputClass} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Sqft</label>
-                  <input
-                    type="number"
-                    min={1}
-                    value={editSqft}
-                    onChange={(e) => setEditSqft(e.target.value ? parseInt(e.target.value) : "")}
-                    placeholder="Optional"
-                    className={inputClass}
-                  />
+                  <label className="block text-sm font-medium mb-1.5">Sqft</label>
+                  <input type="number" min={1} value={editSqft} onChange={e => setEditSqft(e.target.value)} placeholder="Optional" className={inputClass} />
                 </div>
               </div>
-              
+
               <div className="flex gap-3 pt-2">
-                <button
-                  type="submit"
-                  disabled={editLoading}
-                  className="flex-1 px-4 py-2.5 bg-teal-600 text-white font-medium rounded-xl hover:bg-teal-700 min-h-[44px] disabled:opacity-50 transition-colors"
-                >
+                <button type="submit" disabled={editLoading} className="flex-1 px-4 py-2.5 bg-teal-600 text-white font-medium rounded-xl hover:bg-teal-700 transition-colors min-h-[44px] disabled:opacity-50">
                   {editLoading ? "Saving..." : "Save Changes"}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="px-4 py-2.5 bg-red-50 text-red-600 font-medium rounded-xl hover:bg-red-100 min-h-[44px] transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
+                <button type="button" onClick={() => setShowDeleteConfirm(true)} className="px-4 py-2.5 bg-red-50 text-red-600 font-medium rounded-xl hover:bg-red-100 transition-colors min-h-[44px] flex items-center gap-2">
+                  <Trash2 className="w-4 h-4" /> Delete
                 </button>
               </div>
             </form>
-            
+
             {showDeleteConfirm && (
-              <div className="border-t border-gray-200 pt-4 mt-4">
+              <div className="border-t border-gray-200 pt-4 mt-2">
                 <p className="text-sm text-red-600 font-medium mb-3">
-                  Delete "{editName}"? Expenses and revenue won't be deleted but will be unlinked.
+                  Delete &ldquo;{property.name}&rdquo;? Expenses and revenue won&apos;t be deleted but will be unlinked from this property.
                 </p>
                 <div className="flex gap-3">
-                  <button
-                    onClick={handleDelete}
-                    disabled={editLoading}
-                    className="px-4 py-2.5 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 min-h-[44px] disabled:opacity-50 transition-colors"
-                  >
-                    {editLoading ? "Deleting..." : "Yes, Delete"}
+                  <button onClick={handleDelete} disabled={deleteLoading} className="px-4 py-2.5 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 transition-colors min-h-[44px] disabled:opacity-50">
+                    {deleteLoading ? "Deleting..." : "Yes, Delete"}
                   </button>
-                  <button
-                    onClick={() => setShowDeleteConfirm(false)}
-                    className="px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 min-h-[44px] transition-colors"
-                  >
+                  <button onClick={() => setShowDeleteConfirm(false)} className="px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors min-h-[44px]">
                     Cancel
                   </button>
                 </div>
