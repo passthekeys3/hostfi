@@ -13,6 +13,7 @@ import {
   Check, X, Pencil, ChevronDown, ChevronUp, Mail, Clock, MapPin,
   AlertTriangle, Building2,
 } from "lucide-react";
+// Note: Circle was previously imported but never used
 
 const utilityIcons: Record<string, React.ElementType> = {
   gas: Flame, water: Droplets, electric: Zap, internet: Wifi,

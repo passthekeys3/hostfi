@@ -400,18 +400,18 @@ export default function RevenuePage() {
                 const margin = row.net > 0 ? ((row.profit / row.net) * 100) : 0;
                 return (
                   <tr key={row.property.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-5 py-3.5">
+                    <td className="px-5 py-3">
                       <p className="font-medium text-gray-900">{row.property.name}</p>
                       <p className="text-xs text-gray-400">{row.bookings} bookings</p>
                     </td>
-                    <td className="px-5 py-3.5 text-right text-gray-700">{formatCurrency(row.gross)}</td>
-                    <td className="px-5 py-3.5 text-right text-gray-400 hidden sm:table-cell">-{formatCurrency(row.gross - row.net)}</td>
-                    <td className="px-5 py-3.5 text-right text-gray-700">{formatCurrency(row.net)}</td>
-                    <td className="px-5 py-3.5 text-right text-gray-700">-{formatCurrency(row.expenses)}</td>
-                    <td className={cn("px-5 py-3.5 text-right font-semibold", row.profit >= 0 ? "text-teal-600" : "text-rose-600")}>
+                    <td className="px-5 py-3 text-right text-gray-700">{formatCurrency(row.gross)}</td>
+                    <td className="px-5 py-3 text-right text-gray-400 hidden sm:table-cell">-{formatCurrency(row.gross - row.net)}</td>
+                    <td className="px-5 py-3 text-right text-gray-700">{formatCurrency(row.net)}</td>
+                    <td className="px-5 py-3 text-right text-gray-700">-{formatCurrency(row.expenses)}</td>
+                    <td className={cn("px-5 py-3 text-right font-semibold", row.profit >= 0 ? "text-teal-600" : "text-rose-600")}>
                       {row.profit >= 0 ? '' : '-'}{formatCurrency(Math.abs(row.profit))}
                     </td>
-                    <td className={cn("px-5 py-3.5 text-right hidden sm:table-cell", margin >= 0 ? "text-teal-600" : "text-rose-600")}>
+                    <td className={cn("px-5 py-3 text-right hidden sm:table-cell", margin >= 0 ? "text-teal-600" : "text-rose-600")}>
                       {margin.toFixed(1)}%
                     </td>
                   </tr>
@@ -533,6 +533,7 @@ export default function RevenuePage() {
                 const src = REVENUE_SOURCES.find(s => s.value === (r.platform || r.source));
                 return (
                   <tr key={r.id} className="hover:bg-gray-50/50 transition-colors cursor-pointer" onClick={() => openEdit(r)}>
+                    {/* Using short month format intentionally for compact table display */}
                     <td className="px-5 py-3 text-gray-600 whitespace-nowrap">
                       {new Date(r.payout_date || r.date || r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </td>

@@ -17,7 +17,6 @@ import {
 import { DEMO_PROPERTIES, DEMO_EXPENSES } from "@/lib/data";
 import { isDemoMode } from "@/lib/data/data-provider";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { type Property } from "@/lib/types";
 import { getCategoryConfig, EXPENSE_CATEGORY_CONFIG, getCategoryColorClasses } from "@/lib/expense-categories";
 import { 
   generatePropertyTaxSummary, 
@@ -79,10 +78,10 @@ function ScheduleELineRow({
         )}
         onClick={hasExpenses ? onToggle : undefined}
       >
-        <td className="px-4 py-3 w-16">
+        <td className="px-5 py-3 w-16">
           <span className="text-sm font-mono text-muted-foreground">{lineItem.line}</span>
         </td>
-        <td className="px-4 py-3">
+        <td className="px-5 py-3">
           <div className="flex items-center gap-2">
             {hasExpenses && (
               <span className="text-muted-foreground">
@@ -97,7 +96,7 @@ function ScheduleELineRow({
             )}
           </div>
         </td>
-        <td className="px-4 py-3 text-right">
+        <td className="px-5 py-3 text-right">
           <span className={cn(
             "font-semibold tabular-nums text-sm",
             lineItem.amount > 0 ? "text-foreground" : "text-muted-foreground"
@@ -110,7 +109,7 @@ function ScheduleELineRow({
       {/* Expanded expense details */}
       {isExpanded && hasExpenses && (
         <tr>
-          <td colSpan={3} className="px-4 py-0 bg-gray-50/60">
+          <td colSpan={3} className="px-5 py-0 bg-gray-50/60">
             <div className="py-3 pl-8 space-y-2">
               {lineItem.expenses.map((expense) => {
                 const catConfig = getCategoryConfig(expense.category);
@@ -192,13 +191,13 @@ function PropertyTaxCard({ summary }: { summary: PropertyTaxSummary }) {
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50/80">
-              <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3 w-16">
+              <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 w-16">
                 Line
               </th>
-              <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3">
+              <th className="text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3">
                 Description
               </th>
-              <th className="text-right text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-4 py-3 w-32">
+              <th className="text-right text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 w-32">
                 Amount
               </th>
             </tr>
@@ -215,10 +214,10 @@ function PropertyTaxCard({ summary }: { summary: PropertyTaxSummary }) {
           </tbody>
           <tfoot>
             <tr className="border-t border-gray-200 bg-gray-50">
-              <td colSpan={2} className="px-4 py-4 text-sm font-semibold">
+              <td colSpan={2} className="px-5 py-3 text-sm font-semibold">
                 Total Deductible Expenses
               </td>
-              <td className="px-4 py-4 text-right font-bold tabular-nums">
+              <td className="px-5 py-3 text-right font-bold tabular-nums">
                 {formatCurrency(summary.totalDeductions)}
               </td>
             </tr>
@@ -252,10 +251,14 @@ export default function TaxPage() {
   
   // Generate summaries for each property (excluding primary residence)
   const allProperties = demo ? DEMO_PROPERTIES : realProperties;
-  const propertySummaries = allProperties
+  const allPropertySummaries = allProperties
     .filter(p => p.property_type !== 'primary')
-    .map(property => generatePropertyTaxSummary(property, yearExpenses))
+    .map(property => generatePropertyTaxSummary(property, yearExpenses));
+  const propertySummaries = allPropertySummaries
     .filter(summary => summary.totalDeductions > 0 || summary.lineItems.some(l => l.expenses.length > 0));
+  // Properties with no expenses for the selected year
+  const emptyProperties = allPropertySummaries
+    .filter(summary => summary.totalDeductions === 0 && !summary.lineItems.some(l => l.expenses.length > 0));
   
   // Generate insights
   const insights = generateTaxInsights(propertySummaries);
@@ -448,7 +451,7 @@ export default function TaxPage() {
       <div className="space-y-6">
         <h2 className="text-lg font-semibold">Schedule E by Property</h2>
         
-        {propertySummaries.length === 0 ? (
+        {propertySummaries.length === 0 && emptyProperties.length === 0 ? (
           <div 
             className="bg-white rounded-2xl p-12 text-center border border-gray-200"
             style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 6px rgba(0, 0, 0, 0.02)' }}
@@ -462,9 +465,29 @@ export default function TaxPage() {
             </p>
           </div>
         ) : (
-          propertySummaries.map((summary) => (
-            <PropertyTaxCard key={summary.property.id} summary={summary} />
-          ))
+          <>
+            {propertySummaries.map((summary) => (
+              <PropertyTaxCard key={summary.property.id} summary={summary} />
+            ))}
+            {/* Inline empty state for properties with 0 expenses */}
+            {emptyProperties.map((summary) => (
+              <div
+                key={summary.property.id}
+                className="bg-white rounded-2xl border border-gray-200 p-6 flex items-center gap-4"
+                style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 6px rgba(0, 0, 0, 0.02)' }}
+              >
+                <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
+                  <Building2 className="w-5 h-5 text-gray-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900">{summary.property.name}</h3>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    No expenses recorded for {summary.property.name} in {selectedYear}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </>
         )}
       </div>
 

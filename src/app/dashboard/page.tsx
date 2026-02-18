@@ -291,11 +291,11 @@ export default function DashboardPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-gray-200">
-                <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-6 py-4 bg-gray-50/80">Expense</th>
-                <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-6 py-4 bg-gray-50/80">Property</th>
-                <th className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-6 py-4 bg-gray-50/80">Amount</th>
-                <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-6 py-4 bg-gray-50/80">Date</th>
-                <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-6 py-4 bg-gray-50/80">Status</th>
+                <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 bg-gray-50/80">Expense</th>
+                <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 bg-gray-50/80">Property</th>
+                <th className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 bg-gray-50/80">Amount</th>
+                <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 bg-gray-50/80">Date</th>
+                <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 bg-gray-50/80">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -311,7 +311,7 @@ export default function DashboardPage() {
                       index !== recentExpenses.length - 1 && "border-b border-gray-100"
                     )}
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-3">
                       <div className="flex items-center gap-3">
                         <span className={cn(
                           "flex items-center justify-center w-9 h-9 rounded-xl text-sm border transition-all duration-200 group-hover:scale-105",
@@ -330,16 +330,16 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-3">
                       <p className="text-sm text-muted-foreground">{property?.name || '—'}</p>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-5 py-3 text-right">
                       <p className="font-semibold text-sm tabular-nums">{formatCurrency(expense.amount)}</p>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-3">
                       <p className="text-sm text-muted-foreground">{formatDate(expense.date)}</p>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-3">
                       <span className={cn(
                         "inline-flex items-center text-[11px] font-medium px-2.5 py-1 rounded-full capitalize transition-colors",
                         getStatusColor(expense.status)

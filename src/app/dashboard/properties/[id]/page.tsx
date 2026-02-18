@@ -174,6 +174,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                     {r.guest_name || 'Guest'}
                   </p>
                   <div className="flex items-center gap-2 mt-0.5">
+                    {/* Using short month format intentionally for compact booking date display */}
                     <span className="text-xs text-gray-400">
                       {r.check_in ? new Date(r.check_in + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
                       {r.check_out ? ` → ${new Date(r.check_out + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}` : ''}

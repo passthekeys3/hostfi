@@ -1,7 +1,6 @@
 "use client";
 
 import { ExternalLink, ChevronRight, Building2, Shield, Percent, Video, Star, Handshake, ShieldCheck, TrendingUp, Sparkles, Landmark } from "lucide-react";
-import Link from "next/link";
 
 interface Partner {
   id: string;

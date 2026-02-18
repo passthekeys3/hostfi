@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { getCategoryConfig, EXPENSE_CATEGORY_CONFIG, getCategoryColorClasses, ALL_EXPENSE_CATEGORIES, type ExpenseCategory } from "@/lib/expense-categories";
 import { formatCurrency, formatDate, cn, getStatusColor } from "@/lib/utils";
-import { Receipt, Plus, Pencil, Trash2, X, Loader2 } from "lucide-react";
+import { Receipt, Plus, X, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { isDemoMode } from "@/lib/data/data-provider";
@@ -170,11 +170,11 @@ export default function ExpensesPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-6 py-4 bg-gray-50/80">Expense</th>
-                  <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-6 py-4 bg-gray-50/80">Property</th>
-                  <th className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-6 py-4 bg-gray-50/80">Amount</th>
-                  <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-6 py-4 bg-gray-50/80">Date</th>
-                  <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-6 py-4 bg-gray-50/80">Status</th>
+                  <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 bg-gray-50/80">Expense</th>
+                  <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 bg-gray-50/80">Property</th>
+                  <th className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 bg-gray-50/80">Amount</th>
+                  <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 bg-gray-50/80">Date</th>
+                  <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 bg-gray-50/80">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -185,7 +185,7 @@ export default function ExpensesPage() {
 
                   return (
                     <tr key={expense.id} onClick={() => openEdit(expense)} className={cn("group transition-colors duration-150 hover:bg-gray-50/60 cursor-pointer", index !== filteredExpenses.length - 1 && "border-b border-gray-100")}>
-                      <td className="px-6 py-4">
+                      <td className="px-5 py-3">
                         <div className="flex items-center gap-3">
                           <span className={cn("flex items-center justify-center w-9 h-9 rounded-xl text-sm border", colorClasses.bg, colorClasses.border)}>
                             {catConfig?.icon && <catConfig.icon className="w-4 h-4" />}
@@ -196,10 +196,10 @@ export default function ExpensesPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-muted-foreground">{property?.name || '—'}</td>
-                      <td className="px-6 py-4 text-right font-semibold text-sm tabular-nums">{formatCurrency(expense.amount)}</td>
-                      <td className="px-6 py-4 text-sm text-muted-foreground">{formatDate(expense.date)}</td>
-                      <td className="px-6 py-4">
+                      <td className="px-5 py-3 text-sm text-muted-foreground">{property?.name || '—'}</td>
+                      <td className="px-5 py-3 text-right font-semibold text-sm tabular-nums">{formatCurrency(expense.amount)}</td>
+                      <td className="px-5 py-3 text-sm text-muted-foreground">{formatDate(expense.date)}</td>
+                      <td className="px-5 py-3">
                         <span className={cn("inline-flex items-center text-[11px] font-medium px-2.5 py-1 rounded-full capitalize", getStatusColor(expense.status))}>{expense.status}</span>
                       </td>
                     </tr>

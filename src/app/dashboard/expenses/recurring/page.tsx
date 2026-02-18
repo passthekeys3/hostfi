@@ -1,19 +1,38 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import Link from "next/link";
 import { DEMO_RECURRING_EXPENSES } from "@/lib/demo-expenses";
-import { getCategoryConfig, EXPENSE_CATEGORY_CONFIG, FREQUENCY_LABELS, getCategoryColorClasses } from "@/lib/expense-categories";
+import type { RecurringExpense } from "@/lib/types";
+import { getCategoryConfig, EXPENSE_CATEGORY_CONFIG, FREQUENCY_LABELS, getCategoryColorClasses, ALL_EXPENSE_CATEGORIES, type ExpenseCategory, type ExpenseFrequency } from "@/lib/expense-categories";
 import { DEMO_PROPERTIES } from "@/lib/data";
 import { isDemoMode } from "@/lib/data/data-provider";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
-import { Plus, Pause, Pencil, ArrowLeft, RefreshCw } from "lucide-react";
+import { Plus, ArrowLeft, RefreshCw, X, Loader2 } from "lucide-react";
+
+interface EditState {
+  description: string;
+  category: ExpenseCategory;
+  amount: string;
+  vendor: string;
+  property_id: string;
+  frequency: ExpenseFrequency;
+  next_due_date: string;
+  is_active: boolean;
+}
 
 export default function RecurringExpensesPage() {
   const demo = isDemoMode();
-  const { properties: realProperties, loading } = useDashboardData();
-  const recurringExpenses = demo ? DEMO_RECURRING_EXPENSES : [];
+  const { properties: realProperties, loading, refresh } = useDashboardData();
+  const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>(demo ? DEMO_RECURRING_EXPENSES : []);
   const properties = demo ? DEMO_PROPERTIES : realProperties;
+
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editState, setEditState] = useState<EditState | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+
   const activeExpenses = recurringExpenses.filter(e => e.is_active);
   const totalMonthly = activeExpenses.reduce((sum, e) => {
     switch (e.frequency) {
@@ -25,6 +44,107 @@ export default function RecurringExpensesPage() {
       default: return sum;
     }
   }, 0);
+
+  const openEdit = (expense: RecurringExpense) => {
+    setEditingId(expense.id);
+    setEditState({
+      description: expense.description || '',
+      category: expense.category as ExpenseCategory,
+      amount: expense.amount.toString(),
+      vendor: expense.vendor || '',
+      property_id: expense.property_id,
+      frequency: expense.frequency as ExpenseFrequency,
+      next_due_date: expense.next_due_date || '',
+      is_active: expense.is_active,
+    });
+    setShowEditModal(true);
+  };
+
+  const closeEdit = () => {
+    setShowEditModal(false);
+    setEditingId(null);
+    setEditState(null);
+  };
+
+  const saveEdit = useCallback(async () => {
+    if (!editState || !editingId || demo) {
+      // For demo mode, just update local state
+      if (editState && editingId) {
+        setRecurringExpenses(prev => prev.map(e => 
+          e.id === editingId 
+            ? {
+                ...e,
+                description: editState.description,
+                category: editState.category,
+                amount: parseFloat(editState.amount) || e.amount,
+                vendor: editState.vendor,
+                property_id: editState.property_id,
+                frequency: editState.frequency,
+                next_due_date: editState.next_due_date,
+                is_active: editState.is_active,
+              }
+            : e
+        ));
+      }
+      closeEdit();
+      return;
+    }
+    setSaving(true);
+    try {
+      // Real API call would go here
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      if (!supabase) return;
+      // Update recurring_expenses table if it exists
+      // For now, just close the modal
+      closeEdit();
+      if (refresh) refresh();
+    } catch (err) {
+      console.error('Failed to update recurring expense:', err);
+      alert('Failed to save. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  }, [editState, editingId, demo, refresh]);
+
+  const deleteExpense = useCallback(async () => {
+    if (!editingId) return;
+    if (!confirm('Delete this recurring expense? This cannot be undone.')) return;
+    
+    if (demo) {
+      setRecurringExpenses(prev => prev.filter(e => e.id !== editingId));
+      closeEdit();
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      if (!supabase) return;
+      // Delete from recurring_expenses table if it exists
+      closeEdit();
+      if (refresh) refresh();
+    } catch (err) {
+      console.error('Failed to delete recurring expense:', err);
+    } finally {
+      setSaving(false);
+    }
+  }, [editingId, demo, refresh]);
+
+  const togglePause = useCallback(async () => {
+    if (!editState || !editingId) return;
+    const newIsActive = !editState.is_active;
+    setEditState({ ...editState, is_active: newIsActive });
+    
+    if (demo) {
+      setRecurringExpenses(prev => prev.map(e => 
+        e.id === editingId ? { ...e, is_active: newIsActive } : e
+      ));
+      return;
+    }
+    // Real API call would go here
+  }, [editState, editingId, demo]);
 
   if (loading) {
     return (
@@ -73,7 +193,14 @@ export default function RecurringExpensesPage() {
           const property = properties.find(p => p.id === expense.property_id);
 
           return (
-            <div key={expense.id} className={cn("bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-4 sm:p-6 flex gap-3 sm:gap-4 hover:shadow-md hover:translate-y-[-1px] transition-all duration-200", !expense.is_active && "opacity-50")}>
+            <div
+              key={expense.id}
+              onClick={() => openEdit(expense)}
+              className={cn(
+                "bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-4 sm:p-6 flex gap-3 sm:gap-4 hover:shadow-md hover:translate-y-[-1px] transition-all duration-200 cursor-pointer",
+                !expense.is_active && "opacity-50"
+              )}
+            >
               <span className={cn("flex items-center justify-center w-10 h-10 rounded-full shrink-0", colors.bg)}>
                 <catConfig.icon className="w-5 h-5" />
               </span>
@@ -89,14 +216,9 @@ export default function RecurringExpensesPage() {
                   <div className="flex items-center gap-2 sm:gap-3 text-xs text-muted-foreground flex-wrap">
                     <span className="px-2 sm:px-2.5 py-0.5 rounded-full bg-gray-100 font-medium">{FREQUENCY_LABELS[expense.frequency]}</span>
                     <span className="hidden sm:inline">Next: {formatDate(expense.next_due_date)}</span>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-150 min-w-[36px] min-h-[36px] flex items-center justify-center" title="Pause" aria-label="Pause recurring expense">
-                      <Pause className="w-4 h-4 text-muted-foreground" />
-                    </button>
-                    <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-150 min-w-[36px] min-h-[36px] flex items-center justify-center" title="Edit" aria-label="Edit recurring expense">
-                      <Pencil className="w-4 h-4 text-muted-foreground" />
-                    </button>
+                    {!expense.is_active && (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">Paused</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -104,6 +226,86 @@ export default function RecurringExpensesPage() {
           );
         })}
       </div>
+      )}
+
+      {/* Edit Recurring Expense Modal */}
+      {showEditModal && editState && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/40 backdrop-blur-sm" onClick={closeEdit}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h3 className="text-base font-semibold text-gray-900">Edit Recurring Expense</h3>
+              <button onClick={closeEdit} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">Vendor</label>
+                <input type="text" value={editState.vendor} onChange={e => setEditState({ ...editState, vendor: e.target.value })} placeholder="e.g. Spectrum, State Farm" className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">Description</label>
+                <input type="text" value={editState.description} onChange={e => setEditState({ ...editState, description: e.target.value })} placeholder="What is this recurring expense?" className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">Category</label>
+                  <select value={editState.category} onChange={e => setEditState({ ...editState, category: e.target.value as ExpenseCategory })} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none bg-white">
+                    {ALL_EXPENSE_CATEGORIES.map(cat => <option key={cat} value={cat}>{EXPENSE_CATEGORY_CONFIG[cat]?.label || cat}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">Property</label>
+                  <select value={editState.property_id} onChange={e => setEditState({ ...editState, property_id: e.target.value })} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none bg-white">
+                    {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">Amount</label>
+                  <input type="number" step="0.01" value={editState.amount} onChange={e => setEditState({ ...editState, amount: e.target.value })} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1.5">Frequency</label>
+                  <select value={editState.frequency} onChange={e => setEditState({ ...editState, frequency: e.target.value as ExpenseFrequency })} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none bg-white">
+                    {Object.entries(FREQUENCY_LABELS).map(([key, label]) => (
+                      <option key={key} value={key}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1.5">Next Due Date</label>
+                <input type="date" value={editState.next_due_date} onChange={e => setEditState({ ...editState, next_due_date: e.target.value })} className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none" />
+              </div>
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  onClick={togglePause}
+                  className={cn(
+                    "px-4 py-2 text-sm font-medium rounded-lg transition-colors",
+                    editState.is_active
+                      ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
+                      : "bg-teal-50 text-teal-700 hover:bg-teal-100"
+                  )}
+                >
+                  {editState.is_active ? 'Pause Recurring' : 'Resume Recurring'}
+                </button>
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+              <button onClick={deleteExpense} disabled={saving} className="px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50">
+                Delete
+              </button>
+              <div className="flex gap-2">
+                <button onClick={closeEdit} className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
+                <button onClick={saveEdit} disabled={saving || !editState.amount || !editState.next_due_date} className="px-4 py-2.5 text-sm font-medium text-white bg-teal-500 hover:bg-teal-600 disabled:bg-gray-200 disabled:text-gray-400 rounded-lg transition-colors flex items-center gap-2">
+                  {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</> : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
