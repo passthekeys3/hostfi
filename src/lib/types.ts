@@ -199,7 +199,8 @@ export interface BillMapping {
 
 export type UtilityType = 'electric' | 'gas' | 'water' | 'internet' | 'trash' | 'rent' | 'insurance' | 'cleaning' | 'maintenance' | 'mortgage' | 'supplies' | 'taxes' | 'management' | 'subscription' | 'improvement' | 'other';
 
-export const UTILITY_LABELS: Record<UtilityType, string> = {
+export const UTILITY_LABELS: Record<string, string> = {
+  utility: 'Utility',
   electric: 'Electric',
   gas: 'Gas',
   water: 'Water',
@@ -248,6 +249,7 @@ export function getMonthlyTotals(data: MonthlyBill[]) {
 
 export function getUtilityBreakdown(data: MonthlyBill[]) {
   const UTILITY_COLORS: Record<string, string> = {
+    utility: '#3B82F6',
     electric: '#FBBF24',
     gas: '#F97316',
     water: '#3B82F6',

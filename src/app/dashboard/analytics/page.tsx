@@ -195,9 +195,9 @@ export default function AnalyticsPage() {
         <SpendByPropertyChart data={filteredData} />
         <RevenueByPlatformChart data={filteredRevenue} />
         <UtilityBreakdownChart data={filteredData} />
-        <MoMComparisonChart data={filteredData} />
       </div>
 
+      <MoMComparisonChart data={filteredData} />
       <PropertyCostTable data={filteredData} />
     </div>
   );
