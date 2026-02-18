@@ -434,6 +434,18 @@ export default function InboxPage() {
   }, [dashLoading]); // eslint-disable-line react-hooks/exhaustive-deps
   const pendingItems = items.filter((i) => i.status === "pending_review");
   const processedItems = items.filter((i) => i.status !== "pending_review");
+  const [pendingPage, setPendingPage] = useState(1);
+  const [processedPage, setProcessedPage] = useState(1);
+  const [bulkConfirming, setBulkConfirming] = useState(false);
+  const ITEMS_PER_PAGE = 20;
+
+  // Items that have a property and can be bulk-confirmed
+  const confirmableItems = pendingItems.filter(i => i.match.property_id);
+
+  const paginatedPending = pendingItems.slice((pendingPage - 1) * ITEMS_PER_PAGE, pendingPage * ITEMS_PER_PAGE);
+  const pendingTotalPages = Math.ceil(pendingItems.length / ITEMS_PER_PAGE);
+  const paginatedProcessed = processedItems.slice((processedPage - 1) * ITEMS_PER_PAGE, processedPage * ITEMS_PER_PAGE);
+  const processedTotalPages = Math.ceil(processedItems.length / ITEMS_PER_PAGE);
 
   const persistStatus = async (id: string, status: "approved" | "dismissed", item?: InboxItem, propertyId?: string | null) => {
     try {
@@ -544,6 +556,16 @@ export default function InboxPage() {
     })();
   };
 
+  const handleBulkConfirm = async () => {
+    if (confirmableItems.length === 0) return;
+    setBulkConfirming(true);
+    for (const item of confirmableItems) {
+      setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, status: "confirmed" as const } : i)));
+      await persistStatus(item.id, "approved", item, item.match.property_id);
+    }
+    setBulkConfirming(false);
+  };
+
   return (
     <div className="space-y-10">
       <div className="flex items-start sm:items-center justify-between gap-3">
@@ -553,11 +575,23 @@ export default function InboxPage() {
             Review and Confirm Parsed Bills From Your Email
           </p>
         </div>
-        {pendingItems.length > 0 && (
-          <span className="px-3 py-1.5 bg-teal-500/10 text-teal-600 rounded-full text-sm font-medium border border-teal-500/20">
-            {pendingItems.length} pending
-          </span>
-        )}
+        <div className="flex items-center gap-2 shrink-0">
+          {confirmableItems.length > 0 && (
+            <button
+              onClick={handleBulkConfirm}
+              disabled={bulkConfirming}
+              className="flex items-center gap-1.5 px-4 py-2 min-h-[44px] bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-all text-xs font-medium shadow-sm disabled:opacity-50"
+            >
+              <Check className="w-3.5 h-3.5" />
+              {bulkConfirming ? "Confirming..." : `Confirm All Matched (${confirmableItems.length})`}
+            </button>
+          )}
+          {pendingItems.length > 0 && (
+            <span className="px-3 py-1.5 bg-teal-500/10 text-teal-600 rounded-full text-sm font-medium border border-teal-500/20">
+              {pendingItems.length} pending
+            </span>
+          )}
+        </div>
       </div>
 
       {inboxLoading ? (
@@ -574,7 +608,7 @@ export default function InboxPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {pendingItems.map((item) => (
+          {paginatedPending.map((item) => (
             <InboxCard
               key={item.id}
               item={item}
@@ -585,6 +619,13 @@ export default function InboxPage() {
               onUpdate={(updates) => handleUpdate(item.id, updates)}
             />
           ))}
+          {pendingTotalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-4">
+              <button onClick={() => setPendingPage(p => Math.max(1, p - 1))} disabled={pendingPage === 1} className="px-3 py-2 text-sm font-medium bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px]">Previous</button>
+              <span className="text-sm text-muted-foreground px-3">Page {pendingPage} of {pendingTotalPages}</span>
+              <button onClick={() => setPendingPage(p => Math.min(pendingTotalPages, p + 1))} disabled={pendingPage === pendingTotalPages} className="px-3 py-2 text-sm font-medium bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px]">Next</button>
+            </div>
+          )}
         </div>
       )}
 
@@ -594,7 +635,7 @@ export default function InboxPage() {
             Processed ({processedItems.length})
           </h2>
           <div className="space-y-2">
-            {processedItems.map((item) => (
+            {paginatedProcessed.map((item) => (
               <div
                 key={item.id}
                 className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-200/60 opacity-60 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
@@ -638,6 +679,13 @@ export default function InboxPage() {
                 </button>
               </div>
             ))}
+            {processedTotalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 pt-4">
+                <button onClick={() => setProcessedPage(p => Math.max(1, p - 1))} disabled={processedPage === 1} className="px-3 py-2 text-sm font-medium bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px]">Previous</button>
+                <span className="text-sm text-muted-foreground px-3">Page {processedPage} of {processedTotalPages}</span>
+                <button onClick={() => setProcessedPage(p => Math.min(processedTotalPages, p + 1))} disabled={processedPage === processedTotalPages} className="px-3 py-2 text-sm font-medium bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px]">Next</button>
+              </div>
+            )}
           </div>
         </div>
       )}
