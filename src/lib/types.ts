@@ -251,8 +251,9 @@ export function getUtilityBreakdown(data: MonthlyBill[]) {
     electric: '#FBBF24',
     gas: '#F97316',
     water: '#3B82F6',
-    internet: '#8B5CF6',
+    internet: '#A78BFA',
     trash: '#78716C',
+    rent: '#34D399',
     insurance: '#06B6D4',
     cleaning: '#10B981',
     maintenance: '#6366F1',
@@ -289,8 +290,15 @@ export function getMoMComparison(data: MonthlyBill[]) {
   return utilities.map(ut => {
     const current = data.filter(b => b.month === currentMonth && b.utility_type === ut).reduce((s, b) => s + b.amount, 0);
     const previous = data.filter(b => b.month === previousMonth && b.utility_type === ut).reduce((s, b) => s + b.amount, 0);
-    const change = previous > 0 ? Math.round(((current - previous) / previous) * 100) : 0;
-    return { type: ut, utility: UTILITY_LABELS[ut] || ut, current: Math.round(current), previous: Math.round(previous), change };
+    let change: number;
+    if (previous === 0 && current > 0) {
+      change = 100; // Special marker: "new" expense this month
+    } else if (previous > 0) {
+      change = Math.round(((current - previous) / previous) * 100);
+    } else {
+      change = 0;
+    }
+    return { type: ut, utility: UTILITY_LABELS[ut] || ut, current: Math.round(current), previous: Math.round(previous), change, isNew: previous === 0 && current > 0 };
   }).filter(row => row.current > 0 || row.previous > 0);
 }
 
@@ -356,6 +364,67 @@ export interface InboxItem {
 // ============================================================================
 
 export type RevenueSource = 'airbnb' | 'vrbo' | 'booking_com' | 'direct' | 'other';
+
+export const PLATFORM_LABELS: Record<string, string> = {
+  airbnb: 'Airbnb',
+  vrbo: 'VRBO',
+  booking_com: 'Booking.com',
+  direct: 'Direct',
+  other: 'Other',
+};
+
+export const PLATFORM_COLORS: Record<string, string> = {
+  airbnb: '#FF5A5F',
+  vrbo: '#3B5998',
+  booking_com: '#003580',
+  direct: '#14B8A6',
+  other: '#9CA3AF',
+};
+
+export interface MonthlyRevenue {
+  month: string;
+  monthLabel: string;
+  property_id: string;
+  property_name: string;
+  platform: string;
+  amount: number;
+}
+
+export function getRevenueByPlatform(data: MonthlyRevenue[]) {
+  const byPlatform = new Map<string, number>();
+  for (const r of data) {
+    const platform = r.platform || 'other';
+    byPlatform.set(platform, (byPlatform.get(platform) || 0) + r.amount);
+  }
+  return [...byPlatform.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([platform, value]) => ({
+      platform,
+      name: PLATFORM_LABELS[platform] || platform,
+      value: Math.round(value * 100) / 100,
+      color: PLATFORM_COLORS[platform] || PLATFORM_COLORS.other,
+    }));
+}
+
+export function getRevenueVsExpenses(expenses: MonthlyBill[], revenue: MonthlyRevenue[]) {
+  const allMonths = new Set([...expenses.map(e => e.month), ...revenue.map(r => r.month)]);
+  const months = [...allMonths].sort();
+  
+  return months.map(m => {
+    const expenseTotal = expenses.filter(e => e.month === m).reduce((s, e) => s + e.amount, 0);
+    const revenueTotal = revenue.filter(r => r.month === m).reduce((s, r) => s + r.amount, 0);
+    const firstExp = expenses.find(e => e.month === m);
+    const firstRev = revenue.find(r => r.month === m);
+    const monthLabel = firstExp?.monthLabel || firstRev?.monthLabel || m;
+    return {
+      month: m,
+      monthLabel,
+      revenue: Math.round(revenueTotal * 100) / 100,
+      expenses: Math.round(expenseTotal * 100) / 100,
+      profit: Math.round((revenueTotal - expenseTotal) * 100) / 100,
+    };
+  });
+}
 
 export interface RevenueEntry {
   id: string;

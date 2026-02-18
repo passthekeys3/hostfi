@@ -10,9 +10,11 @@ const SpendByPropertyChart = dynamic(() => import("@/components/analytics-charts
 const UtilityBreakdownChart = dynamic(() => import("@/components/analytics-charts").then(m => m.UtilityBreakdownChart), { ssr: false, loading: () => <div className="h-64 bg-gray-100 rounded-xl animate-pulse" /> });
 const MoMComparisonChart = dynamic(() => import("@/components/analytics-charts").then(m => m.MoMComparisonChart), { ssr: false, loading: () => <div className="h-64 bg-gray-100 rounded-xl animate-pulse" /> });
 const PropertyCostTable = dynamic(() => import("@/components/analytics-charts").then(m => m.PropertyCostTable), { ssr: false, loading: () => <div className="h-48 bg-gray-100 rounded-xl animate-pulse" /> });
+const RevenueVsExpensesChart = dynamic(() => import("@/components/analytics-charts").then(m => m.RevenueVsExpensesChart), { ssr: false, loading: () => <div className="h-64 bg-gray-100 rounded-xl animate-pulse" /> });
+const RevenueByPlatformChart = dynamic(() => import("@/components/analytics-charts").then(m => m.RevenueByPlatformChart), { ssr: false, loading: () => <div className="h-64 bg-gray-100 rounded-xl animate-pulse" /> });
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { type MonthlyBill, type UtilityType } from "@/lib/types";
-import { DollarSign, TrendingUp, Receipt, Building2, BarChart3 } from "lucide-react";
+import { type MonthlyBill, type MonthlyRevenue, type UtilityType } from "@/lib/types";
+import { DollarSign, TrendingUp, Receipt, Building2, BarChart3, Percent, Wallet, ArrowUpDown } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 function formatMonthLabel(ym: string): string {
@@ -27,23 +29,47 @@ export default function AnalyticsPage() {
   const [dateRange, setDateRange] = useState("12");
   const [propertyFilter, setPropertyFilter] = useState("all");
   const [utilityFilter, setUtilityFilter] = useState("all");
-  const { properties, expenses, loading } = useDashboardData();
+  const { properties, expenses, revenue, loading } = useDashboardData();
 
   // Transform real expenses into MonthlyBill format for charts
   const analyticsData: MonthlyBill[] = useMemo(() => {
-    return expenses.map(exp => {
-      const month = exp.date.slice(0, 7); // YYYY-MM
-      const property = properties.find(p => p.id === exp.property_id);
-      return {
-        month,
-        monthLabel: formatMonthLabel(month),
-        property_id: exp.property_id,
-        property_name: property?.name || 'Unknown',
-        utility_type: (exp.category || 'other') as UtilityType,
-        amount: exp.amount,
-      };
-    });
+    return expenses
+      .map(exp => {
+        const month = (exp.date || '').slice(0, 7); // YYYY-MM with null guard
+        if (!month) return null;
+        const property = properties.find(p => p.id === exp.property_id);
+        return {
+          month,
+          monthLabel: formatMonthLabel(month),
+          property_id: exp.property_id,
+          property_name: property?.name || 'Unknown',
+          utility_type: (exp.category || 'other') as UtilityType,
+          amount: exp.amount,
+        };
+      })
+      .filter((item): item is MonthlyBill => item !== null);
   }, [expenses, properties]);
+
+  // Transform revenue into MonthlyRevenue format for charts
+  const revenueData: MonthlyRevenue[] = useMemo(() => {
+    return (revenue || [])
+      .filter(r => r.date || r.payout_date)
+      .map(r => {
+        const dateStr = r.date || r.payout_date || '';
+        const month = dateStr.slice(0, 7);
+        if (!month) return null;
+        const property = properties.find(p => p.id === r.property_id);
+        return {
+          month,
+          monthLabel: formatMonthLabel(month),
+          property_id: r.property_id,
+          property_name: property?.name || 'Unknown',
+          platform: r.platform || 'other',
+          amount: r.amount,
+        };
+      })
+      .filter((item): item is MonthlyRevenue => item !== null);
+  }, [revenue, properties]);
 
   const filteredData = useMemo(() => {
     let data = analyticsData;
@@ -55,10 +81,32 @@ export default function AnalyticsPage() {
     return data;
   }, [analyticsData, dateRange, propertyFilter, utilityFilter]);
 
+  // Apply same filters to revenue data
+  const filteredRevenue = useMemo(() => {
+    let data = revenueData;
+    const months = [...new Set(analyticsData.map(b => b.month))].sort();
+    const rangeMonths = months.slice(-parseInt(dateRange));
+    // Also include revenue months in case expenses don't cover all months
+    const revMonths = [...new Set(data.map(r => r.month))].sort();
+    const allRangeMonths = [...new Set([...rangeMonths, ...revMonths.slice(-parseInt(dateRange))])];
+    data = data.filter(r => allRangeMonths.includes(r.month));
+    if (propertyFilter !== "all") data = data.filter(r => r.property_id === propertyFilter);
+    return data;
+  }, [revenueData, analyticsData, dateRange, propertyFilter]);
+
   const stats = useMemo(() => {
     const totalSpend = filteredData.reduce((s, b) => s + b.amount, 0);
-    const months = [...new Set(filteredData.map(b => b.month))];
-    const avgMonthly = months.length > 0 ? totalSpend / months.length : 0;
+    const totalRevenue = filteredRevenue.reduce((s, r) => s + r.amount, 0);
+    const netProfit = totalRevenue - totalSpend;
+    
+    const expenseMonths = [...new Set(filteredData.map(b => b.month))];
+    const revenueMonths = [...new Set(filteredRevenue.map(r => r.month))];
+    const allMonths = [...new Set([...expenseMonths, ...revenueMonths])];
+    
+    const avgMonthlyExp = expenseMonths.length > 0 ? totalSpend / expenseMonths.length : 0;
+    const avgMonthlyRev = revenueMonths.length > 0 ? totalRevenue / revenueMonths.length : 0;
+    const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
+    
     const highestBill = filteredData.reduce((max, b) => b.amount > max.amount ? b : max, filteredData[0] || { amount: 0, property_name: 'N/A' });
     const propTotals = new Map<string, { name: string; total: number }>();
     for (const b of filteredData) {
@@ -67,8 +115,8 @@ export default function AnalyticsPage() {
       propTotals.set(b.property_id, p);
     }
     const mostExpensive = [...propTotals.values()].sort((a, b) => b.total - a.total)[0];
-    return { totalSpend, avgMonthly, highestBill, mostExpensive };
-  }, [filteredData]);
+    return { totalSpend, totalRevenue, netProfit, avgMonthlyExp, avgMonthlyRev, profitMargin, highestBill, mostExpensive };
+  }, [filteredData, filteredRevenue]);
 
   const propertyList = useMemo(() => {
     return properties.map(p => ({ id: p.id, name: p.name }));
@@ -119,16 +167,35 @@ export default function AnalyticsPage() {
         />
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-        <StatCard title="Total Spend" value={formatCurrency(stats.totalSpend)} subtitle={`Last ${dateRange} months`} icon={DollarSign} />
-        <StatCard title="Avg Monthly" value={formatCurrency(stats.avgMonthly)} subtitle="Per month average" icon={TrendingUp} />
-        <StatCard title="Highest Bill" value={formatCurrency(stats.highestBill?.amount || 0)} subtitle={stats.highestBill?.property_name || ''} icon={Receipt} />
-        <StatCard title="Most Expensive" value={stats.mostExpensive?.name || 'N/A'} subtitle={formatCurrency(stats.mostExpensive?.total || 0) + ' total'} icon={Building2} />
+      {/* Primary Stats - Revenue & Profit */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        <StatCard title="Total Revenue" value={formatCurrency(stats.totalRevenue)} subtitle={`Last ${dateRange} months`} icon={Wallet} accent="teal" />
+        <StatCard title="Total Expenses" value={formatCurrency(stats.totalSpend)} subtitle={`Last ${dateRange} months`} icon={DollarSign} accent="amber" />
+        <StatCard 
+          title="Net Profit" 
+          value={(stats.netProfit < 0 ? '-' : '') + formatCurrency(Math.abs(stats.netProfit))} 
+          subtitle={stats.netProfit >= 0 ? 'Profitable' : 'Loss'} 
+          icon={ArrowUpDown}
+          accent={stats.netProfit < 0 ? 'rose' : 'teal'}
+        />
+        <StatCard title="Avg Monthly Rev" value={formatCurrency(stats.avgMonthlyRev)} subtitle="Per month" icon={TrendingUp} accent="blue" />
+        <StatCard title="Avg Monthly Exp" value={formatCurrency(stats.avgMonthlyExp)} subtitle="Per month" icon={Receipt} accent="amber" />
+        <StatCard 
+          title="Profit Margin" 
+          value={`${stats.profitMargin >= 0 ? '' : '-'}${Math.abs(stats.profitMargin).toFixed(1)}%`} 
+          subtitle={stats.profitMargin >= 20 ? 'Healthy' : stats.profitMargin >= 0 ? 'Low' : 'Negative'} 
+          icon={Percent}
+          accent={stats.profitMargin < 0 ? 'rose' : stats.profitMargin >= 20 ? 'teal' : 'blue'}
+        />
       </div>
+
+      {/* Revenue vs Expenses - Full Width */}
+      <RevenueVsExpensesChart expenses={filteredData} revenue={filteredRevenue} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <MonthlySpendChart data={filteredData} />
         <SpendByPropertyChart data={filteredData} />
+        <RevenueByPlatformChart data={filteredRevenue} />
         <UtilityBreakdownChart data={filteredData} />
         <MoMComparisonChart data={filteredData} />
       </div>

@@ -6,9 +6,10 @@ import {
   BarChart, Bar, PieChart, Pie, Cell, Legend,
 } from "recharts";
 import {
-  type MonthlyBill, type UtilityType,
-  UTILITY_LABELS, ALL_EXPENSE_TYPES,
+  type MonthlyBill, type UtilityType, type MonthlyRevenue,
+  UTILITY_LABELS, ALL_EXPENSE_TYPES, PLATFORM_LABELS,
   getMonthlyTotals, getUtilityBreakdown, getMoMComparison, getPropertyTable,
+  getRevenueByPlatform, getRevenueVsExpenses,
 } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -223,12 +224,18 @@ export function MoMComparisonChart({ data }: { data: MonthlyBill[] }) {
             <div key={row.type} className="group">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs font-medium text-gray-700">{row.utility}</span>
-                <span className={cn(
-                  "text-xs font-semibold px-1.5 py-0.5 rounded",
-                  row.change > 0 ? "text-rose-600 bg-rose-50" : row.change < 0 ? "text-emerald-600 bg-emerald-50" : "text-gray-500 bg-gray-50"
-                )}>
-                  {row.change > 0 ? '+' : ''}{row.change}%
-                </span>
+                {row.isNew ? (
+                  <span className="text-xs font-semibold px-1.5 py-0.5 rounded text-blue-600 bg-blue-50">
+                    New
+                  </span>
+                ) : (
+                  <span className={cn(
+                    "text-xs font-semibold px-1.5 py-0.5 rounded",
+                    row.change > 0 ? "text-rose-600 bg-rose-50" : row.change < 0 ? "text-emerald-600 bg-emerald-50" : "text-gray-500 bg-gray-50"
+                  )}>
+                    {row.change > 0 ? '+' : ''}{row.change}%
+                  </span>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex-1 space-y-1">
@@ -325,15 +332,168 @@ export function PropertyCostTable({ data }: { data: MonthlyBill[] }) {
                     "inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full",
                     row.trendPct > 0 
                       ? "text-rose-600 bg-rose-50" 
-                      : "text-emerald-600 bg-emerald-50"
+                      : row.trendPct < 0
+                        ? "text-emerald-600 bg-emerald-50"
+                        : "text-gray-500 bg-gray-100"
                   )}>
-                    {row.trendPct > 0 ? '↑' : '↓'} {Math.abs(row.trendPct)}%
+                    {row.trendPct > 0 ? '↑' : row.trendPct < 0 ? '↓' : '—'} {row.trendPct !== 0 ? `${Math.abs(row.trendPct)}%` : '0%'}
                   </span>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+export function RevenueVsExpensesChart({ expenses, revenue }: { expenses: MonthlyBill[]; revenue: MonthlyRevenue[] }) {
+  const chartData = useMemo(() => getRevenueVsExpenses(expenses, revenue), [expenses, revenue]);
+
+  return (
+    <div 
+      className="bg-white rounded-2xl p-6 border border-gray-200"
+      style={{
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+      }}
+    >
+      <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-6">Revenue vs Expenses</h3>
+      {chartData.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <p className="text-gray-400 text-sm">No revenue or expense data yet</p>
+        </div>
+      ) : (
+        <div className="h-[280px]" style={{ minHeight: 200 }}>
+          <ResponsiveContainer width="100%" height="100%" minHeight={200}>
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#14B8A6" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="#14B8A6" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#F43F5E" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="#F43F5E" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.8} vertical={false} />
+              <XAxis dataKey="monthLabel" stroke="#6b7280" fontSize={11} fontWeight={500} tickLine={false} axisLine={false} dy={8} />
+              <YAxis stroke="#6b7280" fontSize={11} fontWeight={500} tickFormatter={fmt} tickLine={false} axisLine={false} dx={-8} />
+              <Tooltip 
+                {...tooltipStyle} 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                formatter={((v: unknown, name: unknown) => [fmt(Number(v)), String(name) === 'revenue' ? 'Revenue' : 'Expenses']) as any} 
+              />
+              <Legend 
+                wrapperStyle={{ fontSize: 12, color: '#6b7280', paddingTop: '16px' }}
+                iconType="circle"
+                iconSize={8}
+                formatter={(value: string) => value === 'revenue' ? 'Revenue' : 'Expenses'}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="revenue" 
+                stroke="#14B8A6" 
+                strokeWidth={2.5} 
+                fill="url(#revenueGrad)"
+                animationDuration={1000}
+                animationEasing="ease-out"
+              />
+              <Area 
+                type="monotone" 
+                dataKey="expenses" 
+                stroke="#F43F5E" 
+                strokeWidth={2.5} 
+                fill="url(#expenseGrad)"
+                animationDuration={1000}
+                animationEasing="ease-out"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function RevenueByPlatformChart({ data }: { data: MonthlyRevenue[] }) {
+  const chartData = useMemo(() => getRevenueByPlatform(data), [data]);
+  const total = chartData.reduce((s, d) => s + d.value, 0);
+
+  if (chartData.length === 0) {
+    return (
+      <div 
+        className="bg-white rounded-2xl p-6 border border-gray-200"
+        style={{
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+        }}
+      >
+        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-6">Revenue by Platform</h3>
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <p className="text-gray-400 text-sm">No revenue data yet</p>
+          <p className="text-gray-300 text-xs mt-1">Add revenue entries to see platform breakdown.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      className="bg-white rounded-2xl p-6 border border-gray-200"
+      style={{
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+      }}
+    >
+      <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-6">Revenue by Platform</h3>
+      <div className="h-[220px]">
+        <ResponsiveContainer width="100%" height="100%" minHeight={180}>
+          <PieChart>
+            <defs>
+              {chartData.map((entry, i) => (
+                <linearGradient key={`platform-gradient-${i}`} id={`platformGrad-${i}`} x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor={entry.color} stopOpacity={1} />
+                  <stop offset="100%" stopColor={entry.color} stopOpacity={0.8} />
+                </linearGradient>
+              ))}
+            </defs>
+            <Pie
+              data={chartData}
+              cx="50%"
+              cy="50%"
+              innerRadius={55}
+              outerRadius={85}
+              paddingAngle={chartData.length > 1 ? 3 : 0}
+              dataKey="value"
+              cornerRadius={4}
+              animationDuration={1000}
+              animationEasing="ease-out"
+            >
+              {chartData.map((entry, i) => (
+                <Cell key={i} fill={`url(#platformGrad-${i})`} stroke="none" />
+              ))}
+            </Pie>
+            <Tooltip
+              {...tooltipStyle}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              formatter={((v: unknown, name: unknown) => { const n = Number(v); return [fmt(n) + ` (${((n / total) * 100).toFixed(1)}%)`, String(name)]; }) as any}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+      {/* Platform list below chart */}
+      <div className="space-y-2.5 mt-4 pt-4 border-t border-gray-100">
+        {chartData.map((item) => {
+          const pct = ((item.value / total) * 100).toFixed(1);
+          return (
+            <div key={item.platform} className="flex items-center gap-3 text-sm">
+              <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+              <span className="text-gray-700 font-medium">{item.name}</span>
+              <span className="text-gray-400 text-xs">{pct}%</span>
+              <span className="text-gray-900 font-semibold ml-auto tabular-nums">{fmt(item.value)}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -351,7 +511,7 @@ interface FiltersProps {
 }
 
 export function AnalyticsFilters({ dateRange, setDateRange, propertyFilter, setPropertyFilter, utilityFilter, setUtilityFilter, properties }: FiltersProps) {
-  const selectClass = "w-full sm:w-auto bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-teal-500/20/20 focus:border-teal-500 min-h-[44px] transition-all duration-200";
+  const selectClass = "w-full sm:w-auto bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 min-h-[44px] transition-all duration-200";
 
   return (
     <div className="flex flex-col sm:flex-row flex-wrap gap-3">

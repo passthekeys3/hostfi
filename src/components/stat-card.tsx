@@ -10,6 +10,7 @@ interface StatCardProps {
   trend?: { value: string; positive: boolean };
   accent?: "teal" | "blue" | "amber" | "rose";
   href?: string;
+  className?: string;
 }
 
 const accentStyles = {
@@ -35,7 +36,7 @@ const accentStyles = {
   },
 };
 
-export function StatCard({ title, value, subtitle, icon: Icon, trend, accent = "teal", href }: StatCardProps) {
+export function StatCard({ title, value, subtitle, icon: Icon, trend, accent = "teal", href, className }: StatCardProps) {
   const a = accentStyles[accent];
   
   const content = (
@@ -46,6 +47,7 @@ export function StatCard({ title, value, subtitle, icon: Icon, trend, accent = "
       "h-full",
       href && "cursor-pointer",
       a.border,
+      className,
     )}>
       <div className="flex items-start justify-between mb-3">
         <p className="text-[11px] font-medium uppercase tracking-widest text-gray-400">{title}</p>
