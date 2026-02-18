@@ -330,15 +330,19 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
                         }}
                       />
                     </div>
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div className="col-span-2">
                         <label htmlFor="onboarding-prop-city" className="sr-only">City</label>
                         <input id="onboarding-prop-city" value={propCity} onChange={(e) => setPropCity(e.target.value)} placeholder="City" className={inputClass} />
                       </div>
-                      <label htmlFor="onboarding-prop-state" className="sr-only">State</label>
-                      <input id="onboarding-prop-state" value={propState} onChange={(e) => setPropState(e.target.value)} placeholder="State" className={inputClass} />
-                      <label htmlFor="onboarding-prop-zip" className="sr-only">Zip code</label>
-                      <input id="onboarding-prop-zip" value={propZip} onChange={(e) => setPropZip(e.target.value)} placeholder="Zip" className={inputClass} />
+                      <div className="col-span-1">
+                        <label htmlFor="onboarding-prop-state" className="sr-only">State</label>
+                        <input id="onboarding-prop-state" value={propState} onChange={(e) => setPropState(e.target.value)} placeholder="State" className={inputClass} />
+                      </div>
+                      <div className="col-span-1">
+                        <label htmlFor="onboarding-prop-zip" className="sr-only">Zip code</label>
+                        <input id="onboarding-prop-zip" value={propZip} onChange={(e) => setPropZip(e.target.value)} placeholder="Zip" className={inputClass} />
+                      </div>
                     </div>
                     <div>
                       <label htmlFor="onboarding-prop-type" className="block text-sm font-medium mb-1.5">Property Type</label>

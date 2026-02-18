@@ -65,7 +65,7 @@ export function StatCard({ title, value, subtitle, icon: Icon, trend, accent = "
       {trend && (
         <div className="mt-2.5">
           <span className={cn(
-            "inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full",
+            "inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap",
             trend.positive
               ? "bg-emerald-50 text-emerald-600"
               : "bg-rose-50 text-rose-600"

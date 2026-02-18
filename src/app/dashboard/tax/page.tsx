@@ -345,7 +345,7 @@ export default function TaxPage() {
       </div>
 
       {/* Export Actions */}
-      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
         <button
           onClick={handleDownloadPDF}
           className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2.5 bg-white text-foreground font-medium rounded-xl text-xs sm:text-sm border border-gray-200 min-h-[44px] transition-all duration-200 hover:bg-gray-100 hover:border-gray-200/80"

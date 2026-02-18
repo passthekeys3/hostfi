@@ -127,19 +127,19 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-5">
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-4 sm:p-6">
-          <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-muted-foreground">Type</p>
+          <p className="text-[11px] sm:text-xs font-medium uppercase tracking-wide text-muted-foreground">Type</p>
           <p className="text-base sm:text-lg font-semibold mt-1 truncate">{getPropertyTypeLabel(property.property_type)}</p>
         </div>
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-4 sm:p-6">
-          <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-muted-foreground">Revenue</p>
+          <p className="text-[11px] sm:text-xs font-medium uppercase tracking-wide text-muted-foreground">Revenue</p>
           <p className="text-base sm:text-lg font-semibold mt-1">{formatCurrency(totalNetRevenue)}</p>
         </div>
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-4 sm:p-6">
-          <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-muted-foreground">Expenses</p>
+          <p className="text-[11px] sm:text-xs font-medium uppercase tracking-wide text-muted-foreground">Expenses</p>
           <p className="text-base sm:text-lg font-semibold mt-1">{formatCurrency(totalExpenses)}</p>
         </div>
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-4 sm:p-6">
-          <p className="text-[10px] sm:text-xs font-medium uppercase tracking-wide text-muted-foreground">Net Profit</p>
+          <p className="text-[11px] sm:text-xs font-medium uppercase tracking-wide text-muted-foreground">Net Profit</p>
           <p className={cn("text-base sm:text-lg font-semibold mt-1", netProfit >= 0 ? "text-teal-600" : "text-rose-600")}>{netProfit >= 0 ? '' : '-'}{formatCurrency(Math.abs(netProfit))}</p>
         </div>
       </div>

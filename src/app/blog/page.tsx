@@ -58,7 +58,7 @@ export default function BlogPage() {
         <div className="space-y-8">
           {posts.map((post) => (
             <Link key={post.slug} href={`/blog/${post.slug}`} className="block group">
-              <article className="p-6 bg-white rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all">
+              <article className="p-4 sm:p-6 bg-white rounded-xl border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all">
                 <div className="flex items-center gap-3 text-xs text-gray-400 mb-3">
                   <span>{post.date}</span>
                   <span>&middot;</span>

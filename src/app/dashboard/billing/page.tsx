@@ -350,7 +350,7 @@ export default function BillingPage() {
             <div
               key={plan.id}
               className={cn(
-                "bg-white rounded-xl border p-6 transition-all relative",
+                "bg-white rounded-xl border p-4 sm:p-6 transition-all relative",
                 isCurrent
                   ? "border-teal-300 shadow-[0_2px_12px_rgba(20,184,166,0.15)]"
                   : plan.badge

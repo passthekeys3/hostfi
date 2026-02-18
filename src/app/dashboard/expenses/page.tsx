@@ -281,19 +281,19 @@ export default function ExpensesPage() {
           )}
         </div>
         
-        <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)} className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm">
+        <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)} className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm w-full sm:w-auto">
           <option value="all">All Categories</option>
           {ALL_EXPENSE_CATEGORIES.map(cat => (
             <option key={cat} value={cat}>{EXPENSE_CATEGORY_CONFIG[cat]?.label || cat}</option>
           ))}
         </select>
-        <select value={selectedProperty} onChange={e => setSelectedProperty(e.target.value)} className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm">
+        <select value={selectedProperty} onChange={e => setSelectedProperty(e.target.value)} className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm w-full sm:w-auto">
           <option value="all">All Properties</option>
           {properties.map((p) => (
             <option key={p.id} value={p.id}>{p.name}</option>
           ))}
         </select>
-        <select value={selectedStatus} onChange={e => setSelectedStatus(e.target.value)} className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm">
+        <select value={selectedStatus} onChange={e => setSelectedStatus(e.target.value)} className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm w-full sm:w-auto">
           <option value="all">All Statuses</option>
           <option value="paid">Paid</option>
           <option value="pending">Pending</option>
@@ -401,7 +401,7 @@ export default function ExpensesPage() {
                 <button
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="p-2.5 sm:p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   aria-label="Previous page"
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -440,7 +440,7 @@ export default function ExpensesPage() {
                 <button
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="p-2.5 sm:p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   aria-label="Next page"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -457,7 +457,7 @@ export default function ExpensesPage() {
           <div role="dialog" aria-modal="true" className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <h3 className="text-base font-semibold text-gray-900">Edit Expense</h3>
-              <button onClick={closeEdit} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <button onClick={closeEdit} className="p-2.5 hover:bg-gray-100 rounded-lg transition-colors">
                 <X className="w-4 h-4 text-gray-400" />
               </button>
             </div>

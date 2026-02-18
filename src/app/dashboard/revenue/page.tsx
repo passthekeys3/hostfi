@@ -586,17 +586,51 @@ export default function RevenuePage() {
             )}
           </div>
         </div>
-        <div className="overflow-x-auto">
+        {/* Mobile card view */}
+        <div className="sm:hidden p-4 space-y-3">
+          {propertyPnL.map(row => (
+            <div key={row.property.id} className="bg-gray-50 rounded-xl border border-gray-100 p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <p className="font-medium text-sm text-gray-900">{row.property.name}</p>
+                  <p className="text-xs text-gray-400">{row.bookings} bookings</p>
+                </div>
+                <span className={cn("text-sm font-bold", row.profit >= 0 ? "text-teal-600" : "text-rose-600")}>
+                  {row.profit >= 0 ? '' : '-'}{formatCurrency(Math.abs(row.profit))}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
+                <div>Revenue: {formatCurrency(row.net)}</div>
+                <div>Expenses: {formatCurrency(row.expenses)}</div>
+              </div>
+            </div>
+          ))}
+          {/* Total card */}
+          <div className="bg-gray-900 rounded-xl p-4 text-white">
+            <div className="flex items-center justify-between mb-2">
+              <p className="font-semibold text-sm">Total</p>
+              <span className={cn("text-sm font-bold", netProfit >= 0 ? "text-teal-400" : "text-rose-400")}>
+                {netProfit >= 0 ? '' : '-'}{formatCurrency(Math.abs(netProfit))}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs text-gray-400">
+              <div>Revenue: {formatCurrency(totalNet)}</div>
+              <div>Expenses: {formatCurrency(totalExpenses)}</div>
+            </div>
+          </div>
+        </div>
+        {/* Desktop table */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-100">
                 <th className="px-5 py-3">Property</th>
                 <th className="px-5 py-3 text-right">Gross Revenue</th>
-                <th className="px-5 py-3 text-right hidden sm:table-cell">Platform Fees</th>
+                <th className="px-5 py-3 text-right hidden md:table-cell">Platform Fees</th>
                 <th className="px-5 py-3 text-right">Net Payouts</th>
                 <th className="px-5 py-3 text-right">Expenses</th>
                 <th className="px-5 py-3 text-right">Profit</th>
-                <th className="px-5 py-3 text-right hidden sm:table-cell">Margin</th>
+                <th className="px-5 py-3 text-right hidden md:table-cell">Margin</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -609,13 +643,13 @@ export default function RevenuePage() {
                       <p className="text-xs text-gray-400">{row.bookings} bookings</p>
                     </td>
                     <td className="px-5 py-3 text-right text-gray-700">{formatCurrency(row.gross)}</td>
-                    <td className="px-5 py-3 text-right text-gray-400 hidden sm:table-cell">-{formatCurrency(row.gross - row.net)}</td>
+                    <td className="px-5 py-3 text-right text-gray-400 hidden md:table-cell">-{formatCurrency(row.gross - row.net)}</td>
                     <td className="px-5 py-3 text-right text-gray-700">{formatCurrency(row.net)}</td>
                     <td className="px-5 py-3 text-right text-gray-700">-{formatCurrency(row.expenses)}</td>
                     <td className={cn("px-5 py-3 text-right font-semibold", row.profit >= 0 ? "text-teal-600" : "text-rose-600")}>
                       {row.profit >= 0 ? '' : '-'}{formatCurrency(Math.abs(row.profit))}
                     </td>
-                    <td className={cn("px-5 py-3 text-right hidden sm:table-cell", margin >= 0 ? "text-teal-600" : "text-rose-600")}>
+                    <td className={cn("px-5 py-3 text-right hidden md:table-cell", margin >= 0 ? "text-teal-600" : "text-rose-600")}>
                       {margin.toFixed(1)}%
                     </td>
                   </tr>
@@ -627,13 +661,13 @@ export default function RevenuePage() {
               <tr className="bg-gray-50/50 font-semibold text-sm">
                 <td className="px-5 py-3">Total</td>
                 <td className="px-5 py-3 text-right">{formatCurrency(totalGross)}</td>
-                <td className="px-5 py-3 text-right hidden sm:table-cell text-gray-400">-{formatCurrency(totalFees)}</td>
+                <td className="px-5 py-3 text-right hidden md:table-cell text-gray-400">-{formatCurrency(totalFees)}</td>
                 <td className="px-5 py-3 text-right">{formatCurrency(totalNet)}</td>
                 <td className="px-5 py-3 text-right">-{formatCurrency(totalExpenses)}</td>
                 <td className={cn("px-5 py-3 text-right", netProfit >= 0 ? "text-teal-600" : "text-rose-600")}>
                   {netProfit >= 0 ? '' : '-'}{formatCurrency(Math.abs(netProfit))}
                 </td>
-                <td className={cn("px-5 py-3 text-right hidden sm:table-cell", netProfit >= 0 ? "text-teal-600" : "text-rose-600")}>
+                <td className={cn("px-5 py-3 text-right hidden md:table-cell", netProfit >= 0 ? "text-teal-600" : "text-rose-600")}>
                   {totalNet > 0 ? `${((netProfit / totalNet) * 100).toFixed(1)}%` : '—'}
                 </td>
               </tr>
@@ -716,11 +750,11 @@ export default function RevenuePage() {
           )}
         </div>
         
-        <select value={filterProperty} onChange={e => setFilterProperty(e.target.value)} className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm">
+        <select value={filterProperty} onChange={e => setFilterProperty(e.target.value)} className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm w-full sm:w-auto">
           <option value="all">All Properties</option>
           {allProperties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
-        <select value={filterSource} onChange={e => setFilterSource(e.target.value)} className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm">
+        <select value={filterSource} onChange={e => setFilterSource(e.target.value)} className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm w-full sm:w-auto">
           <option value="all">All Platforms</option>
           {REVENUE_SOURCES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
@@ -822,7 +856,7 @@ export default function RevenuePage() {
                 <button
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="p-2.5 sm:p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   aria-label="Previous page"
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -861,7 +895,7 @@ export default function RevenuePage() {
                 <button
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="p-2.5 sm:p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   aria-label="Next page"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -880,7 +914,7 @@ export default function RevenuePage() {
           <div role="dialog" aria-modal="true" className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <h3 className="text-base font-semibold text-gray-900">Add Revenue</h3>
-              <button onClick={() => setModal(null)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <button onClick={() => setModal(null)} className="p-2.5 hover:bg-gray-100 rounded-lg transition-colors">
                 <X className="w-4 h-4 text-gray-400" />
               </button>
             </div>
@@ -949,7 +983,7 @@ export default function RevenuePage() {
           <div role="dialog" aria-modal="true" className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <h3 className="text-base font-semibold text-gray-900">Edit Revenue</h3>
-              <button onClick={() => { setModal(null); setEditingId(null); }} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <button onClick={() => { setModal(null); setEditingId(null); }} className="p-2.5 hover:bg-gray-100 rounded-lg transition-colors">
                 <X className="w-4 h-4 text-gray-400" />
               </button>
             </div>
@@ -1027,7 +1061,7 @@ export default function RevenuePage() {
               <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
                 <FileSpreadsheet className="w-4 h-4 text-teal-500" /> Import CSV
               </h3>
-              <button onClick={() => { if (!isImporting) { setModal(null); setCsvResult(null); setCsvText(''); setImportResult(null); setImportError(null); } }} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" disabled={isImporting}>
+              <button onClick={() => { if (!isImporting) { setModal(null); setCsvResult(null); setCsvText(''); setImportResult(null); setImportError(null); } }} className="p-2.5 hover:bg-gray-100 rounded-lg transition-colors" disabled={isImporting}>
                 <X className="w-4 h-4 text-gray-400" />
               </button>
             </div>

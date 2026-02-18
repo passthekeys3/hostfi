@@ -87,7 +87,7 @@ export default function AskPage() {
 
   return (
     <UpgradeGate feature="ask-ai">
-    <div className="flex flex-col h-[calc(100vh-8rem)] lg:h-[calc(100vh-5rem)]">
+    <div className="flex flex-col h-[calc(100dvh-8rem)] lg:h-[calc(100dvh-5rem)]">
       {/* Header */}
       <div className="shrink-0 mb-4">
         <div className="flex items-center gap-3">

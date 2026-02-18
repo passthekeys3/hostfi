@@ -124,7 +124,7 @@ export default function SettingsPage() {
           <div className="flex items-center gap-2 sm:gap-3 max-w-lg">
             {billingEmail && billingEmail !== "loading..." ? (
               <>
-                <div className="flex-1 px-2.5 sm:px-4 py-3 sm:py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-[11px] sm:text-sm font-mono text-center break-all min-w-0">
+                <div className="flex-1 px-2 sm:px-4 py-2.5 sm:py-3.5 bg-gray-50 border border-gray-200 rounded-xl text-[10px] sm:text-sm font-mono text-center break-all min-w-0">
                   {billingEmail}
                 </div>
                 <button

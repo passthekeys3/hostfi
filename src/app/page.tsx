@@ -522,7 +522,7 @@ export default function LandingPage() {
                   <AnimatedNumber value={s.value!} prefix={s.prefix} suffix={s.suffix} visible={statsSection.visible} />
                 )}
               </p>
-              <p className="text-sm text-gray-400 mt-1">{s.label}</p>
+              <p className="text-xs sm:text-sm text-gray-400 mt-1">{s.label}</p>
             </div>
           ))}
         </div>
@@ -623,8 +623,8 @@ export default function LandingPage() {
             ].map((f, i) => (
               <FadeIn key={i} delay={i * 50} withScale>
                 <div className="bg-white rounded-xl p-6 h-full border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all group">
-                  <div className="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center mb-4 group-hover:bg-teal-50 transition-colors">
-                    <f.icon className="w-5 h-5 text-gray-400 group-hover:text-teal-500 transition-colors" />
+                  <div className="w-8 sm:w-10 h-8 sm:h-10 rounded-lg bg-gray-50 flex items-center justify-center mb-4 group-hover:bg-teal-50 transition-colors">
+                    <f.icon className="w-4 sm:w-5 h-4 sm:h-5 text-gray-400 group-hover:text-teal-500 transition-colors" />
                   </div>
                   <h3 className="text-sm font-semibold text-gray-900 mb-2">{f.title}</h3>
                   <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>

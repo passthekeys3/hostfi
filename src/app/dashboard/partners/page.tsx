@@ -124,9 +124,9 @@ function PartnerCard({ partner }: { partner: Partner }) {
             {partner.logo}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-semibold text-gray-900">{partner.name}</span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+            <div className="flex items-center gap-2 flex-wrap min-w-0">
+              <span className="text-sm font-semibold text-gray-900 truncate">{partner.name}</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full shrink-0">
                 {partner.category}
               </span>
             </div>

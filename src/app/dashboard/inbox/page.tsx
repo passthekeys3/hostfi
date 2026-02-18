@@ -153,7 +153,7 @@ function InboxCard({ item, onConfirm, onReject, onUpdate, properties }: { item: 
         {/* Edit form */}
         {editing && (
           <div className="mt-4 ml-0 sm:ml-14 bg-gray-50 rounded-xl border border-gray-200 p-4 space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Provider</label>
                 <input
@@ -176,6 +176,8 @@ function InboxCard({ item, onConfirm, onReject, onUpdate, properties }: { item: 
                   />
                 </div>
               </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Category</label>
                 <select

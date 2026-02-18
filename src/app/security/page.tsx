@@ -208,7 +208,7 @@ function Section({ icon, title, children }: { icon: React.ReactNode; title: stri
         {icon}
         <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
       </div>
-      <div className="text-gray-600 leading-relaxed pl-[30px]">
+      <div className="text-gray-600 leading-relaxed pl-0 sm:pl-[30px]">
         {children}
       </div>
     </div>

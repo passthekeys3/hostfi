@@ -56,8 +56,8 @@ export default function CompareLandlordStudioPage() {
           <h2 className="text-xl font-bold text-gray-900 mb-6">Feature Comparison</h2>
           
           <div className="border border-gray-200 rounded-xl overflow-hidden">
-            {/* Header Row */}
-            <div className="grid grid-cols-3 bg-gray-50 border-b border-gray-200">
+            {/* Header Row - Desktop only */}
+            <div className="hidden sm:grid grid-cols-3 bg-gray-50 border-b border-gray-200">
               <div className="px-4 py-3 font-semibold text-gray-900">Feature</div>
               <div className="px-4 py-3 font-semibold text-gray-900 text-center">HostFi</div>
               <div className="px-4 py-3 font-semibold text-gray-900 text-center">Landlord Studio</div>
@@ -195,23 +195,48 @@ function FeatureRow({ feature, hostfi, competitor, isLast = false }: {
   isLast?: boolean;
 }) {
   return (
-    <div className={`grid grid-cols-3 ${!isLast ? 'border-b border-gray-100' : ''}`}>
-      <div className="px-4 py-3 text-gray-700 text-sm">{feature}</div>
-      <div className="px-4 py-3 flex justify-center">
-        {typeof hostfi === 'boolean' ? (
-          hostfi ? <Check className="w-5 h-5 text-teal-600" /> : <X className="w-5 h-5 text-gray-300" />
-        ) : (
-          <span className="text-sm text-teal-600 font-medium">{hostfi}</span>
-        )}
+    <>
+      {/* Desktop row */}
+      <div className={`hidden sm:grid grid-cols-3 ${!isLast ? 'border-b border-gray-100' : ''}`}>
+        <div className="px-4 py-3 text-gray-700 text-sm">{feature}</div>
+        <div className="px-4 py-3 flex justify-center">
+          {typeof hostfi === 'boolean' ? (
+            hostfi ? <Check className="w-5 h-5 text-teal-600" /> : <X className="w-5 h-5 text-gray-300" />
+          ) : (
+            <span className="text-sm text-teal-600 font-medium">{hostfi}</span>
+          )}
+        </div>
+        <div className="px-4 py-3 flex justify-center">
+          {typeof competitor === 'boolean' ? (
+            competitor ? <Check className="w-5 h-5 text-teal-600" /> : <X className="w-5 h-5 text-gray-300" />
+          ) : (
+            <span className="text-sm text-gray-600">{competitor}</span>
+          )}
+        </div>
       </div>
-      <div className="px-4 py-3 flex justify-center">
-        {typeof competitor === 'boolean' ? (
-          competitor ? <Check className="w-5 h-5 text-teal-600" /> : <X className="w-5 h-5 text-gray-300" />
-        ) : (
-          <span className="text-sm text-gray-600">{competitor}</span>
-        )}
+      {/* Mobile card */}
+      <div className={`sm:hidden p-4 ${!isLast ? 'border-b border-gray-100' : ''}`}>
+        <p className="font-medium text-sm text-gray-900 mb-2">{feature}</p>
+        <div className="flex justify-between text-xs">
+          <span className="flex items-center gap-1.5">
+            <span className="text-gray-500">HostFi:</span>
+            {typeof hostfi === 'boolean' ? (
+              hostfi ? <Check className="w-4 h-4 text-teal-600" /> : <X className="w-4 h-4 text-gray-300" />
+            ) : (
+              <span className="text-teal-600 font-medium">{hostfi}</span>
+            )}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="text-gray-500">Landlord Studio:</span>
+            {typeof competitor === 'boolean' ? (
+              competitor ? <Check className="w-4 h-4 text-teal-600" /> : <X className="w-4 h-4 text-gray-300" />
+            ) : (
+              <span className="text-gray-600">{competitor}</span>
+            )}
+          </span>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
