@@ -3,11 +3,11 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { 
   DollarSign, TrendingUp, Calendar, Upload, Plus, Building2, 
-  ArrowUpRight, ArrowDownRight, FileSpreadsheet, X, ChevronDown,
+  ArrowUpRight, ArrowDownRight, FileSpreadsheet, X,
   Filter, Download, Check, Loader2, AlertCircle, Lock, Search,
-  ChevronUp, ChevronLeft, ChevronRight
+  ChevronUp, ChevronDown, ChevronLeft, ChevronRight
 } from "lucide-react";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { DEMO_REVENUE, DEMO_PROPERTIES, DEMO_EXPENSES } from "@/lib/data";
 import { isDemoMode } from "@/lib/data/data-provider";
 import { useDashboardData } from "@/hooks/useDashboardData";
@@ -230,8 +230,8 @@ export default function RevenuePage() {
     <th 
       onClick={() => handleSort(column)}
       className={cn(
-        "text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3 cursor-pointer hover:bg-gray-50 transition-colors select-none",
-        align === 'right' && 'text-right'
+        "text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 bg-gray-50/80 cursor-pointer hover:bg-gray-100/80 transition-colors select-none",
+        align === 'right' ? 'text-right' : 'text-left'
       )}
     >
       {children}
@@ -520,22 +520,19 @@ export default function RevenuePage() {
   return (
     <div className="space-y-6 pb-24 lg:pb-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
-            <DollarSign className="w-5 h-5 text-teal-600" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">Revenue</h1>
-            <p className="text-sm text-gray-500">Track Income Across All Properties and Platforms</p>
-          </div>
+      <div className="flex items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Revenue</h1>
+          <p className="text-gray-500 mt-1 sm:mt-2 text-sm leading-relaxed">
+            <span className="tabular-nums">{revenue.length}</span> total entries
+          </p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={() => setModal('csv')} className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <Upload className="w-4 h-4" /> Import CSV
+        <div className="flex gap-2 shrink-0">
+          <button onClick={() => setModal('csv')} className="flex items-center gap-2 px-4 sm:px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors min-h-[44px]">
+            <Upload className="w-4 h-4" /> <span className="hidden sm:inline">Import CSV</span><span className="sm:hidden">CSV</span>
           </button>
-          <button onClick={() => setModal('add')} className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-teal-500 rounded-lg hover:bg-teal-600 transition-colors">
-            <Plus className="w-4 h-4" /> Add Revenue
+          <button onClick={() => setModal('add')} className="flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-gray-900 text-white font-medium rounded-xl text-sm min-h-[44px] transition-colors hover:bg-gray-800">
+            <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Add Revenue</span><span className="sm:hidden">Add</span>
           </button>
         </div>
       </div>
@@ -544,14 +541,14 @@ export default function RevenuePage() {
       {showEmptyState && (
         <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
           <DollarSign className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-          <p className="font-medium text-gray-700">No revenue tracked yet</p>
-          <p className="text-gray-500 text-sm mt-1 max-w-md mx-auto">Track rental income from Airbnb, VRBO, direct bookings and more. Import from CSV or add entries manually.</p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-5">
+          <p className="text-gray-500 text-sm">No revenue tracked yet</p>
+          <p className="text-gray-400 text-xs mt-1 max-w-md mx-auto">Track rental income from Airbnb, VRBO, direct bookings and more.</p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-4">
             <button onClick={() => setModal('csv')} className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-gray-700 font-medium rounded-xl text-sm border border-gray-200 hover:bg-gray-50 transition-colors">
               <Upload className="w-4 h-4" /> Import CSV
             </button>
-            <button onClick={() => setModal('add')} className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-500 text-white font-medium rounded-xl text-sm hover:bg-teal-600 transition-colors">
-              <Plus className="w-4 h-4" /> Add Revenue Entry
+            <button onClick={() => setModal('add')} className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white font-medium rounded-xl text-sm hover:bg-gray-800 transition-colors">
+              <Plus className="w-4 h-4" /> Add Your First Entry
             </button>
           </div>
         </div>
@@ -697,165 +694,183 @@ export default function RevenuePage() {
         </div>
       )}
 
-      {/* Search and Filters + Transaction Table */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-100 flex flex-col gap-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-400" /> All Transactions
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              <div className="relative">
-                <select value={filterProperty} onChange={e => setFilterProperty(e.target.value)} className="appearance-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-xs font-medium text-gray-700 focus:ring-2 focus:ring-teal-500/20 focus:outline-none">
-                  <option value="all">All Properties</option>
-                  {allProperties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
-                <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-              </div>
-              <div className="relative">
-                <select value={filterSource} onChange={e => setFilterSource(e.target.value)} className="appearance-none bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 pr-8 text-xs font-medium text-gray-700 focus:ring-2 focus:ring-teal-500/20 focus:outline-none">
-                  <option value="all">All Platforms</option>
-                  {REVENUE_SOURCES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                </select>
-                <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-              </div>
-            </div>
-          </div>
-          
-          {/* Search Input */}
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search guest, confirmation code, platform..."
-              className="w-full pl-9 pr-9 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
+      {/* Search and Filters */}
+      <div className="flex flex-wrap gap-3">
+        {/* Search Input */}
+        <div className="relative flex-1 min-w-[200px] max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search guest, confirmation code, platform..."
+            className="w-full pl-9 pr-9 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
+        
+        <select value={filterProperty} onChange={e => setFilterProperty(e.target.value)} className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm">
+          <option value="all">All Properties</option>
+          {allProperties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </select>
+        <select value={filterSource} onChange={e => setFilterSource(e.target.value)} className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm">
+          <option value="all">All Platforms</option>
+          {REVENUE_SOURCES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+        </select>
+      </div>
 
-        {totalFilteredCount === 0 ? (
-          <div className="py-12 text-center text-sm text-gray-400">
+      {totalFilteredCount === 0 ? (
+        <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+          <DollarSign className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-500 text-sm">
             {searchQuery || filterProperty !== 'all' || filterSource !== 'all'
               ? "No revenue entries match your filters"
               : "No revenue entries yet"
             }
+          </p>
+          {!searchQuery && filterProperty === 'all' && filterSource === 'all' && (
+            <button onClick={() => setModal('add')} className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 bg-gray-900 text-white font-medium rounded-xl text-sm hover:bg-gray-800">
+              <Plus className="w-4 h-4" /> Add Your First Entry
+            </button>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* Desktop table */}
+          <div className="hidden lg:block bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <SortableHeader column="check_in">Date</SortableHeader>
+                  <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 bg-gray-50/80">Property</th>
+                  <SortableHeader column="guest_name">Guest</SortableHeader>
+                  <SortableHeader column="platform">Platform</SortableHeader>
+                  <th className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 bg-gray-50/80">Nights</th>
+                  <SortableHeader column="amount" align="right">Amount</SortableHeader>
+                  <th className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 bg-gray-50/80">Payout</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedRevenue.map((r, index) => {
+                  const prop = allProperties.find(p => p.id === r.property_id);
+                  const src = REVENUE_SOURCES.find(s => s.value === (r.platform || r.source));
+                  return (
+                    <tr key={r.id} onClick={() => openEdit(r)} className={cn("group transition-colors duration-150 hover:bg-gray-50/60 cursor-pointer", index !== paginatedRevenue.length - 1 && "border-b border-gray-100")}>
+                      <td className="px-5 py-3 text-sm text-muted-foreground">{formatDate(r.check_in || r.date || r.created_at)}</td>
+                      <td className="px-5 py-3">
+                        <p className="font-medium text-sm truncate max-w-[150px]">{prop?.name || 'Unmatched'}</p>
+                      </td>
+                      <td className="px-5 py-3 text-sm text-muted-foreground">{r.guest_name || '—'}</td>
+                      <td className="px-5 py-3">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium">
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: src?.color || '#6B7280' }} />
+                          {src?.label || r.source}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 text-right text-sm text-muted-foreground">{r.nights || (r.check_in && r.check_out ? Math.max(1, Math.round((new Date(r.check_out).getTime() - new Date(r.check_in).getTime()) / 86400000)) : '—')}</td>
+                      <td className="px-5 py-3 text-right font-semibold text-sm tabular-nums">{formatCurrency(r.amount)}</td>
+                      <td className="px-5 py-3 text-right font-semibold text-sm tabular-nums text-teal-600">{formatCurrency(r.payout_amount)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-100">
-                    <SortableHeader column="check_in">Date</SortableHeader>
-                    <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">Property</th>
-                    <SortableHeader column="guest_name">Guest</SortableHeader>
-                    <SortableHeader column="platform">Platform</SortableHeader>
-                    <th className="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3 hidden sm:table-cell">Nights</th>
-                    <SortableHeader column="amount" align="right">Amount</SortableHeader>
-                    <th className="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">Payout</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {paginatedRevenue.map(r => {
-                    const prop = allProperties.find(p => p.id === r.property_id);
-                    const src = REVENUE_SOURCES.find(s => s.value === (r.platform || r.source));
-                    return (
-                      <tr key={r.id} className="hover:bg-gray-50/50 transition-colors cursor-pointer" onClick={() => openEdit(r)}>
-                        <td className="px-5 py-3 text-gray-600 whitespace-nowrap">
-                          {new Date(r.check_in || r.date || r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        </td>
-                        <td className="px-5 py-3">
-                          <p className="font-medium text-gray-900 truncate max-w-[150px]">{prop?.name || 'Unmatched'}</p>
-                        </td>
-                        <td className="px-5 py-3 text-gray-600">{r.guest_name || '—'}</td>
-                        <td className="px-5 py-3">
-                          <span className="inline-flex items-center gap-1.5 text-xs font-medium">
-                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: src?.color || '#6B7280' }} />
-                            {src?.label || r.source}
-                          </span>
-                        </td>
-                        <td className="px-5 py-3 text-right text-gray-600 hidden sm:table-cell">{r.nights || (r.check_in && r.check_out ? Math.max(1, Math.round((new Date(r.check_out).getTime() - new Date(r.check_in).getTime()) / 86400000)) : '—')}</td>
-                        <td className="px-5 py-3 text-right text-gray-700">{formatCurrency(r.amount)}</td>
-                        <td className="px-5 py-3 text-right font-medium text-teal-600">{formatCurrency(r.payout_amount)}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-5 py-4 border-t border-gray-100">
-                <p className="text-sm text-gray-500">
-                  Showing <span className="font-medium tabular-nums">{totalFilteredCount > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}</span>-<span className="font-medium tabular-nums">{Math.min(currentPage * ITEMS_PER_PAGE, totalFilteredCount)}</span> of <span className="font-medium tabular-nums">{totalFilteredCount}</span> bookings
-                </p>
-                
-                <div className="flex items-center gap-1">
-                  {/* Previous button */}
-                  <button
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    aria-label="Previous page"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  
-                  {/* Page numbers */}
-                  {totalPages > 3 && (
-                    <div className="hidden sm:flex items-center gap-1">
-                      {getPaginationRange().map((page, index) => (
-                        page === 'ellipsis' ? (
-                          <span key={`ellipsis-${index}`} className="px-2 text-gray-400">…</span>
-                        ) : (
-                          <button
-                            key={page}
-                            onClick={() => setCurrentPage(page)}
-                            className={cn(
-                              "min-w-[36px] h-9 px-3 rounded-lg text-sm font-medium transition-colors",
-                              currentPage === page
-                                ? "bg-gray-900 text-white"
-                                : "text-gray-600 hover:bg-gray-100"
-                            )}
-                          >
-                            {page}
-                          </button>
-                        )
-                      ))}
+          {/* Mobile cards */}
+          <div className="lg:hidden space-y-3">
+            {paginatedRevenue.map((r) => {
+              const prop = allProperties.find(p => p.id === r.property_id);
+              const src = REVENUE_SOURCES.find(s => s.value === (r.platform || r.source));
+
+              return (
+                <div key={r.id} onClick={() => openEdit(r)} className="bg-white rounded-xl p-4 border border-gray-100 shadow-sm cursor-pointer hover:bg-gray-50/60 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center justify-center w-10 h-10 rounded-xl text-sm border bg-gray-50 border-gray-100 shrink-0">
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: src?.color || '#6B7280' }} />
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{r.guest_name || prop?.name || 'Revenue Entry'}</p>
+                      <p className="text-xs text-muted-foreground truncate mt-0.5">{prop?.name} · {formatDate(r.check_in || r.date || r.created_at)}</p>
                     </div>
-                  )}
-                  
-                  {/* Mobile page indicator */}
-                  <span className="sm:hidden px-3 text-sm text-gray-600">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  
-                  {/* Next button */}
-                  <button
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    aria-label="Next page"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
+                    <div className="text-right shrink-0 pl-2">
+                      <p className="font-semibold text-sm tabular-nums text-teal-600">{formatCurrency(r.payout_amount)}</p>
+                      <span className="inline-flex items-center text-[10px] font-medium text-muted-foreground mt-1">{src?.label || r.source}</span>
+                    </div>
+                  </div>
                 </div>
+              );
+            })}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+              <p className="text-sm text-gray-500">
+                Showing <span className="font-medium tabular-nums">{totalFilteredCount > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}</span>-<span className="font-medium tabular-nums">{Math.min(currentPage * ITEMS_PER_PAGE, totalFilteredCount)}</span> of <span className="font-medium tabular-nums">{totalFilteredCount}</span> entries
+              </p>
+              
+              <div className="flex items-center gap-1">
+                {/* Previous button */}
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                
+                {/* Page numbers */}
+                {totalPages > 3 && (
+                  <div className="hidden sm:flex items-center gap-1">
+                    {getPaginationRange().map((page, index) => (
+                      page === 'ellipsis' ? (
+                        <span key={`ellipsis-${index}`} className="px-2 text-gray-400">…</span>
+                      ) : (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={cn(
+                            "min-w-[36px] h-9 px-3 rounded-lg text-sm font-medium transition-colors",
+                            currentPage === page
+                              ? "bg-gray-900 text-white"
+                              : "text-gray-600 hover:bg-gray-100"
+                          )}
+                        >
+                          {page}
+                        </button>
+                      )
+                    ))}
+                  </div>
+                )}
+                
+                {/* Mobile page indicator */}
+                <span className="sm:hidden px-3 text-sm text-gray-600">
+                  Page {currentPage} of {totalPages}
+                </span>
+                
+                {/* Next button */}
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Next page"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
               </div>
-            )}
-          </>
-        )}
-      </div>
+            </div>
+          )}
+        </>
+      )}
       </>
       )}
 
