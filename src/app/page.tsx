@@ -1020,6 +1020,7 @@ export default function LandingPage() {
                 <Link href="/compare/stessa" className="block text-sm text-gray-400 hover:text-gray-700 transition-colors">HostFi vs Stessa</Link>
                 <Link href="/compare/topkey" className="block text-sm text-gray-400 hover:text-gray-700 transition-colors">HostFi vs Topkey</Link>
                 <Link href="/compare/landlord-studio" className="block text-sm text-gray-400 hover:text-gray-700 transition-colors">HostFi vs Landlord Studio</Link>
+                <Link href="/compare/appfolio" className="block text-sm text-gray-400 hover:text-gray-700 transition-colors">HostFi vs AppFolio</Link>
               </div>
             </div>
             <div>
