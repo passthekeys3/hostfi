@@ -161,12 +161,12 @@ export function transformToExpenses(
       amount: Math.abs(amount),
       description,
       property,
-      category,
+      category: category || 'other', // Default to 'other' if no category detected
       vendor,
       notes,
       valid: errors.length === 0,
-      hasIssue: errors.length > 0 || !category,
-      issueMessage: errors.length > 0 ? errors[0] : !category ? 'Could not detect category' : null,
+      hasIssue: errors.length > 0,
+      issueMessage: errors.length > 0 ? errors[0] : null,
       errors,
     };
   });

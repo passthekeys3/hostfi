@@ -433,9 +433,9 @@ export default function RevenuePage() {
   }, [form, refresh]);
 
   const handleCSVParse = useCallback(() => {
-    const result = parseRevenueCSV(csvText);
+    const result = parseRevenueCSV(csvText, allProperties);
     setCsvResult(result);
-  }, [csvText]);
+  }, [csvText, allProperties]);
 
   const handleCSVImport = useCallback(async () => {
     if (!csvResult) return;

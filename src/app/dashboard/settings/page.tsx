@@ -1,21 +1,29 @@
 "use client";
 
-import { Copy, Check, RotateCcw } from "lucide-react";
+import { Copy, Check, RotateCcw, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { resetOnboarding } from "@/lib/onboarding";
 
 export default function SettingsPage() {
   const [copied, setCopied] = useState(false);
   const [testSent, setTestSent] = useState(false);
+  const [sendingTest, setSendingTest] = useState(false);
   const [billingEmail, setBillingEmail] = useState("loading...");
   const [generating, setGenerating] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [emailPrefs, setEmailPrefs] = useState<Record<string, boolean>>({
+    email_weekly_digest: true,
+    email_monthly_report: true,
+    email_tips: true,
+    email_anomaly_alerts: true,
+  });
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
 
   useEffect(() => {
-    // Load user profile
+    // Load user profile and email preferences
     (async () => {
       try {
         const { createClient } = await import("@/lib/supabase/client");
@@ -24,11 +32,20 @@ export default function SettingsPage() {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           setUserEmail(user.email || "");
-          const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user.id).single();
+          const { data: profile } = await supabase.from('profiles').select('full_name, email_preferences').eq('id', user.id).single();
           setUserName(profile?.full_name || "");
+          // Load email preferences if they exist
+          if (profile?.email_preferences && typeof profile.email_preferences === 'object') {
+            setEmailPrefs(prev => ({
+              ...prev,
+              ...(profile.email_preferences as Record<string, boolean>),
+            }));
+          }
+          setPrefsLoaded(true);
         }
       } catch (error) {
         console.error("Failed to load user profile:", error);
+        setPrefsLoaded(true);
       }
     })();
     fetch("/api/email/setup")
@@ -59,6 +76,23 @@ export default function SettingsPage() {
     navigator.clipboard.writeText(billingEmail);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const sendTestEmail = async () => {
+    if (!billingEmail || billingEmail === "loading...") return;
+    setSendingTest(true);
+    try {
+      const res = await fetch("/api/email/test", { method: "POST" });
+      if (res.ok) {
+        setTestSent(true);
+        setTimeout(() => setTestSent(false), 3000);
+      } else {
+        console.error("Failed to send test email");
+      }
+    } catch (error) {
+      console.error("Failed to send test email:", error);
+    }
+    setSendingTest(false);
   };
 
   const saveProfile = async () => {
@@ -153,10 +187,17 @@ export default function SettingsPage() {
               <span className="text-xs text-teal-600 font-medium">Active — receiving emails</span>
             </div>
             <button
-              onClick={() => setTestSent(true)}
-              className="px-4 py-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 transition-all text-xs font-medium shadow-sm"
+              onClick={sendTestEmail}
+              disabled={sendingTest || !billingEmail || billingEmail === "loading..."}
+              className="px-4 py-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 transition-all text-xs font-medium shadow-sm disabled:opacity-50 flex items-center gap-1.5"
             >
-              {testSent ? "✓ Test sent!" : "Send test email"}
+              {sendingTest ? (
+                <><Loader2 className="w-3 h-3 animate-spin" /> Sending...</>
+              ) : testSent ? (
+                "✓ Test sent!"
+              ) : (
+                "Send test email"
+              )}
             </button>
           </div>
         </div>
@@ -258,41 +299,52 @@ export default function SettingsPage() {
         <p className="text-sm text-muted-foreground leading-relaxed">
           Choose which emails you receive from HostFi.
         </p>
-        <div className="space-y-4">
-          {[
-            { id: 'email_weekly_digest', label: 'Weekly Digest', desc: 'Expense summary every Monday' },
-            { id: 'email_monthly_report', label: 'Monthly Report', desc: 'Full financial report on the 1st of each month' },
-            { id: 'email_tips', label: 'Tips and Updates', desc: 'Product tips and feature announcements' },
-            { id: 'email_anomaly_alerts', label: 'Anomaly Alerts', desc: 'Unusual expense notifications' },
-          ].map((pref) => (
-            <label key={pref.id} className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                defaultChecked={true}
-                onChange={async (e) => {
-                  try {
-                    const { createClient } = await import("@/lib/supabase/client");
-                    const sb = createClient();
-                    if (!sb) return;
-                    const { data: { user } } = await sb.auth.getUser();
-                    if (!user) return;
-                    const { data: current } = await sb.from('profiles').select('email_preferences').eq('id', user.id).single();
-                    const prefs = (current?.email_preferences as Record<string, boolean>) || {};
-                    prefs[pref.id] = e.target.checked;
-                    await sb.from('profiles').update({ email_preferences: prefs }).eq('id', user.id);
-                  } catch (error) {
-                    console.error("Failed to update email preferences:", error);
-                  }
-                }}
-                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-teal-500 focus:ring-teal-500/20"
-              />
-              <div>
-                <p className="text-sm font-medium text-gray-900">{pref.label}</p>
-                <p className="text-xs text-gray-500">{pref.desc}</p>
-              </div>
-            </label>
-          ))}
-        </div>
+        {!prefsLoaded ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="w-4 h-4 animate-spin" /> Loading preferences...
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {[
+              { id: 'email_weekly_digest', label: 'Weekly Digest', desc: 'Expense summary every Monday' },
+              { id: 'email_monthly_report', label: 'Monthly Report', desc: 'Full financial report on the 1st of each month' },
+              { id: 'email_tips', label: 'Tips and Updates', desc: 'Product tips and feature announcements' },
+              { id: 'email_anomaly_alerts', label: 'Anomaly Alerts', desc: 'Unusual expense notifications' },
+            ].map((pref) => (
+              <label key={pref.id} className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={emailPrefs[pref.id] ?? true}
+                  onChange={async (e) => {
+                    const newValue = e.target.checked;
+                    // Update local state immediately for responsive UI
+                    setEmailPrefs(prev => ({ ...prev, [pref.id]: newValue }));
+                    try {
+                      const { createClient } = await import("@/lib/supabase/client");
+                      const sb = createClient();
+                      if (!sb) return;
+                      const { data: { user } } = await sb.auth.getUser();
+                      if (!user) return;
+                      const { data: current } = await sb.from('profiles').select('email_preferences').eq('id', user.id).single();
+                      const prefs = (current?.email_preferences as Record<string, boolean>) || {};
+                      prefs[pref.id] = newValue;
+                      await sb.from('profiles').update({ email_preferences: prefs }).eq('id', user.id);
+                    } catch (error) {
+                      console.error("Failed to update email preferences:", error);
+                      // Revert local state on error
+                      setEmailPrefs(prev => ({ ...prev, [pref.id]: !newValue }));
+                    }
+                  }}
+                  className="mt-0.5 w-4 h-4 rounded border-gray-300 text-teal-500 focus:ring-teal-500/20"
+                />
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{pref.label}</p>
+                  <p className="text-xs text-gray-500">{pref.desc}</p>
+                </div>
+              </label>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Danger Zone */}
