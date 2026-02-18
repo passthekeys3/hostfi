@@ -6,6 +6,7 @@ import {
   ChevronRight, Sparkles, Home, Zap, Crown, CreditCard,
   MailCheck, Forward, ArrowDown,
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 import { AddressAutocomplete, type AddressData } from "@/components/address-autocomplete";
 import {
   getOnboardingState,
@@ -118,10 +119,16 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
   const [properties, setProperties] = useState<AddedProperty[]>([]);
   const [copied, setCopied] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<PlanId>("free");
+  const [userId, setUserId] = useState<string>("");
 
-  // Demo user ID for the billing email
-  const userId = "demo_abc123";
-  const billingEmail = `expenses-${userId}@hostfi.ai`;
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) setUserId(data.user.id);
+    });
+  }, []);
+
+  const billingEmail = userId ? `expenses-${userId}@hostfi.ai` : "Loading...";
 
   // Property form
   const [propName, setPropName] = useState("");
