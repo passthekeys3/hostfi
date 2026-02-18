@@ -50,7 +50,7 @@ export default function AlertsPage() {
 
 function AlertsPageContent() {
   const searchParams = useSearchParams();
-  const { anomalies: dashboardAnomalies, refresh } = useDashboardData();
+  const { anomalies: dashboardAnomalies, properties, refresh } = useDashboardData();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [anomalies, setAnomalies] = useState<AnomalyResult[]>([]);
   const initialFilter = (searchParams.get('filter') as ExtendedFilter) || 'all';
@@ -430,7 +430,7 @@ function AlertsPageContent() {
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground">Property</span>
                                 <span className="font-medium text-gray-700">
-                                  {alert.property_id === '1' ? 'Venice Beach Unit' : alert.property_id === '2' ? 'Silver Lake Duplex' : 'Joshua Tree Cabin'}
+                                  {properties.find(p => p.id === alert.property_id)?.name || 'Unknown Property'}
                                 </span>
                               </div>
                               {alert.type === 'due_soon' && (
