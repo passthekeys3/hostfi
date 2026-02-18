@@ -11,6 +11,7 @@ const PROPERTY_TYPES = [
   { value: "str", label: "Short-Term Rental" },
   { value: "ltr", label: "Long-Term Rental" },
   { value: "primary", label: "Primary Residence" },
+  { value: "arbitrage", label: "Arbitrage (Rental Arbitrage)" },
 ];
 
 export function AddPropertyForm() {

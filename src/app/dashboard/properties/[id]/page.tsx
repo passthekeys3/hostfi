@@ -2,6 +2,7 @@
 
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { notFound } from "next/navigation";
 import { EXPENSE_CATEGORY_CONFIG } from "@/lib/expense-categories";
 
@@ -14,17 +15,93 @@ function getExpensesByCategory(expenses: { category: string; amount: number }[])
   return byCategory;
 }
 import { cn, getPropertyTypeLabel, formatCurrency } from "@/lib/utils";
-import { ArrowLeft, MapPin, Plus, Bed, Bath, Ruler, Building2, Landmark, Mail, TrendingUp, DollarSign, Calendar } from "lucide-react";
+import { ArrowLeft, MapPin, Plus, Bed, Bath, Ruler, Building2, Landmark, Mail, TrendingUp, DollarSign, Calendar, Pencil, X, Trash2 } from "lucide-react";
 import { PropertyExportBar } from "@/components/property-export-bar";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
+const PROPERTY_TYPES = [
+  { value: "str", label: "Short-Term Rental" },
+  { value: "ltr", label: "Long-Term Rental" },
+  { value: "primary", label: "Primary Residence" },
+  { value: "arbitrage", label: "Rental Arbitrage" },
+];
+
+const PROPERTY_STATUSES = [
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+];
+
 export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { properties, expenses, revenue, loading } = useDashboardData();
+  const router = useRouter();
+  const { properties, expenses, revenue, loading, refresh } = useDashboardData();
   
   // Monthly spend data - computed client-side to avoid hydration mismatch
   const [monthlySpend, setMonthlySpend] = useState<{ months: string[]; data: number[]; max: number }>({ months: [], data: [], max: 1 });
+  
+  // Edit modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  
+  // Edit form fields
+  const [editName, setEditName] = useState("");
+  const [editType, setEditType] = useState("");
+  const [editAddress, setEditAddress] = useState("");
+  const [editAddress2, setEditAddress2] = useState("");
+  const [editCity, setEditCity] = useState("");
+  const [editState, setEditState] = useState("");
+  const [editZip, setEditZip] = useState("");
+  const [editBedrooms, setEditBedrooms] = useState(1);
+  const [editBathrooms, setEditBathrooms] = useState(1);
+  const [editSqft, setEditSqft] = useState<number | "">("");
+  const [editStatus, setEditStatus] = useState("active");
 
+  // Build last 5 months of spend data from real expenses (client-side only)
+  // Use stable deps: id and expenses array
+  useEffect(() => {
+    const property = properties.find(p => p.id === id);
+    if (!property) return;
+    
+    const propertyExpenses = expenses.filter(e => e.property_id === id);
+    
+    const now = new Date();
+    const monthLabels: string[] = [];
+    const spendData: number[] = [];
+    for (let i = 4; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      monthLabels.push(d.toLocaleString('en-US', { month: 'short' }));
+      const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const monthTotal = propertyExpenses
+        .filter(e => e.date?.startsWith(monthStr))
+        .reduce((sum, e) => sum + e.amount, 0);
+      spendData.push(Math.round(monthTotal * 100) / 100);
+    }
+    setMonthlySpend({ months: monthLabels, data: spendData, max: Math.max(...spendData, 1) });
+  }, [id, properties, expenses]);
+
+  // Initialize edit form when property loads or modal opens
+  useEffect(() => {
+    const property = properties.find(p => p.id === id);
+    if (property && showEditModal) {
+      setEditName(property.name || "");
+      setEditType(property.property_type || "str");
+      setEditAddress(property.address_line1 || "");
+      setEditAddress2(property.address_line2 || "");
+      setEditCity(property.city || "");
+      setEditState(property.state || "");
+      setEditZip(property.zip || "");
+      setEditBedrooms(property.bedrooms || 1);
+      setEditBathrooms(property.bathrooms || 1);
+      setEditSqft(property.sqft || "");
+      setEditStatus(property.status || "active");
+      setEditError(null);
+      setShowDeleteConfirm(false);
+    }
+  }, [id, properties, showEditModal]);
+
+  // Loading skeleton
   if (loading) {
     return (
       <div className="space-y-10 animate-pulse">
@@ -51,29 +128,107 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   const totalNetRevenue = propertyRevenue.reduce((sum, r) => sum + (r.payout_amount ?? r.amount ?? 0), 0);
   const totalFees = propertyRevenue.reduce((sum, r) => sum + (r.platform_fee ?? 0), 0);
   const netProfit = totalNetRevenue - totalExpenses;
-
-  // Build last 5 months of spend data from real expenses (client-side only)
-  useEffect(() => {
-    const now = new Date();
-    const monthLabels: string[] = [];
-    const spendData: number[] = [];
-    for (let i = 4; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      monthLabels.push(d.toLocaleString('en-US', { month: 'short' }));
-      const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const monthTotal = propertyExpenses
-        .filter(e => e.date?.startsWith(monthStr))
-        .reduce((sum, e) => sum + e.amount, 0);
-      spendData.push(Math.round(monthTotal * 100) / 100);
-    }
-    setMonthlySpend({ months: monthLabels, data: spendData, max: Math.max(...spendData, 1) });
-  }, [propertyExpenses]);
   
   const { months, data: spendData, max: maxSpend } = monthlySpend;
 
   const topCategories = Object.entries(expensesByCategory)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 3);
+
+  const handleEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditLoading(true);
+    setEditError(null);
+    
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      if (!supabase) {
+        setEditError("Database not configured.");
+        setEditLoading(false);
+        return;
+      }
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setEditError("You must be logged in.");
+        setEditLoading(false);
+        return;
+      }
+      
+      const { error } = await supabase
+        .from("properties")
+        .update({
+          name: editName,
+          property_type: editType,
+          address_line1: editAddress,
+          address_line2: editAddress2 || null,
+          city: editCity,
+          state: editState,
+          zip: editZip,
+          bedrooms: editBedrooms,
+          bathrooms: editBathrooms,
+          sqft: editSqft || null,
+          status: editStatus,
+        })
+        .eq("id", id)
+        .eq("user_id", user.id);
+      
+      if (error) {
+        setEditError(error.message);
+        setEditLoading(false);
+        return;
+      }
+      
+      if (refresh) await refresh();
+      setShowEditModal(false);
+    } catch (err) {
+      setEditError("Something went wrong. Please try again.");
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setEditLoading(true);
+    setEditError(null);
+    
+    try {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      if (!supabase) {
+        setEditError("Database not configured.");
+        setEditLoading(false);
+        return;
+      }
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setEditError("You must be logged in.");
+        setEditLoading(false);
+        return;
+      }
+      
+      const { error } = await supabase
+        .from("properties")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", user.id);
+      
+      if (error) {
+        setEditError(error.message);
+        setEditLoading(false);
+        return;
+      }
+      
+      router.push("/dashboard/properties");
+    } catch (err) {
+      setEditError("Something went wrong. Please try again.");
+      setEditLoading(false);
+    }
+  };
+
+  const inputClass = "w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 text-sm transition-all";
 
   return (
     <div className="space-y-10">
@@ -88,6 +243,13 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
               <span className={cn("w-2 h-2 rounded-full", property.status === 'active' ? 'bg-teal-500' : 'bg-gray-300')} />
               <span className="text-xs text-muted-foreground capitalize">{property.status}</span>
             </div>
+            <button
+              onClick={() => setShowEditModal(true)}
+              className="p-2 hover:bg-gray-100 rounded-xl transition-colors duration-150 min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0"
+              title="Edit property"
+            >
+              <Pencil className="w-4 h-4 text-gray-500" />
+            </button>
           </div>
           <div className="flex items-start gap-1.5 text-muted-foreground mt-2 text-sm">
             <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
@@ -132,11 +294,11 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
         totalExpenses={totalExpenses}
       />
 
-      {/* Stats row */}
+      {/* Stats row - removed duplicate Type, replaced with Bookings */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-5">
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-4 sm:p-6">
-          <p className="text-[11px] sm:text-xs font-medium uppercase tracking-wide text-muted-foreground">Type</p>
-          <p className="text-base sm:text-lg font-semibold mt-1 truncate">{getPropertyTypeLabel(property.property_type)}</p>
+          <p className="text-[11px] sm:text-xs font-medium uppercase tracking-wide text-muted-foreground">Bookings</p>
+          <p className="text-base sm:text-lg font-semibold mt-1">{propertyRevenue.length}</p>
         </div>
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-4 sm:p-6">
           <p className="text-[11px] sm:text-xs font-medium uppercase tracking-wide text-muted-foreground">Revenue</p>
@@ -348,6 +510,192 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
         </div>
       </div>
 
+      {/* Edit Property Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/50" onClick={() => setShowEditModal(false)} />
+          <div className="relative bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 space-y-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Edit Property</h2>
+              <button onClick={() => setShowEditModal(false)} className="p-2 hover:bg-gray-100 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            {editError && (
+              <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                {editError}
+              </div>
+            )}
+            
+            <form onSubmit={handleEdit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Property Name</label>
+                <input
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  required
+                  className={inputClass}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Property Type</label>
+                <select
+                  value={editType}
+                  onChange={(e) => setEditType(e.target.value)}
+                  className={inputClass}
+                >
+                  {PROPERTY_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Status</label>
+                <select
+                  value={editStatus}
+                  onChange={(e) => setEditStatus(e.target.value)}
+                  className={inputClass}
+                >
+                  {PROPERTY_STATUSES.map((s) => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Address</label>
+                <input
+                  value={editAddress}
+                  onChange={(e) => setEditAddress(e.target.value)}
+                  required
+                  className={inputClass}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Address Line 2</label>
+                <input
+                  value={editAddress2}
+                  onChange={(e) => setEditAddress2(e.target.value)}
+                  placeholder="Unit, Apt, etc."
+                  className={inputClass}
+                />
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">City</label>
+                  <input
+                    value={editCity}
+                    onChange={(e) => setEditCity(e.target.value)}
+                    required
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">State</label>
+                  <input
+                    value={editState}
+                    onChange={(e) => setEditState(e.target.value)}
+                    required
+                    maxLength={2}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">ZIP</label>
+                  <input
+                    value={editZip}
+                    onChange={(e) => setEditZip(e.target.value)}
+                    required
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Bedrooms</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={editBedrooms}
+                    onChange={(e) => setEditBedrooms(parseInt(e.target.value) || 1)}
+                    required
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Bathrooms</label>
+                  <input
+                    type="number"
+                    min={1}
+                    step={0.5}
+                    value={editBathrooms}
+                    onChange={(e) => setEditBathrooms(parseFloat(e.target.value) || 1)}
+                    required
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Sqft</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={editSqft}
+                    onChange={(e) => setEditSqft(e.target.value ? parseInt(e.target.value) : "")}
+                    placeholder="Optional"
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+              
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="flex-1 px-4 py-2.5 bg-teal-600 text-white font-medium rounded-xl hover:bg-teal-700 min-h-[44px] disabled:opacity-50 transition-colors"
+                >
+                  {editLoading ? "Saving..." : "Save Changes"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="px-4 py-2.5 bg-red-50 text-red-600 font-medium rounded-xl hover:bg-red-100 min-h-[44px] transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </form>
+            
+            {showDeleteConfirm && (
+              <div className="border-t border-gray-200 pt-4 mt-4">
+                <p className="text-sm text-red-600 font-medium mb-3">
+                  Delete "{editName}"? Expenses and revenue won't be deleted but will be unlinked.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleDelete}
+                    disabled={editLoading}
+                    className="px-4 py-2.5 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 min-h-[44px] disabled:opacity-50 transition-colors"
+                  >
+                    {editLoading ? "Deleting..." : "Yes, Delete"}
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 min-h-[44px] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

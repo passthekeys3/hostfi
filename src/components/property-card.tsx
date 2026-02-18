@@ -6,6 +6,7 @@ import { Building2, MapPin, Home, Hotel, KeyRound } from "lucide-react";
 interface PropertyCardProps {
   property: Property;
   monthlySpend?: number;
+  monthlyRevenue?: number;
   billCount?: number;
 }
 
@@ -16,7 +17,7 @@ const propertyTypeConfig = {
   arbitrage: { label: 'Arbitrage', color: 'bg-amber-50 text-amber-700 ring-amber-200/60', icon: KeyRound },
 };
 
-export function PropertyCard({ property, monthlySpend = 0, billCount = 0 }: PropertyCardProps) {
+export function PropertyCard({ property, monthlySpend = 0, monthlyRevenue = 0, billCount = 0 }: PropertyCardProps) {
   const typeConfig = propertyTypeConfig[property.property_type] || propertyTypeConfig.ltr;
   const TypeIcon = typeConfig.icon;
 
@@ -79,15 +80,15 @@ export function PropertyCard({ property, monthlySpend = 0, billCount = 0 }: Prop
         {/* Footer stats */}
         <div className="flex items-center justify-between pt-4 border-t border-gray-200/80">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Monthly Spend</p>
-            <p className="font-bold text-lg tabular-nums mt-0.5" style={{ letterSpacing: '-0.02em' }}>
-              {formatCurrency(monthlySpend)}
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Monthly Revenue</p>
+            <p className="font-bold text-lg tabular-nums mt-0.5 text-teal-600" style={{ letterSpacing: '-0.02em' }}>
+              {formatCurrency(monthlyRevenue)}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Bills</p>
-            <p className="font-bold text-lg tabular-nums mt-0.5">
-              {billCount}
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">Monthly Spend</p>
+            <p className="font-bold text-lg tabular-nums mt-0.5" style={{ letterSpacing: '-0.02em' }}>
+              {formatCurrency(monthlySpend)}
             </p>
           </div>
         </div>

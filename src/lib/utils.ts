@@ -32,6 +32,7 @@ export function getPropertyTypeLabel(type: string): string {
     case 'str': return 'Short-Term Rental';
     case 'ltr': return 'Long-Term Rental';
     case 'primary': return 'Primary Residence';
+    case 'arbitrage': return 'Rental Arbitrage';
     default: return type;
   }
 }

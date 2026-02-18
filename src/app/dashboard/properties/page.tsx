@@ -7,7 +7,7 @@ import { Plus, Building2 } from "lucide-react";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 export default function PropertiesPage() {
-  const { properties, expenses, loading } = useDashboardData();
+  const { properties, expenses, revenue, loading } = useDashboardData();
   const [cmStr, setCmStr] = useState('');
   useEffect(() => {
     const n = new Date();
@@ -55,11 +55,14 @@ export default function PropertiesPage() {
           {properties.map((property) => {
             const propertyExpenses = expenses.filter(e => e.property_id === property.id);
             const monthlySpend = propertyExpenses.filter(e => cmStr ? e.date?.startsWith(cmStr) : false).reduce((sum, e) => sum + e.amount, 0);
+            const propertyRevenue = revenue.filter(r => r.property_id === property.id);
+            const monthlyRev = propertyRevenue.filter(r => cmStr ? r.date?.startsWith(cmStr) : false).reduce((sum, r) => sum + (r.payout_amount ?? r.amount ?? 0), 0);
             return (
               <PropertyCard
                 key={property.id}
                 property={property}
                 monthlySpend={monthlySpend}
+                monthlyRevenue={monthlyRev}
                 billCount={propertyExpenses.length}
               />
             );
