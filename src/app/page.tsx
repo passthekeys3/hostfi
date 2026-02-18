@@ -991,7 +991,7 @@ export default function LandingPage() {
       {/* ─── FOOTER ─── */}
       <footer className="py-16 px-5 bg-white border-t border-gray-100">
         <div className="max-w-6xl mx-auto">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-10 mb-12">
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <img src="/logo.svg" alt="HostFi" className="w-7 h-7 rounded-lg" />
@@ -1015,10 +1015,19 @@ export default function LandingPage() {
               </div>
             </div>
             <div>
+              <p className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-4">Compare</p>
+              <div className="space-y-2.5">
+                <Link href="/compare/stessa" className="block text-sm text-gray-400 hover:text-gray-700 transition-colors">HostFi vs Stessa</Link>
+                <Link href="/compare/topkey" className="block text-sm text-gray-400 hover:text-gray-700 transition-colors">HostFi vs Topkey</Link>
+                <Link href="/compare/landlord-studio" className="block text-sm text-gray-400 hover:text-gray-700 transition-colors">HostFi vs Landlord Studio</Link>
+              </div>
+            </div>
+            <div>
               <p className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-4">Legal</p>
               <div className="space-y-2.5">
                 <Link href="/privacy" className="block text-sm text-gray-400 hover:text-gray-700 transition-colors">Privacy</Link>
                 <Link href="/terms" className="block text-sm text-gray-400 hover:text-gray-700 transition-colors">Terms</Link>
+                <Link href="/security" className="block text-sm text-gray-400 hover:text-gray-700 transition-colors">Security</Link>
               </div>
             </div>
           </div>
