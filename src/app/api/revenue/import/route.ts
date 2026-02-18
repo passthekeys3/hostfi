@@ -109,7 +109,9 @@ export async function POST(request: NextRequest) {
         id: entry.id || `import-${Date.now()}-${result.imported}`,
         user_id: auth.userId,
         property_id: entry.property_id,
-        source: entry.source || 'other',
+        platform: entry.source || 'other',
+        source: 'csv_import',
+        date: entry.check_in,
         description: (entry.description || 'CSV Import').slice(0, 1000),
         guest_name: entry.guest_name?.slice(0, 200) || null,
         amount: entry.amount,
@@ -123,7 +125,6 @@ export async function POST(request: NextRequest) {
         payout_date: entry.payout_date || entry.check_out,
         confirmation_code: entry.confirmation_code?.slice(0, 100) || null,
         created_at: entry.created_at || new Date().toISOString(),
-        import_source: 'csv_import',
       };
 
       result.entries.push(newEntry);

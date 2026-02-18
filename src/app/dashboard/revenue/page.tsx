@@ -272,25 +272,6 @@ export default function RevenuePage() {
     const checkOut = form.check_out;
     const nights = Math.max(1, Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000));
 
-    const entry: RevenueEntry = {
-      id: `manual-${Date.now()}`,
-      user_id: 'demo',
-      property_id: form.property_id,
-      source: form.source,
-      description: 'Manual entry',
-      guest_name: form.guest_name || null,
-      amount,
-      payout_amount: amount - fee,
-      platform_fee: fee,
-      check_in: checkIn,
-      check_out: checkOut,
-      nights,
-      payout_date: form.payout_date || checkOut,
-      confirmation_code: form.confirmation_code || null,
-      created_at: new Date().toISOString(),
-      import_source: 'manual',
-    };
-
     if (!demo) {
       try {
         const { createClient } = await import("@/lib/supabase/client");
@@ -301,7 +282,9 @@ export default function RevenuePage() {
             const { error } = await supabase.from("revenue").insert({
               user_id: user.id,
               property_id: form.property_id,
-              source: form.source,
+              platform: form.source,
+              source: 'manual',
+              date: checkIn,
               description: 'Manual entry',
               guest_name: form.guest_name || null,
               amount,
@@ -312,13 +295,14 @@ export default function RevenuePage() {
               nights,
               payout_date: form.payout_date || checkOut,
               confirmation_code: form.confirmation_code || null,
-              import_source: 'manual',
             });
             if (error) { console.error("Revenue insert error:", error.message); }
             else if (refresh) { refresh(); setModal(null); setForm({ property_id: '', source: 'airbnb', guest_name: '', amount: '', platform_fee: '', check_in: '', check_out: '', confirmation_code: '', payout_date: '' }); return; }
           }
         }
-      } catch {}
+      } catch (error) {
+        console.error("Revenue insert failed:", error);
+      }
     }
 
     // For demo mode, just close modal (data won't persist anyway)
