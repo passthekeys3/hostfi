@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/auth";
 import { parseReceipt } from "@/lib/receipt-parser";
 import { createRateLimiter } from "@/lib/rate-limit";
+import { createClient } from "@/lib/supabase/server";
+import { RECEIPT_LIMITS, type Plan } from "@/lib/feature-gates";
 
 const isRateLimited = createRateLimiter('parse-receipt', 20, 60_000);
 
@@ -18,6 +20,38 @@ export async function POST(request: NextRequest) {
     // Rate limiting by user
     if (isRateLimited(auth.userId)) {
       return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+    }
+
+    // Check receipt scanning limits by plan
+    const supabase = await createClient();
+    if (supabase) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("plan")
+        .eq("id", auth.userId)
+        .single();
+      const userPlan = (profile?.plan || "free") as Plan;
+      const limit = RECEIPT_LIMITS[userPlan];
+
+      if (limit !== Infinity) {
+        // Count scans this month
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+        const { count } = await supabase
+          .from("expenses")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", auth.userId)
+          .eq("source", "receipt_scan")
+          .gte("created_at", startOfMonth.toISOString());
+
+        if ((count ?? 0) >= limit) {
+          return NextResponse.json(
+            { error: `Free plan allows ${limit} receipt scans per month. Upgrade to Pro for unlimited scanning.` },
+            { status: 403 }
+          );
+        }
+      }
     }
 
     // Payload size check

@@ -23,7 +23,7 @@ Return ONLY valid JSON with this exact structure:
   "vendor_name": "string - business name (e.g. The Home Depot, Target, Lowe's)",
   "amount": number - total amount charged,
   "date": "YYYY-MM-DD or null",
-  "category_suggestion": "string - one of: utility, cleaning, insurance, maintenance, mortgage, supplies, taxes, management, subscription, improvement, other",
+  "category_suggestion": "string - one of: utility, cleaning, insurance, maintenance, mortgage, rent, supplies, taxes, management, subscription, improvement, other",
   "items": [{"description": "string", "amount": number}],
   "payment_method": "string or null - e.g. Visa ending 4521",
   "tax_amount": number or null,
@@ -43,7 +43,8 @@ Category inference rules:
 - Renovation materials, furniture, appliances → "improvement"
 - Property management, co-host fees → "management"
 - Utility companies (electric, gas, water, internet) → "utility"
-- Mortgage/rent payments → "mortgage"
+- Mortgage payments (owners) → "mortgage"
+- Rent/lease payments to landlord (arbitrage operators) → "rent"
 - If unclear, use "other"
 
 Rules:

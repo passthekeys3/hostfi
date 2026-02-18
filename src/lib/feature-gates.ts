@@ -1,5 +1,7 @@
 // Feature gating by plan tier
 
+import type { ExpenseCategory } from '@/lib/expense-categories';
+
 export type Plan = 'free' | 'pro' | 'business';
 
 export interface FeatureConfig {
@@ -38,10 +40,21 @@ export const PROPERTY_LIMITS: Record<Plan, number> = {
 };
 
 export const RECEIPT_LIMITS: Record<Plan, number> = {
-  free: 5,
+  free: 3,
   pro: Infinity,
   business: Infinity,
 };
+
+// Categories that are typically recurring for STR operators
+export const RECURRING_CATEGORIES: ExpenseCategory[] = [
+  'rent',
+  'mortgage',
+  'insurance',
+  'utility',
+  'subscription',
+  'management',
+  'cleaning',
+];
 
 export function hasAccess(userPlan: Plan, requiredPlan: Plan): boolean {
   return PLAN_HIERARCHY[userPlan] >= PLAN_HIERARCHY[requiredPlan];

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useRef, Suspense } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { EXPENSE_CATEGORY_CONFIG, ALL_EXPENSE_CATEGORIES, FREQUENCY_LABELS, getCategoryColorClasses, type ExpenseCategory, type ExpenseFrequency } from "@/lib/expense-categories";
+import { RECURRING_CATEGORIES } from "@/lib/feature-gates";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { cn } from "@/lib/utils";
 import { Check, ChevronDown, ChevronUp, Camera, Info } from "lucide-react";
@@ -21,11 +22,24 @@ function NewExpenseForm() {
   const [loading, setLoading] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [receiptApplied, setReceiptApplied] = useState(false);
+  const [todayStr, setTodayStr] = useState("");
 
   // Form refs for auto-fill
   const amountRef = useRef<HTMLInputElement>(null);
   const dateRef = useRef<HTMLInputElement>(null);
   const vendorRef = useRef<HTMLInputElement>(null);
+
+  // Hydration-safe date
+  useEffect(() => {
+    setTodayStr(new Date().toISOString().split("T")[0]);
+  }, []);
+
+  // Auto-suggest recurring for typical categories
+  useEffect(() => {
+    if (selectedCategory && RECURRING_CATEGORIES.includes(selectedCategory)) {
+      setIsRecurring(true);
+    }
+  }, [selectedCategory]);
 
   const handleReceiptData = (data: {
     amount: number;
@@ -73,6 +87,9 @@ function NewExpenseForm() {
         date,
         status: "paid",
         notes,
+        is_recurring: isRecurring,
+        frequency: isRecurring ? frequency : "one-time",
+        source: receiptApplied ? "receipt_scan" : "manual",
       }).select("id").single();
 
       if (insertError) { setError(insertError.message); setLoading(false); return; }
@@ -253,7 +270,7 @@ function NewExpenseForm() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2">Date</label>
-              <input ref={dateRef} name="date" type="date" defaultValue={new Date().toISOString().split('T')[0]} required className={inputClass} />
+              <input ref={dateRef} name="date" type="date" defaultValue={todayStr} key={todayStr} required className={inputClass} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">Vendor / Description</label>
@@ -285,19 +302,6 @@ function NewExpenseForm() {
               </select>
             </div>
           )}
-
-          {/* Tags */}
-          <div>
-            <label className="block text-sm font-medium mb-2">Tags (comma-separated)</label>
-            <input 
-              type="text" 
-              placeholder="e.g. tax-deductible, emergency, recurring" 
-              className={inputClass} 
-            />
-            <p className="text-xs text-muted-foreground mt-1.5">
-              Suggested: tax-deductible, emergency, recurring, reimbursable
-            </p>
-          </div>
 
           {/* Notes */}
           {!showNotes ? (
