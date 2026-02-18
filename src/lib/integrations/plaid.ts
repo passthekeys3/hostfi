@@ -22,7 +22,7 @@ function getPlaidConfig() {
   const env = (process.env.PLAID_ENV || 'sandbox') as PlaidEnv;
 
   if (!clientId || !secret) {
-    return null; // Demo mode
+    return null; // Plaid not configured
   }
 
   return { clientId, secret, baseUrl: PLAID_ENVS[env], env };
