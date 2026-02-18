@@ -106,7 +106,10 @@ export default function RevenuePage() {
         }),
       });
       if (res.ok && refresh) refresh();
-    } catch {}
+    } catch (error) {
+      console.error('Failed to save revenue edit:', error);
+      alert('Failed to save changes. Please try again.');
+    }
     setEditSaving(false);
     setModal(null);
     setEditingId(null);
@@ -122,7 +125,10 @@ export default function RevenuePage() {
         body: JSON.stringify({ id: editingId }),
       });
       if (res.ok && refresh) refresh();
-    } catch {}
+    } catch (error) {
+      console.error('Failed to delete revenue entry:', error);
+      alert('Failed to delete. Please try again.');
+    }
     setEditSaving(false);
     setModal(null);
     setEditingId(null);
