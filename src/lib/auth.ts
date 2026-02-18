@@ -9,15 +9,13 @@ export interface AuthResult {
 
 /**
  * Authenticate a request via Supabase.
- * Returns userId if authenticated, or null if in demo mode (Supabase not configured).
- * Throws a NextResponse if unauthorized.
+ * Throws a NextResponse if unauthorized or Supabase not configured.
  */
 export async function authenticateRequest(): Promise<AuthResult> {
   const supabase = await createClient();
 
-  // Demo mode — Supabase not configured
   if (!supabase) {
-    return { authenticated: false, userId: 'demo' };
+    throw NextResponse.json({ error: 'Database not configured' }, { status: 503 });
   }
 
   const { data: { user }, error } = await supabase.auth.getUser();

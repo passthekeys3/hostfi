@@ -6,7 +6,7 @@ import { readCredentials } from '@/lib/crypto';
 
 export function decryptPlaidToken(storedToken: string): string {
   // Plaintext tokens start with 'access-' (sandbox/development) or 'access_' 
-  if (storedToken.startsWith('access-') || storedToken.startsWith('access_') || storedToken === 'demo-access-token') {
+  if (storedToken.startsWith('access-') || storedToken.startsWith('access_')) {
     return storedToken;
   }
 

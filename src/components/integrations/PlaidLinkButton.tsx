@@ -14,7 +14,7 @@ interface PlaidLinkButtonProps {
 /**
  * Plaid Link button — handles the full flow:
  * 1. Creates a link token from our API
- * 2. Opens Plaid Link widget (or simulates in demo mode)
+ * 2. Opens Plaid Link widget
  * 3. Exchanges public token for access token
  * 4. Returns connected accounts
  */
@@ -48,27 +48,11 @@ export function PlaidLinkButton({
 
       const tokenData = await tokenRes.json();
 
-      // Demo mode — simulate the flow
-      if (tokenData.demo) {
-        setStatus("linking");
-        await new Promise(r => setTimeout(r, 1500));
-
-        setStatus("exchanging");
-        const exchangeRes = await fetch("/api/integrations/plaid/exchange", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ public_token: "demo-public-token" }),
-        });
-
-        if (!exchangeRes.ok) throw new Error("Failed to exchange token");
-        const exchangeData = await exchangeRes.json();
-
-        setStatus("success");
-        onSuccess?.(exchangeData.accounts, exchangeData.institution);
-        return;
+      if (tokenData.error) {
+        throw new Error(tokenData.error);
       }
 
-      // Production mode — load and open Plaid Link
+      // Load and open Plaid Link
       setStatus("linking");
       await openPlaidLink(tokenData.link_token);
     } catch (err) {
