@@ -61,14 +61,14 @@ describe('authenticateRequest', () => {
     }
   });
 
-  it('returns demo mode result when Supabase is not configured', async () => {
+  it('throws 503 when Supabase is not configured', async () => {
     vi.mocked(createClient).mockResolvedValue(null as any);
 
-    const result = await authenticateRequest();
-
-    expect(result).toEqual({
-      authenticated: false,
-      userId: 'demo',
-    });
+    try {
+      await authenticateRequest();
+      expect.unreachable('Should have thrown');
+    } catch (response: any) {
+      expect(response.status).toBe(503);
+    }
   });
 });
