@@ -24,7 +24,9 @@ export function usePlan(): { plan: Plan; loading: boolean } {
         if (!user) { setLoading(false); return; }
         const { data: profile } = await supabase.from('profiles').select('plan').eq('id', user.id).single();
         setPlan((profile?.plan as Plan) || 'free');
-      } catch {}
+      } catch (error) {
+        console.error("Failed to load user plan:", error);
+      }
       setLoading(false);
     })();
   }, []);

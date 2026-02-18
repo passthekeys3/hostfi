@@ -203,7 +203,9 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
           });
         }
       }
-    } catch {}
+    } catch (error) {
+      console.error("Failed to add property:", error);
+    }
 
     setProperties((prev) => [...prev, p]);
     setPropName(""); setPropAddress(""); setPropCity("");

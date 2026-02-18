@@ -27,10 +27,14 @@ export async function triggerAlert(
     return;
   }
 
-  // Determine base URL
+  // Determine base URL - no localhost fallback in production
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-                  process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
-                  'http://localhost:3000';
+                  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
+
+  if (!baseUrl) {
+    console.error('[triggerAlert] No base URL configured (NEXT_PUBLIC_APP_URL or VERCEL_URL required)');
+    return;
+  }
 
   // Fire and forget - don't await
   // 1. Send email alert via API

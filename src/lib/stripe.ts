@@ -84,6 +84,31 @@ export function getPlanLimits(plan: PlanId) {
   return PLANS[plan];
 }
 
+/**
+ * Validate that Stripe price IDs are configured (not using placeholder defaults)
+ * @param priceId - The price ID to validate
+ * @returns true if configured, false if using placeholder
+ */
+export function isStripePriceConfigured(priceId: string | null): boolean {
+  if (!priceId) return false;
+  // Placeholder patterns from defaults
+  return !priceId.startsWith('price_pro_') && !priceId.startsWith('price_business_');
+}
+
+/**
+ * Get a valid price ID or throw an error with clear message
+ */
+export function getValidPriceId(plan: 'pro' | 'business', annual: boolean): string {
+  const planConfig = PLANS[plan];
+  const priceId = annual ? planConfig.annualPriceId : planConfig.priceId;
+  
+  if (!priceId || !isStripePriceConfigured(priceId)) {
+    throw new Error(`Stripe price not configured for ${plan} plan (${annual ? 'annual' : 'monthly'}). Set ${plan === 'pro' ? (annual ? 'STRIPE_PRO_ANNUAL_PRICE_ID' : 'STRIPE_PRO_MONTHLY_PRICE_ID') : (annual ? 'STRIPE_BUSINESS_ANNUAL_PRICE_ID' : 'STRIPE_BUSINESS_MONTHLY_PRICE_ID')} in environment variables.`);
+  }
+  
+  return priceId;
+}
+
 export function isFeatureAvailable(plan: PlanId, feature: string): boolean {
   const planConfig = PLANS[plan];
   switch (feature) {

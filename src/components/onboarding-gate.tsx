@@ -33,7 +33,9 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
             }
           }
         }
-      } catch {}
+      } catch (error) {
+        console.error("Failed to check onboarding status:", error);
+      }
 
       // Fall back to localStorage
       const state = getOnboardingState();
@@ -59,7 +61,9 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
             .eq("id", user.id);
         }
       }
-    } catch {}
+    } catch (error) {
+      console.error("Failed to save onboarding completion:", error);
+    }
 
     setShowOnboarding(false);
   };

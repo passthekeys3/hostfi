@@ -80,10 +80,11 @@ export function useDashboardData(): DashboardData {
           return;
         }
 
-        const [propertiesRes, expensesRes, revenueRes] = await Promise.all([
+        const [propertiesRes, expensesRes, revenueRes, recurringRes] = await Promise.all([
           supabase.from("properties").select("*").order("created_at", { ascending: false }),
           supabase.from("expenses").select("*").order("date", { ascending: false }),
           supabase.from("revenue").select("*").order("date", { ascending: false }),
+          supabase.from("recurring_expenses").select("*").order("created_at", { ascending: false }),
         ]);
 
         setData({
@@ -92,7 +93,7 @@ export function useDashboardData(): DashboardData {
           anomalies: [],
           alerts: [],
           revenue: (revenueRes.data as RevenueEntry[]) || [],
-          recurringExpenses: [],
+          recurringExpenses: (recurringRes.data as RecurringExpense[]) || [],
           isDemo: false,
           loading: false,
           refresh,

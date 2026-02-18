@@ -46,7 +46,9 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
           .eq("user_id", user.id)
           .order("name");
         if (data) setProperties(data);
-      } catch {}
+      } catch (error) {
+        console.error("Failed to load properties:", error);
+      }
     }
     loadProperties();
   }, []);
@@ -112,7 +114,9 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
         const data = await res.json();
         setTxnCount((data.added || []).length);
       }
-    } catch {}
+    } catch (error) {
+      console.error("Failed to import transactions:", error);
+    }
 
     setImporting(false);
     onConnected?.();

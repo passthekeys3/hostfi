@@ -128,7 +128,9 @@ export default function IntegrationsPage() {
             setGoogleDriveFolderUrl(`https://drive.google.com/drive/folders/${driveConn.metadata.hostfi_folder_id}`);
           }
         }
-      } catch {}
+      } catch (error) {
+        console.error("Failed to load integration connections:", error);
+      }
     }
     loadConnections();
   }, []);
@@ -177,7 +179,9 @@ export default function IntegrationsPage() {
         setSheetsSyncSuccess(true);
         setTimeout(() => setSheetsSyncSuccess(false), 3000);
       }
-    } catch {}
+    } catch (error) {
+      console.error("Failed to sync Google Sheets:", error);
+    }
     setSheetsSyncing(false);
   }, []);
 

@@ -153,7 +153,9 @@ export function SlackConnectModal({ onClose, isConnected: initialConnected, onDi
         .eq("provider", "slack");
 
       setStep("success");
-    } catch {}
+    } catch (error) {
+      console.error("Failed to save Slack settings:", error);
+    }
     setSaving(false);
   };
 
@@ -171,7 +173,9 @@ export function SlackConnectModal({ onClose, isConnected: initialConnected, onDi
         .eq("provider", "slack");
       onDisconnect?.();
       onClose();
-    } catch {}
+    } catch (error) {
+      console.error("Failed to disconnect Slack:", error);
+    }
   };
 
   const notifOptions = [

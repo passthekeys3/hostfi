@@ -43,7 +43,9 @@ export function AddPropertyForm() {
         const current = count || 0;
         setLimitInfo({ count: current, max, plan });
         if (current >= max) setAtLimit(true);
-      } catch {}
+      } catch (error) {
+        console.error("Failed to check property limit:", error);
+      }
     })();
   }, [demo]);
 

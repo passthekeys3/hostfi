@@ -112,7 +112,9 @@ export function GoogleDriveModal({ onClose, isConnected: initialConnected, onDis
 
       onDisconnect?.();
       onClose();
-    } catch {}
+    } catch (error) {
+      console.error("Failed to disconnect Google Drive:", error);
+    }
   };
 
   const formatLastBackup = (iso: string | null) => {

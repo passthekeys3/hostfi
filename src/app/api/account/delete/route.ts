@@ -39,7 +39,17 @@ export async function POST(request: NextRequest) {
     const admin = createAdminClient(supabaseUrl, serviceKey);
 
     // Delete in dependency order (children first)
+    // Include ALL user-data tables for GDPR compliance
     const tables = [
+      'expense_splits',
+      'plaid_recurring_rules',
+      'plaid_ignored_merchants',
+      'plaid_account_mappings',
+      'plaid_items',
+      'alert_preferences',
+      'anomaly_logs',
+      'receipts',
+      'inbound_emails',
       'parsed_emails',
       'integration_connections', 
       'revenue',

@@ -248,7 +248,9 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
       setSyncResults(null);
       setConnectedAt(null);
       setRemoteProperties([]);
-    } catch {}
+    } catch (error) {
+      console.error(`Failed to disconnect ${provider}:`, error);
+    }
   };
 
   if (!open || !config) return null;

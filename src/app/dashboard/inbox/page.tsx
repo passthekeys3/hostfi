@@ -416,7 +416,9 @@ export default function InboxPage() {
           });
           setItems(mapped);
         }
-      } catch {}
+      } catch (error) {
+        console.error("Failed to fetch inbox items:", error);
+      }
       setInboxLoading(false);
     })();
   }, [demo]);
@@ -498,7 +500,9 @@ export default function InboxPage() {
           const supabase = createClient();
           if (!supabase) return;
           await supabase.from("parsed_emails").update({ property_id: updates.property_id }).eq("id", id);
-        } catch {}
+        } catch (error) {
+          console.error("Failed to update property assignment:", error);
+        }
       })();
     }
   };
@@ -582,7 +586,9 @@ export default function InboxPage() {
                           if (supabase) {
                             await supabase.from("parsed_emails").update({ status: "pending" }).eq("id", item.id);
                           }
-                        } catch {}
+                        } catch (error) {
+                          console.error("Failed to reset item status:", error);
+                        }
                       })();
                     }
                   }}

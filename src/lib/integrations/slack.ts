@@ -17,8 +17,11 @@ const SLACK_SCOPES = [
 export function getSlackAuthUrl(state: string): string {
   const clientId = process.env.SLACK_CLIENT_ID;
   if (!clientId) throw new Error('SLACK_CLIENT_ID not configured');
+  
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (!appUrl) throw new Error('NEXT_PUBLIC_APP_URL not configured');
 
-  const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/integrations/slack/callback`;
+  const redirectUri = `${appUrl}/api/integrations/slack/callback`;
 
   const params = new URLSearchParams({
     client_id: clientId,
@@ -45,7 +48,7 @@ export async function exchangeSlackCode(code: string): Promise<{
       code,
       client_id: process.env.SLACK_CLIENT_ID!,
       client_secret: process.env.SLACK_CLIENT_SECRET!,
-      redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/integrations/slack/callback`,
+      redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/integrations/slack/callback`,
     }),
   });
 

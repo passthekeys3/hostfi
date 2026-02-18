@@ -176,7 +176,9 @@ export function GoogleSheetsModal({ onClose, isConnected: initialConnected, onDi
 
       onDisconnect?.();
       onClose();
-    } catch {}
+    } catch (error) {
+      console.error("Failed to disconnect Google Sheets:", error);
+    }
   };
 
   const formatLastSynced = (iso: string | null) => {

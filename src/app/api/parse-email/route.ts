@@ -192,49 +192,50 @@ Respond with ONLY valid JSON, no markdown or explanation.`;
     // Parse the JSON response
     const parsed = JSON.parse(text);
 
-    // Create the expense record
-    const { data: expense, error: expenseError } = await supabase
-      .from('expenses')
+    // Create a parsed_emails entry for inbox review (instead of expense directly)
+    // User will confirm in inbox which then creates the actual expense
+    const { data: parsedEmail, error: parsedEmailError } = await supabase
+      .from('parsed_emails')
       .insert({
         user_id: userId,
-        property_id: parsed.property_id || properties?.[0]?.id,
-        category: parsed.category || 'other',
-        description: parsed.description || payload.Subject,
-        vendor: parsed.vendor,
+        property_id: parsed.property_id || null,
+        vendor_name: parsed.vendor,
+        category: parsed.category || 'utility',
         amount: parseFloat(parsed.amount) || 0,
-        date: new Date().toISOString().split('T')[0],
-        due_date: parsed.due_date,
-        billing_period_start: parsed.billing_period_start,
-        billing_period_end: parsed.billing_period_end,
-        source: 'email_parse',
-        status: 'pending',
+        due_date: parsed.due_date || null,
+        service_address: parsed.service_address || null,
+        account_number: parsed.account_number || null,
+        confidence: parsed.confidence || 0.8,
+        source_from: payload.FromFull?.Email || payload.From,
+        source_subject: payload.Subject,
         raw_email_id: emailRecord.id,
-        confidence_score: parsed.confidence,
+        status: 'pending',
+        received_at: new Date().toISOString(),
       })
       .select('id')
       .single();
 
-    if (expenseError) {
-      console.error('[parse-email] Failed to create expense:', expenseError.message);
-      // Still mark email as stored
+    if (parsedEmailError) {
+      console.error('[parse-email] Failed to create parsed_emails entry:', parsedEmailError.message);
+      // Still mark inbound email as stored
       return NextResponse.json({ 
         success: true, 
         emailId: emailRecord.id,
         parsed: false,
-        error: 'Failed to create expense',
+        error: 'Failed to create inbox entry',
       });
     }
 
-    // Mark email as parsed
+    // Mark inbound email as parsed
     await supabase
       .from('inbound_emails')
-      .update({ parsed: true, expense_id: expense.id })
+      .update({ parsed: true, parsed_email_id: parsedEmail.id })
       .eq('id', emailRecord.id);
 
     return NextResponse.json({ 
       success: true, 
       emailId: emailRecord.id,
-      expenseId: expense.id,
+      parsedEmailId: parsedEmail.id,
       parsed: true,
       data: {
         vendor: parsed.vendor,

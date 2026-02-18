@@ -12,8 +12,11 @@ const GOOGLE_SCOPES = [
 export function getGoogleAuthUrl(state: string): string {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   if (!clientId) throw new Error('GOOGLE_CLIENT_ID not configured');
+  
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (!appUrl) throw new Error('NEXT_PUBLIC_APP_URL not configured');
 
-  const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/integrations/google/callback`;
+  const redirectUri = `${appUrl}/api/integrations/google/callback`;
 
   const params = new URLSearchParams({
     client_id: clientId,
@@ -43,7 +46,7 @@ export async function exchangeGoogleCode(code: string): Promise<{
       code,
       client_id: process.env.GOOGLE_CLIENT_ID!,
       client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-      redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/integrations/google/callback`,
+      redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/integrations/google/callback`,
       grant_type: 'authorization_code',
     }),
   });

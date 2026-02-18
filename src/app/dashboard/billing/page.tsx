@@ -130,7 +130,9 @@ export default function BillingPage() {
           subscriptionStatus: (profile?.subscription_status as SubscriptionStatus) || null,
           stripeConfigured: true,
         });
-      } catch {}
+      } catch (error) {
+        console.error("Failed to load billing info:", error);
+      }
       setLoading(false);
     })();
   }, []);

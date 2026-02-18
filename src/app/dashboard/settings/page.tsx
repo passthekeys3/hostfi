@@ -27,7 +27,9 @@ export default function SettingsPage() {
           const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user.id).single();
           setUserName(profile?.full_name || "");
         }
-      } catch {}
+      } catch (error) {
+        console.error("Failed to load user profile:", error);
+      }
     })();
     fetch("/api/email/setup")
       .then(r => r.json())
@@ -47,8 +49,8 @@ export default function SettingsPage() {
       const res = await fetch("/api/email/setup", { method: "POST" });
       const data = await res.json();
       if (data.email) setBillingEmail(data.email);
-    } catch {
-      // ignore
+    } catch (error) {
+      console.error("Failed to generate billing email:", error);
     }
     setGenerating(false);
   };
@@ -74,7 +76,9 @@ export default function SettingsPage() {
       setUserName(newName);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
-    } catch {}
+    } catch (error) {
+      console.error("Failed to save profile:", error);
+    }
     setSaving(false);
   };
 
@@ -276,7 +280,9 @@ export default function SettingsPage() {
                     const prefs = (current?.email_preferences as Record<string, boolean>) || {};
                     prefs[pref.id] = e.target.checked;
                     await sb.from('profiles').update({ email_preferences: prefs }).eq('id', user.id);
-                  } catch {}
+                  } catch (error) {
+                    console.error("Failed to update email preferences:", error);
+                  }
                 }}
                 className="mt-0.5 w-4 h-4 rounded border-gray-300 text-teal-500 focus:ring-teal-500/20"
               />

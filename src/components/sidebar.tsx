@@ -59,7 +59,9 @@ function SidebarUser({ demo }: { demo: boolean }) {
           name: profile?.full_name || authUser.email?.split('@')[0] || 'User',
           plan: profile?.plan || 'free',
         });
-      } catch {}
+      } catch (error) {
+        console.error("Failed to load user profile:", error);
+      }
     })();
   }, [demo]);
 
@@ -73,7 +75,9 @@ function SidebarUser({ demo }: { demo: boolean }) {
       const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
       if (supabase) await supabase.auth.signOut();
-    } catch {}
+    } catch (error) {
+      console.error("Failed to sign out:", error);
+    }
     router.push('/login');
   };
 

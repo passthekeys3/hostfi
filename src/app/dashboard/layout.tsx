@@ -25,7 +25,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const { createClient } = await import("@/lib/supabase/client");
         const supabase = createClient();
         if (supabase) await supabase.auth.signOut();
-      } catch {}
+      } catch (error) {
+        console.error("Failed to sign out:", error);
+      }
       window.location.href = '/login';
     })();
   }, []);

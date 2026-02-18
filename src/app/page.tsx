@@ -271,7 +271,9 @@ function useAuthTarget() {
         if (!supabase) return;
         const { data: { session } } = await supabase.auth.getSession();
         if (session) setTarget("/dashboard");
-      } catch {}
+      } catch (error) {
+        console.error("Failed to check auth session:", error);
+      }
     })();
   }, []);
   return target;
