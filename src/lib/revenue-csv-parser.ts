@@ -27,7 +27,7 @@ function detectPlatform(headers: string[]): RevenueSource {
   const joined = headers.join(' ').toLowerCase();
   if (joined.includes('confirmation code') || joined.includes('host payout')) return 'airbnb';
   if (joined.includes('reservation id') && joined.includes('vrbo')) return 'vrbo';
-  if (joined.includes('booking.com') || joined.includes('booker')) return 'booking';
+  if (joined.includes('booking.com') || joined.includes('booker')) return 'booking_com';
   return 'other';
 }
 
@@ -98,9 +98,9 @@ export function parseRevenueCSV(text: string): CSVParseResult {
 
     return {
       id: `csv-${Date.now()}-${idx}`,
-      user_id: 'demo',
+      user_id: '', // Set by API route with actual auth user
       property_id: propertyId || '',
-      source: platform,
+      platform: platform,
       description: row['type'] || row['description'] || 'Reservation',
       guest_name: row['guest'] || row['guest name'] || row['booker name'] || null,
       amount: amount || (payout + fee),
@@ -112,7 +112,7 @@ export function parseRevenueCSV(text: string): CSVParseResult {
       payout_date: payoutDate || checkOut,
       confirmation_code: row['confirmation code'] || row['reservation id'] || row['booking id'] || null,
       created_at: new Date().toISOString(),
-      import_source: 'csv_import' as const,
+      source: 'csv_import' as const,
     };
   });
 
