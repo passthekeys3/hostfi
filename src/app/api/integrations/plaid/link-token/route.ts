@@ -16,13 +16,10 @@ export async function POST(request: NextRequest) {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
     if (rateLimiter(ip)) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
 
-    // Demo mode
     if (!isPlaidConfigured()) {
       return NextResponse.json({
-        link_token: 'demo-link-token-xxx',
-        expiration: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(),
-        demo: true,
-      });
+        error: 'Plaid not configured',
+      }, { status: 503 });
     }
 
     const body = await request.json().catch(() => ({}));

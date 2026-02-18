@@ -31,39 +31,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'public_token is required' }, { status: 400 });
     }
 
-    // Demo mode
     if (!isPlaidConfigured()) {
-      // Still save connection to Supabase so status persists
-      const supabase = await createClient();
-      if (supabase) {
-        await supabase.from('integration_connections').upsert({
-          user_id: auth.userId,
-          provider: 'plaid',
-          access_token: 'demo-access-token',
-          metadata: {
-            item_id: 'demo-item-xxx',
-            institution_name: 'Chase (Demo)',
-            accounts: [
-              { account_id: 'acc_1', name: 'Business Checking', type: 'depository', mask: '4521' },
-              { account_id: 'acc_2', name: 'Business Savings', type: 'depository', mask: '8832' },
-            ],
-            sync_cursor: null,
-          },
-          active: true,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id,provider' });
-      }
-
       return NextResponse.json({
-        success: true,
-        demo: true,
-        item_id: 'demo-item-xxx',
-        accounts: [
-          { account_id: 'acc_1', name: 'Business Checking', type: 'depository', mask: '4521' },
-          { account_id: 'acc_2', name: 'Business Savings', type: 'depository', mask: '8832' },
-        ],
-        institution: { name: 'Chase', logo: null },
-      });
+        error: 'Plaid not configured',
+      }, { status: 503 });
     }
 
     // Exchange token

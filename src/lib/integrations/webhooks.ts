@@ -2,17 +2,6 @@ import crypto from 'crypto';
 import { createClient } from '@/lib/supabase/server';
 import type { WebhookEventType, WebhookPayload, WebhookSubscription } from './types';
 
-// In-memory store for demo mode (when Supabase isn't configured)
-const demoSubscriptions: WebhookSubscription[] = [];
-
-/**
- * Check if we're in demo mode (no Supabase)
- */
-async function isDemoMode(): Promise<boolean> {
-  const supabase = await createClient();
-  return supabase === null;
-}
-
 /**
  * Register a new webhook subscription (Zapier "subscribe" action)
  */
@@ -27,21 +16,8 @@ export async function createSubscription(
   const supabase = await createClient();
 
   if (!supabase) {
-    // Demo mode: use in-memory store
-    const sub: WebhookSubscription = {
-      id: crypto.randomUUID(),
-      user_id: userId,
-      target_url: targetUrl,
-      event_types: eventTypes,
-      secret,
-      active: true,
-      created_at: now,
-    };
-    demoSubscriptions.push(sub);
-    return sub;
+    throw new Error('Database not configured');
   }
-
-  // Production: insert into Supabase
   const { data, error } = await supabase
     .from('webhook_subscriptions')
     .insert({
@@ -76,14 +52,8 @@ export async function removeSubscription(subscriptionId: string, userId?: string
   const supabase = await createClient();
 
   if (!supabase) {
-    // Demo mode: remove from in-memory store
-    const idx = demoSubscriptions.findIndex(s => s.id === subscriptionId);
-    if (idx === -1) return false;
-    demoSubscriptions.splice(idx, 1);
-    return true;
+    throw new Error('Database not configured');
   }
-
-  // Production: delete from Supabase (RLS enforces user ownership)
   const query = supabase.from('webhook_subscriptions').delete().eq('id', subscriptionId);
   
   // If userId provided, add extra filter (belt and suspenders with RLS)
@@ -108,11 +78,8 @@ export async function getSubscriptions(userId: string): Promise<WebhookSubscript
   const supabase = await createClient();
 
   if (!supabase) {
-    // Demo mode: filter from in-memory store
-    return demoSubscriptions.filter(s => s.user_id === userId && s.active);
+    throw new Error('Database not configured');
   }
-
-  // Production: query Supabase
   const { data, error } = await supabase
     .from('webhook_subscriptions')
     .select('*')
@@ -145,37 +112,33 @@ export async function fireWebhookEvent(
 ): Promise<{ sent: number; errors: number }> {
   const supabase = await createClient();
 
-  let subs: WebhookSubscription[];
-
   if (!supabase) {
-    // Demo mode: filter from in-memory store
-    subs = demoSubscriptions.filter(
-      s => s.user_id === userId && s.active && s.event_types.includes(event)
-    );
-  } else {
-    // Production: query Supabase for matching subscriptions
-    const { data: rows, error } = await supabase
-      .from('webhook_subscriptions')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('active', true)
-      .contains('event_types', [event]);
-
-    if (error) {
-      console.error('Failed to query webhook subscriptions:', error);
-      return { sent: 0, errors: 0 };
-    }
-
-    subs = (rows || []).map(row => ({
-      id: row.id,
-      user_id: row.user_id,
-      target_url: row.target_url,
-      event_types: row.event_types as WebhookEventType[],
-      secret: row.secret,
-      active: row.active,
-      created_at: row.created_at,
-    }));
+    console.error('Database not configured for webhooks');
+    return { sent: 0, errors: 0 };
   }
+
+  // Query Supabase for matching subscriptions
+  const { data: rows, error } = await supabase
+    .from('webhook_subscriptions')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('active', true)
+    .contains('event_types', [event]);
+
+  if (error) {
+    console.error('Failed to query webhook subscriptions:', error);
+    return { sent: 0, errors: 0 };
+  }
+
+  const subs = (rows || []).map(row => ({
+    id: row.id,
+    user_id: row.user_id,
+    target_url: row.target_url,
+    event_types: row.event_types as WebhookEventType[],
+    secret: row.secret,
+    active: row.active,
+    created_at: row.created_at,
+  }));
 
   let sent = 0;
   let errors = 0;

@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!stripe) {
-      return NextResponse.json({ error: 'Stripe not configured', demo: true });
+      return NextResponse.json({ error: 'Stripe not configured' }, { status: 503 });
     }
     const session = await stripe.checkout.sessions.create(sessionConfig);
 
@@ -98,9 +98,8 @@ export async function POST(request: NextRequest) {
 
     if (message.includes('API key') || message.includes('placeholder')) {
       return NextResponse.json({
-        error: 'Demo mode: Set STRIPE_SECRET_KEY to enable real checkout.',
-        demo: true,
-      });
+        error: 'Stripe not configured',
+      }, { status: 503 });
     }
 
     return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 });

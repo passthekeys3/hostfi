@@ -24,8 +24,7 @@ export async function POST(req: NextRequest) {
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !serviceKey) {
-      // Demo mode
-      return NextResponse.json({ status: 'ok', demo: true });
+      return NextResponse.json({ error: 'Service not configured' }, { status: 503 });
     }
 
     const { createClient } = await import('@supabase/supabase-js');

@@ -1,5 +1,5 @@
 import type { SlackConfig } from './types';
-import { parseReceipt, getDemoReceipt, type ParsedReceipt } from '@/lib/receipt-parser';
+import { parseReceipt, type ParsedReceipt } from '@/lib/receipt-parser';
 
 // Slack OAuth configuration
 const SLACK_SCOPES = [

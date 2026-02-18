@@ -6,7 +6,6 @@ import {
   fetchAllTransactions,
   mapPlaidCategory,
   isPlaidConfigured,
-  getDemoTransactions,
 } from '@/lib/integrations/plaid';
 import { createClient } from '@/lib/supabase/server';
 
@@ -23,68 +22,8 @@ export async function POST(request: NextRequest) {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
     if (rateLimiter(ip)) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
 
-    // Demo mode
     if (!isPlaidConfigured()) {
-      const demoTxns = getDemoTransactions();
-      const mapped = demoTxns.map(t => ({
-        ...t,
-        hostfi_category: mapPlaidCategory(t),
-      }));
-
-      // Save demo transactions to expenses
-      const supabaseDemo = await createClient();
-      if (supabaseDemo) {
-        const { data: props } = await supabaseDemo
-          .from('properties')
-          .select('id')
-          .eq('user_id', auth.userId)
-          .limit(1);
-
-        if (props?.[0]?.id) {
-          const pid = props[0].id;
-          const expenses = mapped.filter(t => (t.amount || 0) > 0);
-          const income = mapped.filter(t => (t.amount || 0) < 0);
-
-          if (expenses.length > 0) {
-            await supabaseDemo.from('expenses').insert(expenses.map(t => ({
-              user_id: auth.userId,
-              property_id: pid,
-              category: t.hostfi_category || 'other',
-              description: t.name || t.merchant_name || 'Bank transaction',
-              vendor: t.merchant_name || t.name || null,
-              amount: Math.abs(t.amount),
-              date: t.date,
-              source: 'csv_import' as const,
-              status: 'paid' as const,
-              notes: 'Imported from Plaid (demo)',
-            })));
-          }
-
-          if (income.length > 0) {
-            await supabaseDemo.from('revenue').insert(income.map(t => ({
-              user_id: auth.userId,
-              property_id: pid,
-              platform: 'other' as const,
-              description: t.name || t.merchant_name || 'Bank deposit',
-              amount: Math.abs(t.amount),
-              date: t.date,
-              source: 'csv_import' as const,
-              notes: 'Imported from Plaid (demo)',
-            })));
-          }
-        }
-      }
-
-      return NextResponse.json({
-        demo: true,
-        added: mapped,
-        modified: [],
-        removed: [],
-        accounts: [
-          { account_id: 'acc_1', name: 'Business Checking', type: 'depository', mask: '4521' },
-        ],
-        imported: mapped.filter(t => (t.amount || 0) > 0).length,
-      });
+      return NextResponse.json({ error: 'Plaid not configured' }, { status: 503 });
     }
 
     // Get Plaid connection from Supabase

@@ -12,9 +12,8 @@ export async function GET(request: NextRequest) {
 
     if (!process.env.SLACK_CLIENT_ID) {
       return NextResponse.json({
-        demo: true,
-        message: 'Slack OAuth not configured. Set SLACK_CLIENT_ID and SLACK_CLIENT_SECRET.',
-      });
+        error: 'Slack OAuth not configured',
+      }, { status: 503 });
     }
 
     const state = Buffer.from(

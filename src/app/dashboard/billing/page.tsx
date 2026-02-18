@@ -163,9 +163,13 @@ export default function BillingPage() {
 
       const data = await res.json();
 
-      if (data.demo) {
-        setUserPlan((prev) => ({ ...prev, stripeConfigured: false }));
-        setSuccessMessage("Stripe is not configured yet. Billing will be available once Stripe is set up.");
+      if (data.error) {
+        if (data.error.includes('not configured')) {
+          setUserPlan((prev) => ({ ...prev, stripeConfigured: false }));
+          setSuccessMessage("Stripe is not configured yet. Billing will be available once Stripe is set up.");
+        } else {
+          setSuccessMessage(data.error);
+        }
       } else if (data.url) {
         window.location.href = data.url;
       } else {
@@ -195,8 +199,10 @@ export default function BillingPage() {
 
       const data = await res.json();
 
-      if (data.demo) {
+      if (data.error && data.error.includes('not configured')) {
         setSuccessMessage("Stripe is not configured yet. Cancellation will be available once billing is set up.");
+      } else if (data.error) {
+        setSuccessMessage(data.error);
       } else if (data.success) {
         setSuccessMessage("Your subscription has been cancelled. You'll keep access until the end of your billing period.");
         setUserPlan((prev) => ({ ...prev, subscriptionStatus: "canceled" }));

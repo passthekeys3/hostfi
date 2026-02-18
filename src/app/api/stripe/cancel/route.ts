@@ -17,9 +17,8 @@ export async function POST(request: NextRequest) {
 
     if (!supabase) {
       return NextResponse.json({
-        error: 'Supabase not configured',
-        demo: true,
-      });
+        error: 'Service not configured',
+      }, { status: 503 });
     }
 
     // Get authenticated user
@@ -40,7 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!stripe) {
-      return NextResponse.json({ error: 'Stripe not configured', demo: true });
+      return NextResponse.json({ error: 'Stripe not configured' }, { status: 503 });
     }
 
     // Cancel at period end (user keeps access until billing period ends)
@@ -59,9 +58,8 @@ export async function POST(request: NextRequest) {
 
     if (message.includes('API key') || message.includes('placeholder')) {
       return NextResponse.json({
-        error: 'Demo mode: Set STRIPE_SECRET_KEY to enable cancellation.',
-        demo: true,
-      });
+        error: 'Stripe not configured',
+      }, { status: 503 });
     }
 
     return NextResponse.json({ error: 'Failed to cancel subscription' }, { status: 500 });

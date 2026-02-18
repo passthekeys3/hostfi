@@ -44,25 +44,10 @@ Rules:
 - Set confidence based on how clearly you can read the data
 - If a field is unreadable, use null`;
 
-const DEMO_PARSED_BILL: ParsedBill = {
-  vendor_name: "Southern California Edison",
-  amount: 142.87,
-  due_date: "2026-03-01",
-  billing_period: "Jan 15 - Feb 14, 2026",
-  category_suggestion: "utility",
-  account_number: "4821",
-  confidence: 0.95,
-};
-
-export function getDemoBill(): ParsedBill {
-  return { ...DEMO_PARSED_BILL };
-}
-
 export async function parseBillFromText(emailBody: string): Promise<ParsedBill> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    await new Promise((r) => setTimeout(r, 1000));
-    return getDemoBill();
+    throw new Error('AI not configured: ANTHROPIC_API_KEY is required for bill parsing');
   }
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -118,8 +103,7 @@ export async function parseBillFromAttachment(
 ): Promise<ParsedBill> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    await new Promise((r) => setTimeout(r, 1000));
-    return getDemoBill();
+    throw new Error('AI not configured: ANTHROPIC_API_KEY is required for bill parsing');
   }
 
   // For PDFs, we extract text and parse. For images, use vision.

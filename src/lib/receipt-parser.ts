@@ -52,38 +52,13 @@ Rules:
 - Set confidence based on image quality and data clarity
 - If a field is unreadable, use null`;
 
-const DEMO_PARSED_RECEIPT: ParsedReceipt = {
-  vendor_name: "The Home Depot",
-  amount: 87.42,
-  date: "2026-02-05",
-  category_suggestion: "maintenance",
-  items: [
-    { description: '1/2" PVC Pipe 10ft', amount: 12.98 },
-    { description: "PVC Cement 8oz", amount: 7.49 },
-    { description: 'Pipe Wrench 14"', amount: 24.97 },
-    { description: "Toilet Flapper Universal", amount: 8.99 },
-    { description: "Plumber's Tape 5-pack", amount: 4.99 },
-    { description: "Drain Snake 25ft", amount: 19.98 },
-  ],
-  payment_method: "Visa ending 4521",
-  tax_amount: 8.02,
-  subtotal: 79.40,
-  confidence: 0.94,
-};
-
-export function getDemoReceipt(): ParsedReceipt {
-  return { ...DEMO_PARSED_RECEIPT };
-}
-
 export async function parseReceipt(
   imageBase64: string,
   mimeType: string = "image/jpeg"
 ): Promise<ParsedReceipt> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    // Demo mode — simulate a delay then return mock data
-    await new Promise((r) => setTimeout(r, 1500));
-    return getDemoReceipt();
+    throw new Error('AI not configured: ANTHROPIC_API_KEY is required for receipt parsing');
   }
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {

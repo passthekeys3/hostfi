@@ -11,12 +11,10 @@ export async function GET(request: NextRequest) {
   try {
     const auth = await authenticateRequest();
 
-    // In demo mode, return the URL without redirecting
     if (!process.env.GOOGLE_CLIENT_ID) {
       return NextResponse.json({
-        demo: true,
-        message: 'Google OAuth not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.',
-      });
+        error: 'Google OAuth not configured',
+      }, { status: 503 });
     }
 
     // State token encodes user ID + CSRF protection

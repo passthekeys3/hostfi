@@ -6,7 +6,6 @@ import {
   fetchAllTransactions,
   mapPlaidCategory,
   isPlaidConfigured,
-  getDemoTransactions,
   PlaidTransaction,
 } from '@/lib/integrations/plaid';
 import {
@@ -47,9 +46,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
     }
 
-    // Demo mode
     if (!isPlaidConfigured()) {
-      return handleDemoSync(auth.userId, supabase);
+      return NextResponse.json({ error: 'Plaid not configured' }, { status: 503 });
     }
 
     // Get user's Plaid items
@@ -303,53 +301,6 @@ async function createRevenue(
     date: txn.date,
     source: 'api_sync',
     notes: `Imported from Plaid (${txn.transaction_id})`,
-  });
-}
-
-async function handleDemoSync(userId: string, supabase: ReturnType<typeof getServiceClient>) {
-  if (!supabase) {
-    return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
-  }
-
-  const demoTxns = getDemoTransactions();
-  const { data: props } = await supabase
-    .from('properties')
-    .select('id')
-    .eq('user_id', userId)
-    .limit(1);
-
-  const propertyId = props?.[0]?.id;
-  if (!propertyId) {
-    return NextResponse.json({
-      success: true,
-      demo: true,
-      added: 0,
-      matched: 0,
-      skipped: 0,
-      revenue: 0,
-      message: 'No properties found. Create a property first.',
-    });
-  }
-
-  let added = 0, revenue = 0;
-
-  for (const txn of demoTxns) {
-    if (txn.amount > 0) {
-      await createExpense(supabase, userId, txn, propertyId);
-      added++;
-    } else {
-      await createRevenue(supabase, userId, txn, propertyId);
-      revenue++;
-    }
-  }
-
-  return NextResponse.json({
-    success: true,
-    demo: true,
-    added,
-    matched: 0,
-    skipped: 0,
-    revenue,
   });
 }
 

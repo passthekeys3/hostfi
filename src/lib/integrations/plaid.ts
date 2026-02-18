@@ -313,32 +313,8 @@ export function mapPlaidCategory(transaction: PlaidTransaction): string {
 }
 
 /**
- * Check if Plaid is configured (not demo mode)
+ * Check if Plaid is configured
  */
 export function isPlaidConfigured(): boolean {
   return getPlaidConfig() !== null;
-}
-
-/**
- * Get demo transactions for sandbox/demo mode
- */
-export function getDemoTransactions(): PlaidTransaction[] {
-  const today = new Date();
-  const fmt = (d: Date) => d.toISOString().split('T')[0];
-  const ago = (days: number) => {
-    const d = new Date(today);
-    d.setDate(d.getDate() - days);
-    return fmt(d);
-  };
-
-  return [
-    { transaction_id: 'demo_1', account_id: 'acc_1', amount: 245.00, date: ago(2), name: 'SoCalGas', merchant_name: 'Southern California Gas', category: ['Utilities', 'Gas'], personal_finance_category: { primary: 'RENT_AND_UTILITIES', detailed: 'RENT_AND_UTILITIES_GAS_AND_ELECTRICITY' }, pending: false, payment_channel: 'online', iso_currency_code: 'USD' },
-    { transaction_id: 'demo_2', account_id: 'acc_1', amount: 189.50, date: ago(5), name: 'LADWP', merchant_name: 'LA Dept of Water and Power', category: ['Utilities', 'Water'], personal_finance_category: { primary: 'RENT_AND_UTILITIES', detailed: 'RENT_AND_UTILITIES_WATER' }, pending: false, payment_channel: 'online', iso_currency_code: 'USD' },
-    { transaction_id: 'demo_3', account_id: 'acc_1', amount: 87.42, date: ago(7), name: 'The Home Depot', merchant_name: 'The Home Depot', category: ['Shops', 'Hardware Store'], personal_finance_category: { primary: 'HOME_IMPROVEMENT', detailed: 'HOME_IMPROVEMENT_HARDWARE' }, pending: false, payment_channel: 'in store', iso_currency_code: 'USD' },
-    { transaction_id: 'demo_4', account_id: 'acc_1', amount: 150.00, date: ago(10), name: 'Sparkle Clean Services', merchant_name: 'Sparkle Clean Services', category: ['Service', 'Cleaning'], personal_finance_category: { primary: 'GENERAL_SERVICES', detailed: 'GENERAL_SERVICES_OTHER_GENERAL_SERVICES' }, pending: false, payment_channel: 'online', iso_currency_code: 'USD' },
-    { transaction_id: 'demo_5', account_id: 'acc_1', amount: 2450.00, date: ago(1), name: 'Rent Payment', merchant_name: null, category: ['Transfer', 'Debit'], personal_finance_category: { primary: 'RENT_AND_UTILITIES', detailed: 'RENT_AND_UTILITIES_RENT' }, pending: false, payment_channel: 'online', iso_currency_code: 'USD' },
-    { transaction_id: 'demo_6', account_id: 'acc_1', amount: 134.20, date: ago(3), name: 'SoCalEdison', merchant_name: 'Southern California Edison', category: ['Utilities', 'Electric'], personal_finance_category: { primary: 'RENT_AND_UTILITIES', detailed: 'RENT_AND_UTILITIES_GAS_AND_ELECTRICITY' }, pending: false, payment_channel: 'online', iso_currency_code: 'USD' },
-    { transaction_id: 'demo_7', account_id: 'acc_1', amount: -1850.00, date: ago(4), name: 'Airbnb Payout', merchant_name: 'Airbnb', category: ['Transfer', 'Credit'], personal_finance_category: { primary: 'TRANSFER_IN', detailed: 'TRANSFER_IN_ACCOUNT_TRANSFER' }, pending: false, payment_channel: 'online', iso_currency_code: 'USD' },
-    { transaction_id: 'demo_8', account_id: 'acc_1', amount: 45.99, date: ago(8), name: 'Amazon', merchant_name: 'Amazon', category: ['Shops', 'Online Marketplaces'], personal_finance_category: { primary: 'GENERAL_MERCHANDISE', detailed: 'GENERAL_MERCHANDISE_ONLINE_MARKETPLACES' }, pending: false, payment_channel: 'online', iso_currency_code: 'USD' },
-  ];
 }
