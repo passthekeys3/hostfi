@@ -155,7 +155,8 @@ export function GoogleSheetsModal({ onClose, isConnected: initialConnected, onDi
       } else {
         setSyncStatus("error");
       }
-    } catch {
+    } catch (error) {
+      console.error('Google Sheets sync failed:', error);
       setSyncStatus("error");
     }
   };

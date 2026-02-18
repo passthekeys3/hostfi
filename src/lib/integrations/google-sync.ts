@@ -81,8 +81,9 @@ export async function getGoogleConnection(
         })
         .eq('user_id', userId)
         .eq('provider', provider);
-    } catch {
+    } catch (error) {
       // Token refresh failed - connection may need to be re-authorized
+      console.error('Google token refresh failed:', error);
       return null;
     }
   }
@@ -204,7 +205,8 @@ async function ensureHostFiFolder(
       .eq('provider', 'google_drive');
 
     return folderId;
-  } catch {
+  } catch (error) {
+    console.error('Failed to create HostFi folder in Drive:', error);
     return null;
   }
 }
@@ -242,7 +244,8 @@ async function ensurePropertyFolder(
       .eq('provider', 'google_drive');
 
     return folderId;
-  } catch {
+  } catch (error) {
+    console.error('Failed to create property folder in Drive:', error);
     return null;
   }
 }

@@ -27,7 +27,8 @@ export async function GET(request: NextRequest) {
     let stateData: { userId: string; nonce: string };
     try {
       stateData = JSON.parse(Buffer.from(state, 'base64url').toString());
-    } catch {
+    } catch (error) {
+      console.error('Invalid Google OAuth state:', error);
       return NextResponse.redirect(
         new URL('/dashboard/integrations?error=invalid_state', request.url)
       );

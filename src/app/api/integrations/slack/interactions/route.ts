@@ -109,7 +109,9 @@ export async function POST(request: NextRequest) {
         let receiptData: Record<string, unknown> = {};
         try {
           receiptData = JSON.parse(action.value || '{}');
-        } catch { /* empty */ }
+        } catch (error) {
+          console.error('Failed to parse receipt data from Slack action:', error);
+        }
 
         // Save to Supabase
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

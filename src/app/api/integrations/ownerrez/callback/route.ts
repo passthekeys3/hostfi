@@ -37,7 +37,8 @@ export async function GET(request: NextRequest) {
     let state: { userId: string; csrf: string; ts: number };
     try {
       state = JSON.parse(Buffer.from(stateParam, 'base64url').toString());
-    } catch {
+    } catch (error) {
+      console.error('Invalid OwnerRez OAuth state:', error);
       return NextResponse.redirect(`${redirectBase}?ownerrez=error&reason=invalid_state`);
     }
 

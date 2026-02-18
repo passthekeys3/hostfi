@@ -92,7 +92,8 @@ export default function ReportsPage() {
         body: JSON.stringify({}),
       });
       alert(res.ok ? 'Report sent to your email.' : 'Failed to send. Please try again.');
-    } catch {
+    } catch (error) {
+      console.error('Failed to send report email:', error);
       alert('Failed to send report.');
     } finally {
       setTimeout(() => setEmailSent(false), 2000);

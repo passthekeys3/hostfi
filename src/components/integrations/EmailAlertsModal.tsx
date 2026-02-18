@@ -110,7 +110,8 @@ export function EmailAlertsModal({ onClose }: ModalProps) {
       } else {
         setStep("recipients");
       }
-    } catch {
+    } catch (error) {
+      console.error('Failed to load alert preferences:', error);
       setStep("recipients");
     }
   }, []);

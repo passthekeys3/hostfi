@@ -98,7 +98,8 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
         } else {
           setStep("connect");
         }
-      } catch {
+      } catch (error) {
+        console.error('Failed to check PMS connection status:', error);
         setStep("connect");
       }
     })();
@@ -116,7 +117,8 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
         return;
       }
       window.location.href = data.url;
-    } catch {
+    } catch (error) {
+      console.error('PMS OAuth redirect failed:', error);
       setOauthAvailable(false);
       setConnecting(false);
     }
@@ -154,7 +156,8 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
 
       // Go straight to property selection
       loadRemoteProperties();
-    } catch {
+    } catch (error) {
+      console.error('PMS connection failed:', error);
       setError("Connection failed. Please check your credentials and try again.");
       setConnecting(false);
     }
@@ -183,7 +186,8 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
         // Fallback: just do a full sync without selection
         handleSync();
       }
-    } catch {
+    } catch (error) {
+      console.error('Failed to load remote properties:', error);
       // Fallback: full sync
       handleSync();
     }
@@ -217,7 +221,8 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
       if (!res.ok) { setError(data.error || "Sync failed"); setSyncing(false); return; }
       setSyncResults(data.results);
       setStep("connected");
-    } catch {
+    } catch (error) {
+      console.error('PMS sync selected properties failed:', error);
       setError("Sync failed. Please try again.");
     }
     setSyncing(false);

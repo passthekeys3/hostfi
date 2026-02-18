@@ -51,7 +51,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    console.error('Unsubscribe request failed:', error);
     return NextResponse.json({ success: true }); // Never reveal errors
   }
 }

@@ -62,7 +62,8 @@ export async function POST(req: NextRequest) {
     }).catch(() => {}); // Don't fail waitlist signup if email fails
 
     return NextResponse.json({ status: 'ok' });
-  } catch {
+  } catch (error) {
+    console.error('Invalid waitlist request:', error);
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 }

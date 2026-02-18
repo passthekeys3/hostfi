@@ -157,8 +157,9 @@ export function GooglePicker({
         const res = await fetch("/api/integrations/google/access-token");
         const data = await res.json();
         if (data.access_token) accessToken = data.access_token;
-      } catch {
+      } catch (error) {
         // Fall back to the provided token
+        console.error('Failed to refresh Google access token:', error);
       }
     }
 

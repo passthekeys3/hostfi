@@ -15,8 +15,9 @@ async function sendWelcomeEmail(userId: string) {
       },
       body: JSON.stringify({ type: 'welcome', userId }),
     });
-  } catch {
+  } catch (error) {
     // Non-blocking — don't fail auth if email fails
+    console.error('Failed to send welcome email:', error);
   }
 }
 

@@ -21,8 +21,8 @@ export async function createClient() {
           cookiesToSet.forEach(({ name, value, options }) =>
             cookieStore.set(name, value, options)
           );
-        } catch {
-          // Server Component — ignore
+        } catch (error) {
+          // Server Component — expected to fail in RSC context, ignore
         }
       },
     },

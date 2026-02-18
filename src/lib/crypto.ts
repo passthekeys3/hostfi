@@ -67,8 +67,9 @@ export function isEncrypted(value: unknown): boolean {
     try {
       JSON.parse(value);
       return false; // It's a JSON string, not encrypted
-    } catch {
-      return true; // Not JSON — likely encrypted base64
+    } catch (error) {
+      // Not JSON — likely encrypted base64
+      return true;
     }
   }
   return false; // Objects are plaintext

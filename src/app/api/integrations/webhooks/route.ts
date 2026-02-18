@@ -54,7 +54,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate URL
-    try { new URL(target_url); } catch {
+    try { new URL(target_url); } catch (error) {
+      console.error('Invalid webhook target URL:', error);
       return NextResponse.json({ error: 'Invalid target_url' }, { status: 400 });
     }
 

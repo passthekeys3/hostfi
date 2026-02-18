@@ -43,7 +43,8 @@ export async function POST(request: NextRequest) {
 
     try {
       await getGuestyToken(client_id, client_secret);
-    } catch {
+    } catch (error) {
+      console.error('Guesty authentication failed:', error);
       return NextResponse.json({ error: 'Guesty authentication failed. Please reconnect.' }, { status: 401 });
     }
 

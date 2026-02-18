@@ -20,7 +20,8 @@ export default function UnsubscribePage() {
         body: JSON.stringify({ email }),
       });
       setDone(true);
-    } catch {
+    } catch (error) {
+      console.error('Unsubscribe request failed:', error);
       setDone(true); // Show success anyway to avoid leaking email existence
     } finally {
       setLoading(false);

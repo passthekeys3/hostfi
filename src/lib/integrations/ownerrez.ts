@@ -160,7 +160,8 @@ export async function verifyCredentials(emailOrAuth: OwnerRezAuth | string, toke
   try {
     await ownerrezFetch('/properties', auth, { page_size: '1' });
     return true;
-  } catch {
+  } catch (error) {
+    console.error('OwnerRez credentials verification failed:', error);
     return false;
   }
 }

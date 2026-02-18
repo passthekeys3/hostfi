@@ -177,7 +177,8 @@ export default function BillingPage() {
       } else {
         setSuccessMessage(data.error || "Something went wrong. Please try again.");
       }
-    } catch {
+    } catch (error) {
+      console.error('Failed to start checkout:', error);
       setSuccessMessage("Failed to start checkout. Please try again.");
     } finally {
       setUpgrading(null);
@@ -208,7 +209,8 @@ export default function BillingPage() {
       } else {
         setSuccessMessage(data.error || "Failed to cancel subscription.");
       }
-    } catch {
+    } catch (error) {
+      console.error('Failed to cancel subscription:', error);
       setSuccessMessage("Failed to cancel subscription. Please try again.");
     } finally {
       setCancelling(false);

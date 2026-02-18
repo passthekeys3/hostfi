@@ -82,7 +82,8 @@ export function SlackConnectModal({ onClose, isConnected: initialConnected, onDi
             }
           }
           setInitialLoadDone(true);
-        } catch {
+        } catch (error) {
+          console.error('Failed to load Slack connection:', error);
           setInitialLoadDone(true);
         }
       })();

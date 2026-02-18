@@ -60,7 +60,8 @@ export default function AskPage() {
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
-    } catch {
+    } catch (error) {
+      console.error('AI question request failed:', error);
       setMessages((prev) => [
         ...prev,
         {

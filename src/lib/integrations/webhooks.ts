@@ -208,7 +208,8 @@ export async function fireWebhookEvent(
 
         if (res.ok) sent++;
         else errors++;
-      } catch {
+      } catch (error) {
+        console.error('Webhook delivery failed:', error);
         errors++;
       }
     })

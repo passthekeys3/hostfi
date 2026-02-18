@@ -32,7 +32,8 @@ export function getOnboardingState(): OnboardingState {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return DEFAULT_STATE;
     return JSON.parse(stored) as OnboardingState;
-  } catch {
+  } catch (error) {
+    console.error('Failed to load onboarding state from localStorage:', error);
     return DEFAULT_STATE;
   }
 }

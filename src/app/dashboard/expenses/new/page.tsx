@@ -114,7 +114,8 @@ function NewExpenseForm() {
       }
 
       router.push("/dashboard/expenses");
-    } catch {
+    } catch (error) {
+      console.error('Failed to add expense:', error);
       setError("Something went wrong. Please try again.");
       setLoading(false);
     }

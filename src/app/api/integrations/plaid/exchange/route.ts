@@ -79,8 +79,9 @@ export async function POST(request: NextRequest) {
     try {
       const instData = await getInstitution(itemData.item.institution_id);
       institution = instData.institution;
-    } catch {
+    } catch (error) {
       // Non-critical — some sandbox institutions don't resolve
+      console.error('Failed to get Plaid institution info:', error);
     }
 
     // Store in Supabase

@@ -104,7 +104,8 @@ export async function getProperties(userId?: string): Promise<Property[]> {
     if (!supabase) return [];
     const { data } = await supabase.from('properties').select('*').order('created_at', { ascending: false });
     return (data as Property[]) || [];
-  } catch {
+  } catch (error) {
+    console.error('Failed to fetch properties:', error);
     return [];
   }
 }
@@ -120,7 +121,8 @@ export async function getPropertyById(propertyId: string): Promise<Property | nu
     if (!supabase) return null;
     const { data } = await supabase.from('properties').select('*').eq('id', propertyId).single();
     return (data as Property) || null;
-  } catch {
+  } catch (error) {
+    console.error('Failed to fetch property by ID:', error);
     return null;
   }
 }
@@ -140,7 +142,8 @@ export async function getExpenses(userId?: string): Promise<DemoExpense[]> {
     if (!supabase) return [];
     const { data } = await supabase.from('expenses').select('*').order('date', { ascending: false });
     return (data as DemoExpense[]) || [];
-  } catch {
+  } catch (error) {
+    console.error('Failed to fetch expenses:', error);
     return [];
   }
 }
@@ -156,7 +159,8 @@ export async function getExpensesByPropertyId(propertyId: string): Promise<DemoE
     if (!supabase) return [];
     const { data } = await supabase.from('expenses').select('*').eq('property_id', propertyId).order('date', { ascending: false });
     return (data as DemoExpense[]) || [];
-  } catch {
+  } catch (error) {
+    console.error('Failed to fetch expenses by property:', error);
     return [];
   }
 }
@@ -172,7 +176,8 @@ export async function getRecurringExpenses(userId?: string): Promise<RecurringEx
     if (!supabase) return [];
     const { data } = await supabase.from('recurring_expenses').select('*').order('created_at', { ascending: false });
     return (data as RecurringExpense[]) || [];
-  } catch {
+  } catch (error) {
+    console.error('Failed to fetch recurring expenses:', error);
     return [];
   }
 }
@@ -192,7 +197,8 @@ export async function getRevenue(userId?: string): Promise<RevenueEntry[]> {
     if (!supabase) return [];
     const { data } = await supabase.from('revenue').select('*').order('date', { ascending: false });
     return (data as RevenueEntry[]) || [];
-  } catch {
+  } catch (error) {
+    console.error('Failed to fetch revenue:', error);
     return [];
   }
 }
@@ -208,7 +214,8 @@ export async function getRevenueByPropertyId(propertyId: string): Promise<Revenu
     if (!supabase) return [];
     const { data } = await supabase.from('revenue').select('*').eq('property_id', propertyId).order('date', { ascending: false });
     return (data as RevenueEntry[]) || [];
-  } catch {
+  } catch (error) {
+    console.error('Failed to fetch revenue by property:', error);
     return [];
   }
 }

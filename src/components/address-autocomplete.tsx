@@ -110,7 +110,8 @@ export function AddressAutocomplete({ onSelect, defaultValue = "", className }: 
 
       setSuggestions(mapped);
       setShowDropdown(mapped.length > 0);
-    } catch {
+    } catch (error) {
+      console.error('Address autocomplete fetch failed:', error);
       setSuggestions([]);
     } finally {
       setLoading(false);
@@ -147,7 +148,8 @@ export function AddressAutocomplete({ onSelect, defaultValue = "", className }: 
       setSuggestions([]);
 
       onSelect({ address_line1, city, state, zip });
-    } catch {
+    } catch (error) {
+      console.error('Failed to fetch address details:', error);
       // Fallback - just use the suggestion text
       setQuery(suggestion.mainText);
       setSelected(true);

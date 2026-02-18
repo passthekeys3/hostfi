@@ -135,7 +135,8 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
           const genData = await genRes.json();
           if (genData.email) setBillingEmail(genData.email);
         }
-      } catch {
+      } catch (error) {
+        console.error('Failed to fetch billing email:', error);
         setBillingEmail("Error generating email");
       }
     })();
