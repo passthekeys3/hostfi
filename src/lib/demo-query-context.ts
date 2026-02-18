@@ -71,11 +71,11 @@ export function buildQueryContext(): string {
 
 export const EXAMPLE_QUESTIONS = [
   "How much did I spend this month?",
-  "Which property costs the most?",
+  "Which property is most profitable?",
   "What are my biggest expense categories?",
-  "Compare spending across properties",
-  "Any overdue bills?",
+  "Compare revenue across properties",
+  "What's my net profit this year?",
   "How much do I spend on cleaning?",
-  "What's my monthly rent total?",
+  "Which platform brings the most revenue?",
   "Show me utility costs by property",
 ];

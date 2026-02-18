@@ -14,6 +14,7 @@ interface Message {
 }
 
 export default function AskPage() {
+  const MAX_MESSAGES = 40; // 20 exchanges — prevent unbounded memory growth
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -38,7 +39,7 @@ export default function AskPage() {
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages((prev) => [...prev, userMsg].slice(-MAX_MESSAGES));
     setInput("");
     setLoading(true);
 
@@ -59,7 +60,7 @@ export default function AskPage() {
         error: !!data.error,
       };
 
-      setMessages((prev) => [...prev, assistantMsg]);
+      setMessages((prev) => [...prev, assistantMsg].slice(-MAX_MESSAGES));
     } catch (error) {
       console.error('AI question request failed:', error);
       setMessages((prev) => [
@@ -209,10 +210,11 @@ export default function AskPage() {
             id="ask-ai-input"
             ref={inputRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => { if (e.target.value.length <= 500) setInput(e.target.value); }}
             onKeyDown={handleKeyDown}
-            placeholder="Ask about your expenses..."
+            placeholder="Ask about your expenses and revenue..."
             rows={1}
+            maxLength={500}
             aria-describedby="ask-ai-hint"
             className="flex-1 px-4 py-3.5 text-sm bg-transparent resize-none outline-none placeholder:text-gray-400 max-h-[120px]"
             style={{ minHeight: "48px" }}
