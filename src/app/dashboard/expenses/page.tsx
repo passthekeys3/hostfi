@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { getCategoryConfig, EXPENSE_CATEGORY_CONFIG, getCategoryColorClasses, ALL_EXPENSE_CATEGORIES, type ExpenseCategory } from "@/lib/expense-categories";
 import { formatCurrency, formatDate, cn, getStatusColor } from "@/lib/utils";
-import { Receipt, Plus, X, Loader2 } from "lucide-react";
+import { Receipt, Plus, X, Loader2, Search, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { isDemoMode } from "@/lib/data/data-provider";
@@ -18,8 +18,15 @@ interface EditState {
   property_id: string;
 }
 
+type SortColumn = 'date' | 'amount' | 'category' | 'vendor';
+type SortDirection = 'asc' | 'desc';
+
+const ITEMS_PER_PAGE = 25;
+
 export default function ExpensesPage() {
   const { properties, expenses, loading, refresh } = useDashboardData();
+  
+  // All state declarations BEFORE any early returns
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedProperty, setSelectedProperty] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
@@ -27,7 +34,23 @@ export default function ExpensesPage() {
   const [editState, setEditState] = useState<EditState | null>(null);
   const [saving, setSaving] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Sorting state
+  const [sortColumn, setSortColumn] = useState<SortColumn>('date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  
   const demo = isDemoMode();
+
+  // Reset to page 1 when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory, selectedProperty, selectedStatus, sortColumn, sortDirection]);
 
   const openEdit = (expense: typeof expenses[0]) => {
     setEditingId(expense.id);
@@ -98,14 +121,114 @@ export default function ExpensesPage() {
     }
   }, [editingId, demo, refresh]);
 
-  const filteredExpenses = useMemo(() => {
-    return expenses.filter((exp) => {
+  // Handle column sort click
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection(column === 'date' ? 'desc' : 'asc');
+    }
+  };
+
+  // Filter, search, sort, and paginate expenses
+  const { paginatedExpenses, totalFilteredCount, totalPages } = useMemo(() => {
+    // Step 1: Apply filters
+    let result = expenses.filter((exp) => {
       if (selectedCategory !== "all" && exp.category !== selectedCategory) return false;
       if (selectedProperty !== "all" && exp.property_id !== selectedProperty) return false;
       if (selectedStatus !== "all" && exp.status !== selectedStatus) return false;
       return true;
     });
-  }, [expenses, selectedCategory, selectedProperty, selectedStatus]);
+
+    // Step 2: Apply search
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter((exp) => {
+        const vendor = (exp.vendor || '').toLowerCase();
+        const description = (exp.description || '').toLowerCase();
+        const notes = (exp.notes || '').toLowerCase();
+        return vendor.includes(query) || description.includes(query) || notes.includes(query);
+      });
+    }
+
+    // Step 3: Apply sorting
+    result = [...result].sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortColumn) {
+        case 'date':
+          comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
+          break;
+        case 'amount':
+          comparison = a.amount - b.amount;
+          break;
+        case 'category':
+          comparison = (a.category || '').localeCompare(b.category || '');
+          break;
+        case 'vendor':
+          comparison = (a.vendor || a.description || '').localeCompare(b.vendor || b.description || '');
+          break;
+      }
+      
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+
+    const totalFilteredCount = result.length;
+    const totalPages = Math.ceil(totalFilteredCount / ITEMS_PER_PAGE);
+    
+    // Step 4: Apply pagination
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const paginatedExpenses = result.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+    return { paginatedExpenses, totalFilteredCount, totalPages };
+  }, [expenses, selectedCategory, selectedProperty, selectedStatus, searchQuery, sortColumn, sortDirection, currentPage]);
+
+  // Sort indicator component
+  const SortIndicator = ({ column }: { column: SortColumn }) => {
+    if (sortColumn !== column) return null;
+    return sortDirection === 'asc' 
+      ? <ChevronUp className="w-3 h-3 inline-block ml-1" />
+      : <ChevronDown className="w-3 h-3 inline-block ml-1" />;
+  };
+
+  // Sortable header component
+  const SortableHeader = ({ column, children, align = 'left' }: { column: SortColumn; children: React.ReactNode; align?: 'left' | 'right' }) => (
+    <th 
+      onClick={() => handleSort(column)}
+      className={cn(
+        "text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 bg-gray-50/80 cursor-pointer hover:bg-gray-100/80 transition-colors select-none",
+        align === 'right' ? 'text-right' : 'text-left'
+      )}
+    >
+      {children}
+      <SortIndicator column={column} />
+    </th>
+  );
+
+  // Pagination range calculation
+  const getPaginationRange = () => {
+    const range: (number | 'ellipsis')[] = [];
+    
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) range.push(i);
+    } else {
+      range.push(1);
+      
+      if (currentPage > 3) range.push('ellipsis');
+      
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      
+      for (let i = start; i <= end; i++) range.push(i);
+      
+      if (currentPage < totalPages - 2) range.push('ellipsis');
+      
+      range.push(totalPages);
+    }
+    
+    return range;
+  };
 
   if (loading) {
     return (
@@ -115,6 +238,9 @@ export default function ExpensesPage() {
       </div>
     );
   }
+
+  const startItem = totalFilteredCount > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0;
+  const endItem = Math.min(currentPage * ITEMS_PER_PAGE, totalFilteredCount);
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -133,8 +259,28 @@ export default function ExpensesPage() {
         </Link>
       </div>
 
-      {/* Filters */}
+      {/* Search and Filters */}
       <div className="flex flex-wrap gap-3">
+        {/* Search Input */}
+        <div className="relative flex-1 min-w-[200px] max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search vendor, description, notes..."
+            className="w-full pl-9 pr-9 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+        
         <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)} className="px-3 py-2 bg-white border border-gray-200 rounded-xl text-sm">
           <option value="all">All Categories</option>
           {ALL_EXPENSE_CATEGORIES.map(cat => (
@@ -155,13 +301,20 @@ export default function ExpensesPage() {
         </select>
       </div>
 
-      {filteredExpenses.length === 0 ? (
+      {totalFilteredCount === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
           <Receipt className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">No expenses yet</p>
-          <Link href="/dashboard/expenses/new" className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 bg-gray-900 text-white font-medium rounded-xl text-sm hover:bg-gray-800">
-            <Plus className="w-4 h-4" /> Add Your First Expense
-          </Link>
+          <p className="text-gray-500 text-sm">
+            {searchQuery || selectedCategory !== 'all' || selectedProperty !== 'all' || selectedStatus !== 'all'
+              ? "No expenses match your filters"
+              : "No expenses yet"
+            }
+          </p>
+          {!searchQuery && selectedCategory === 'all' && selectedProperty === 'all' && selectedStatus === 'all' && (
+            <Link href="/dashboard/expenses/new" className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 bg-gray-900 text-white font-medium rounded-xl text-sm hover:bg-gray-800">
+              <Plus className="w-4 h-4" /> Add Your First Expense
+            </Link>
+          )}
         </div>
       ) : (
         <>
@@ -170,21 +323,21 @@ export default function ExpensesPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 bg-gray-50/80">Expense</th>
+                  <SortableHeader column="vendor">Expense</SortableHeader>
                   <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 bg-gray-50/80">Property</th>
-                  <th className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 bg-gray-50/80">Amount</th>
-                  <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 bg-gray-50/80">Date</th>
+                  <SortableHeader column="amount" align="right">Amount</SortableHeader>
+                  <SortableHeader column="date">Date</SortableHeader>
                   <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-3 bg-gray-50/80">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredExpenses.map((expense, index) => {
+                {paginatedExpenses.map((expense, index) => {
                   const catConfig = getCategoryConfig(expense.category);
                   const colorClasses = getCategoryColorClasses(catConfig?.color || 'gray');
                   const property = properties.find(p => p.id === expense.property_id);
 
                   return (
-                    <tr key={expense.id} onClick={() => openEdit(expense)} className={cn("group transition-colors duration-150 hover:bg-gray-50/60 cursor-pointer", index !== filteredExpenses.length - 1 && "border-b border-gray-100")}>
+                    <tr key={expense.id} onClick={() => openEdit(expense)} className={cn("group transition-colors duration-150 hover:bg-gray-50/60 cursor-pointer", index !== paginatedExpenses.length - 1 && "border-b border-gray-100")}>
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-3">
                           <span className={cn("flex items-center justify-center w-9 h-9 rounded-xl text-sm border", colorClasses.bg, colorClasses.border)}>
@@ -211,7 +364,7 @@ export default function ExpensesPage() {
 
           {/* Mobile cards */}
           <div className="lg:hidden space-y-3">
-            {filteredExpenses.map((expense) => {
+            {paginatedExpenses.map((expense) => {
               const catConfig = getCategoryConfig(expense.category);
               const colorClasses = getCategoryColorClasses(catConfig?.color || 'gray');
               const property = properties.find(p => p.id === expense.property_id);
@@ -235,6 +388,66 @@ export default function ExpensesPage() {
               );
             })}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4">
+              <p className="text-sm text-gray-500">
+                Showing <span className="font-medium tabular-nums">{startItem}</span>-<span className="font-medium tabular-nums">{endItem}</span> of <span className="font-medium tabular-nums">{totalFilteredCount}</span> expenses
+              </p>
+              
+              <div className="flex items-center gap-1">
+                {/* Previous button */}
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                
+                {/* Page numbers */}
+                {totalPages > 3 && (
+                  <div className="hidden sm:flex items-center gap-1">
+                    {getPaginationRange().map((page, index) => (
+                      page === 'ellipsis' ? (
+                        <span key={`ellipsis-${index}`} className="px-2 text-gray-400">…</span>
+                      ) : (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={cn(
+                            "min-w-[36px] h-9 px-3 rounded-lg text-sm font-medium transition-colors",
+                            currentPage === page
+                              ? "bg-gray-900 text-white"
+                              : "text-gray-600 hover:bg-gray-100"
+                          )}
+                        >
+                          {page}
+                        </button>
+                      )
+                    ))}
+                  </div>
+                )}
+                
+                {/* Mobile page indicator */}
+                <span className="sm:hidden px-3 text-sm text-gray-600">
+                  Page {currentPage} of {totalPages}
+                </span>
+                
+                {/* Next button */}
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Next page"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </>
       )}
 
