@@ -457,6 +457,22 @@ export default function InboxPage() {
           });
           if (insertError) {
             console.error("Failed to create expense from confirmed bill:", insertError);
+          } else {
+            // Fire-and-forget: sync to Google Sheets
+            const prop = allProperties.find(p => p.id === propId);
+            fetch("/api/integrations/google/sync-expense", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                expense: {
+                  date: item.parsed.due_date || new Date().toISOString().split("T")[0],
+                  property_name: prop?.name || "Unknown",
+                  category: categoryMap[item.parsed.utility_type] || "utility",
+                  amount: item.parsed.amount,
+                  description: vendorName,
+                },
+              }),
+            }).catch(() => {});
           }
         } else {
           console.warn("Bill confirmed without property assignment — no expense created for:", id);

@@ -83,6 +83,7 @@ export interface HostawayReservation {
   guestName: string;
   arrivalDate: string;
   departureDate: string;
+  nights?: number;
   totalPrice: number;
   hostNote: string;
   status: string;
@@ -139,8 +140,10 @@ export function mapReservationToRevenue(reservation: HostawayReservation, proper
     guest_name: reservation.guestName || 'Guest',
     amount: reservation.totalPrice || 0,
     platform_fee: reservation.channelCommissionAmount || 0,
+    date: reservation.arrivalDate?.split('T')[0] || '',
     check_in: reservation.arrivalDate?.split('T')[0] || '',
     check_out: reservation.departureDate?.split('T')[0] || '',
+    nights: reservation.nights || null,
     confirmation_code: reservation.confirmationCode || '',
     payout_date: null,
     hostaway_reservation_id: String(reservation.id),
