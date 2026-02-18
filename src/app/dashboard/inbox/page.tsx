@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { InboxItem } from "@/lib/types";
 import type { Property } from "@/lib/data/data-provider";
+import { ALL_EXPENSE_CATEGORIES, EXPENSE_CATEGORY_CONFIG } from "@/lib/expense-categories";
 import { useDashboardData } from "@/hooks/useDashboardData";
 
 // Helper function to get property name from properties list
@@ -189,8 +190,8 @@ function InboxCard({ item, onConfirm, onReject, onUpdate, properties, allPropert
                   onChange={(e) => setEditType(e.target.value)}
                   className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20"
                 >
-                  {['gas', 'water', 'electric', 'internet', 'trash', 'rent', 'insurance', 'other'].map(t => (
-                    <option key={t} value={t} className="capitalize">{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                  {ALL_EXPENSE_CATEGORIES.map(cat => (
+                    <option key={cat} value={cat}>{EXPENSE_CATEGORY_CONFIG[cat].label}</option>
                   ))}
                 </select>
               </div>
@@ -257,12 +258,14 @@ function InboxCard({ item, onConfirm, onReject, onUpdate, properties, allPropert
                 // Pass the locally-selected property directly to avoid state timing issues
                 onConfirm(assignedProperty);
               }}
-              className="flex items-center gap-1.5 px-4 py-2 bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-all duration-200 text-xs font-medium shadow-sm"
+              className="flex items-center gap-1.5 px-4 py-2 min-h-[44px] bg-teal-600 text-white rounded-xl hover:bg-teal-700 transition-all duration-200 text-xs font-medium shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
               disabled={!assignedProperty && item.match.match_type === 'none'}
-              title={!assignedProperty && item.match.match_type === 'none' ? 'Assign a property first' : ''}
             >
               <Check className="w-3.5 h-3.5" /> Confirm
             </button>
+            {!assignedProperty && item.match.match_type === 'none' && (
+              <span className="text-xs text-amber-600">← Assign a property first</span>
+            )}
             <button
               onClick={() => setEditing(true)}
               className="flex items-center gap-1.5 px-4 py-2 bg-white text-foreground rounded-xl hover:bg-gray-100 transition-all duration-200 text-xs font-medium border border-gray-200 shadow-sm"
@@ -315,12 +318,14 @@ function InboxCard({ item, onConfirm, onReject, onUpdate, properties, allPropert
             </div>
           </div>
 
-          <div>
-            <span className="text-xs text-muted-foreground">Email Preview</span>
-            <pre className="mt-1 text-xs text-muted-foreground bg-white rounded-xl p-4 whitespace-pre-wrap font-mono leading-relaxed max-h-40 overflow-y-auto border border-gray-200/60">
-              {item.body_preview}
-            </pre>
-          </div>
+          {item.body_preview && (
+            <div>
+              <span className="text-xs text-muted-foreground">Email Preview</span>
+              <pre className="mt-1 text-xs text-muted-foreground bg-white rounded-xl p-4 whitespace-pre-wrap font-mono leading-relaxed max-h-40 overflow-y-auto border border-gray-200/60">
+                {item.body_preview}
+              </pre>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -328,12 +333,15 @@ function InboxCard({ item, onConfirm, onReject, onUpdate, properties, allPropert
 }
 
 export default function InboxPage() {
-  const { properties: allProperties } = useDashboardData();
+  const { properties: allProperties, loading: dashLoading } = useDashboardData();
   const [items, setItems] = useState<InboxItem[]>([]);
-
-  // Fetch real parsed emails
   const [inboxLoading, setInboxLoading] = useState(true);
+  const fetchedRef = useRef(false);
+
+  // Fetch real parsed emails — only once when properties are loaded
   useEffect(() => {
+    if (dashLoading || fetchedRef.current) return;
+    fetchedRef.current = true;
     (async () => {
       try {
         const { createClient } = await import("@/lib/supabase/client");
@@ -384,8 +392,7 @@ export default function InboxPage() {
                 matchedPropertyId = addressMatch.id;
                 matchType = "address";
                 matchConfidence = addressMatch.confidence;
-                // Persist the auto-match to Supabase
-                supabase.from("parsed_emails").update({ property_id: addressMatch.id }).eq("id", row.id as string).then(({ error }) => { if (error) console.error('Auto-match save failed:', error); });
+                // Don't persist auto-match here — only save on user confirm/edit
               }
             }
 
@@ -424,7 +431,7 @@ export default function InboxPage() {
       }
       setInboxLoading(false);
     })();
-  }, [allProperties]);
+  }, [dashLoading]); // eslint-disable-line react-hooks/exhaustive-deps
   const pendingItems = items.filter((i) => i.status === "pending_review");
   const processedItems = items.filter((i) => i.status !== "pending_review");
 
@@ -441,13 +448,19 @@ export default function InboxPage() {
       if (status === "approved" && item) {
         const propId = propertyId ?? item.match.property_id;
         if (propId) {
+          // Map inbox utility types to expense categories
           const categoryMap: Record<string, string> = {
             gas: "utility", water: "utility", electric: "utility", internet: "utility",
-            trash: "utility", rent: "mortgage", insurance: "insurance", other: "other",
+            trash: "utility", rent: "rent", insurance: "insurance", cleaning: "cleaning",
+            maintenance: "maintenance", supplies: "supplies", taxes: "taxes",
+            management: "management", subscription: "subscription", improvement: "improvement",
+            mortgage: "mortgage", other: "other",
           };
           const vendorName = item.parsed.provider_name || "Unknown";
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          if (!authUser) { console.error("Not authenticated — can't create expense"); return; }
           const { error: insertError } = await supabase.from("expenses").insert({
-            user_id: (await supabase.auth.getUser()).data.user?.id,
+            user_id: authUser.id,
             property_id: propId,
             vendor: vendorName,
             amount: item.parsed.amount,
@@ -510,19 +523,25 @@ export default function InboxPage() {
       };
     }));
 
-    // Persist property assignment to Supabase
-    if (updates.property_id !== undefined) {
-      (async () => {
-        try {
-          const { createClient } = await import("@/lib/supabase/client");
-          const supabase = createClient();
-          if (!supabase) return;
-          await supabase.from("parsed_emails").update({ property_id: updates.property_id }).eq("id", id);
-        } catch (error) {
-          console.error("Failed to update property assignment:", error);
+    // Persist all edit changes to Supabase
+    (async () => {
+      try {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        if (!supabase) return;
+        const dbUpdates: Record<string, unknown> = {};
+        if (updates.property_id !== undefined) dbUpdates.property_id = updates.property_id;
+        if (updates.amount !== undefined) dbUpdates.amount = updates.amount;
+        if (updates.provider_name !== undefined) dbUpdates.vendor_name = updates.provider_name;
+        if (updates.utility_type !== undefined) dbUpdates.category = updates.utility_type;
+        if (updates.due_date !== undefined) dbUpdates.due_date = updates.due_date;
+        if (Object.keys(dbUpdates).length > 0) {
+          await supabase.from("parsed_emails").update(dbUpdates).eq("id", id);
         }
-      })();
-    }
+      } catch (error) {
+        console.error("Failed to persist edit changes:", error);
+      }
+    })();
   };
 
   return (
@@ -541,7 +560,11 @@ export default function InboxPage() {
         )}
       </div>
 
-      {pendingItems.length === 0 ? (
+      {inboxLoading ? (
+        <div className="space-y-4 animate-pulse">
+          {[1,2,3].map(i => <div key={i} className="h-32 bg-gray-100 rounded-2xl" />)}
+        </div>
+      ) : pendingItems.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gray-200/60 p-12 text-center">
           <Mail className="w-12 h-12 mx-auto text-muted-foreground/30" />
           <h3 className="mt-4 font-semibold text-lg">All caught up!</h3>
