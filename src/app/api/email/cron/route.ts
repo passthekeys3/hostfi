@@ -39,9 +39,15 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify cron secret or service role key
-    const cronSecret = process.env.CRON_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    // Verify cron secret only (don't fall back to service role key for security)
+    const cronSecret = process.env.CRON_SECRET;
     const authHeader = request.headers.get('authorization');
+    
+    if (!cronSecret) {
+      console.error('[email/cron] CRON_SECRET not configured');
+      return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
+    }
+    
     if (process.env.NODE_ENV === 'production' && authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

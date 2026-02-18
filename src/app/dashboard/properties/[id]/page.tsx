@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getExpensesByCategory } from "@/lib/demo-expenses";
@@ -13,6 +13,9 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { properties, expenses, revenue, isDemo, loading } = useDashboardData();
+  
+  // Monthly spend data - computed client-side to avoid hydration mismatch
+  const [monthlySpend, setMonthlySpend] = useState<{ months: string[]; data: number[]; max: number }>({ months: [], data: [], max: 1 });
 
   if (loading) {
     return (
@@ -41,21 +44,24 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   const totalFees = propertyRevenue.reduce((sum, r) => sum + (r.platform_fee ?? 0), 0);
   const netProfit = totalNetRevenue - totalExpenses;
 
-  // Build last 5 months of spend data from real expenses
-  const now = new Date();
-  const monthLabels: string[] = [];
-  const spendData: number[] = [];
-  for (let i = 4; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    monthLabels.push(d.toLocaleString('en-US', { month: 'short' }));
-    const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    const monthTotal = propertyExpenses
-      .filter(e => e.date?.startsWith(monthStr))
-      .reduce((sum, e) => sum + e.amount, 0);
-    spendData.push(Math.round(monthTotal * 100) / 100);
-  }
-  const months = monthLabels;
-  const maxSpend = Math.max(...spendData, 1);
+  // Build last 5 months of spend data from real expenses (client-side only)
+  useEffect(() => {
+    const now = new Date();
+    const monthLabels: string[] = [];
+    const spendData: number[] = [];
+    for (let i = 4; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      monthLabels.push(d.toLocaleString('en-US', { month: 'short' }));
+      const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const monthTotal = propertyExpenses
+        .filter(e => e.date?.startsWith(monthStr))
+        .reduce((sum, e) => sum + e.amount, 0);
+      spendData.push(Math.round(monthTotal * 100) / 100);
+    }
+    setMonthlySpend({ months: monthLabels, data: spendData, max: Math.max(...spendData, 1) });
+  }, [propertyExpenses]);
+  
+  const { months, data: spendData, max: maxSpend } = monthlySpend;
 
   const topCategories = Object.entries(expensesByCategory)
     .sort(([, a], [, b]) => b - a)
