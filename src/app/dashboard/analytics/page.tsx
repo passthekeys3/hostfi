@@ -14,7 +14,7 @@ const RevenueVsExpensesChart = dynamic(() => import("@/components/analytics-char
 const RevenueByPlatformChart = dynamic(() => import("@/components/analytics-charts").then(m => m.RevenueByPlatformChart), { ssr: false, loading: () => <div className="h-64 bg-gray-100 rounded-xl animate-pulse" /> });
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { type MonthlyBill, type MonthlyRevenue, type UtilityType } from "@/lib/types";
-import { DollarSign, TrendingUp, Receipt, Building2, BarChart3, Percent, Wallet, ArrowUpDown } from "lucide-react";
+import { DollarSign, BarChart3, Percent, Wallet, ArrowUpDown } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 function formatMonthLabel(ym: string): string {
@@ -167,8 +167,8 @@ export default function AnalyticsPage() {
         />
       </div>
 
-      {/* Primary Stats - Revenue & Profit */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+      {/* Primary Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         <StatCard title="Total Revenue" value={formatCurrency(stats.totalRevenue)} subtitle={`Last ${dateRange} months`} icon={Wallet} accent="teal" />
         <StatCard title="Total Expenses" value={formatCurrency(stats.totalSpend)} subtitle={`Last ${dateRange} months`} icon={DollarSign} accent="amber" />
         <StatCard 
@@ -176,16 +176,14 @@ export default function AnalyticsPage() {
           value={(stats.netProfit < 0 ? '-' : '') + formatCurrency(Math.abs(stats.netProfit))} 
           subtitle={stats.netProfit >= 0 ? 'Profitable' : 'Loss'} 
           icon={ArrowUpDown}
-          accent={stats.netProfit < 0 ? 'rose' : 'teal'}
+          accent={stats.netProfit >= 0 ? 'teal' : 'rose'}
         />
-        <StatCard title="Avg Monthly Rev" value={formatCurrency(stats.avgMonthlyRev)} subtitle="Per month" icon={TrendingUp} accent="blue" />
-        <StatCard title="Avg Monthly Exp" value={formatCurrency(stats.avgMonthlyExp)} subtitle="Per month" icon={Receipt} accent="amber" />
         <StatCard 
           title="Profit Margin" 
           value={`${stats.profitMargin >= 0 ? '' : '-'}${Math.abs(stats.profitMargin).toFixed(1)}%`} 
           subtitle={stats.profitMargin >= 20 ? 'Healthy' : stats.profitMargin >= 0 ? 'Low' : 'Negative'} 
           icon={Percent}
-          accent={stats.profitMargin < 0 ? 'rose' : stats.profitMargin >= 20 ? 'teal' : 'blue'}
+          accent={stats.profitMargin < 0 ? 'rose' : 'teal'}
         />
       </div>
 
