@@ -42,7 +42,7 @@ export function NavBar() {
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? "bg-white/80 backdrop-blur-xl border-b border-gray-100" : "bg-transparent"}`}>
       <div className="max-w-6xl mx-auto px-5 flex items-center justify-between h-16">
         <Link href="/" className="flex items-center gap-2">
-          <Image src="/logo.svg" alt="HostFi" width={32} height={32} className="rounded-lg" />
+          <Image src="/logo.svg" alt="" width={32} height={32} className="rounded-lg" />
           <span className="text-lg font-semibold tracking-tight">HostFi</span>
         </Link>
         <div className="hidden md:flex items-center gap-8 text-[13px] font-medium text-gray-600">

@@ -18,7 +18,7 @@ function FAQItem({ q, a, id }: { q: string; a: string; id: string }) {
       >
         <span className="text-[15px] font-medium text-gray-900 group-hover:text-teal-600 transition-colors pr-8">{q}</span>
         <ChevronDown 
-          className={`w-4 h-4 text-gray-400 transition-transform duration-200 flex-shrink-0 ${open ? "rotate-180" : ""}`} 
+          className={`w-4 h-4 text-gray-500 transition-transform duration-200 flex-shrink-0 ${open ? "rotate-180" : ""}`} 
           aria-hidden="true"
         />
       </button>
