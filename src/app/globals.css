@@ -72,6 +72,36 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* Dark mode (class-based, for future toggle) */
+/* Landing page animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-gradient-shift {
+  background-size: 300% 100%;
+  animation: gradientShift 4s ease infinite;
+}
+
+.animate-blink {
+  animation: blink 1s infinite;
+}
+
 .dark {
   --color-background: #09090b;
   --color-foreground: #fafafa;
