@@ -21,7 +21,7 @@ type ModalView = null | 'add' | 'csv' | 'edit';
 type SortColumn = 'check_in' | 'amount' | 'guest_name' | 'platform';
 type SortDirection = 'asc' | 'desc';
 
-const ITEMS_PER_PAGE = 25;
+const ITEMS_PER_PAGE = 20;
 
 interface ImportApiResult {
   imported: number;

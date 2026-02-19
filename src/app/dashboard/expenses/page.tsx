@@ -20,7 +20,7 @@ interface EditState {
 type SortColumn = 'date' | 'amount' | 'category' | 'vendor';
 type SortDirection = 'asc' | 'desc';
 
-const ITEMS_PER_PAGE = 25;
+const ITEMS_PER_PAGE = 20;
 
 export default function ExpensesPage() {
   const { properties, expenses, loading, refresh } = useDashboardData();
