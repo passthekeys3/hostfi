@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Building2, Receipt, Settings, Menu, X, Inbox, BarChart3, Bell, GitCompareArrows, FileText, Calculator, Upload, MessageSquare, DollarSign, Link2, CreditCard, LogOut, Lock, Handshake } from "lucide-react";
@@ -74,7 +75,7 @@ function SidebarUser() {
         <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-semibold text-gray-600">{initial}</div>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium text-gray-900 truncate">{user?.name || 'Loading...'}</p>
-          <p className="text-[10px] text-gray-400">{planLabel}</p>
+          <p className="text-[10px] text-gray-500">{planLabel}</p>
         </div>
         <button
           onClick={handleLogout}
@@ -174,7 +175,7 @@ export function Sidebar() {
         <div className="px-5 py-6 border-b border-gray-100">
           <Link href="/dashboard" className="flex items-center gap-3" onClick={() => setOpen(false)}>
             <div className="w-9 h-9 rounded-lg flex items-center justify-center shadow-sm overflow-hidden">
-              <img src="/logo.svg" alt="HostFi" className="w-9 h-9" />
+              <Image src="/logo.svg" alt="HostFi" width={36} height={36} />
             </div>
             <div>
               <span className="text-lg font-bold tracking-tight text-gray-900">HostFi</span>

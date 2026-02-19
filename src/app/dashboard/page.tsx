@@ -123,7 +123,7 @@ function WelcomeChecklist({
                     {step.title}
                   </p>
                 </div>
-                <p className="text-xs text-gray-500 mt-0.5">{step.description}</p>
+                <p className="text-xs text-gray-600 mt-0.5">{step.description}</p>
               </div>
               <div className="shrink-0">
                 {step.completed ? (
@@ -207,7 +207,7 @@ export default function DashboardPage() {
       <div className="flex items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-gray-500 mt-1.5 sm:mt-2 text-sm leading-relaxed">Overview of Your Property Expenses</p>
+          <p className="text-gray-600 mt-1.5 sm:mt-2 text-sm leading-relaxed">Overview of Your Property Expenses</p>
         </div>
         <div className="hidden sm:flex gap-3">
           <Link 
@@ -391,7 +391,7 @@ export default function DashboardPage() {
         {recentExpenses.length === 0 && (
           <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
             <Receipt className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-            <p className="text-gray-500 text-sm">No expenses yet</p>
+            <p className="text-gray-600 text-sm">No expenses yet</p>
             <Link 
               href="/dashboard/expenses/new" 
               className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-gray-900 text-white font-medium rounded-xl text-sm hover:bg-gray-800 transition-colors"

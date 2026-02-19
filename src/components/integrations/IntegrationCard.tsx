@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import Image from "next/image";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Integration, ConnectionStatus } from "./types";
@@ -17,6 +19,7 @@ interface IntegrationCardProps {
 export function IntegrationCard({ integration, status, onConnect, onDisconnect, actions }: IntegrationCardProps) {
   const isConnected = status === "connected";
   const isComingSoon = status === "coming_soon";
+  const [imgError, setImgError] = useState(false);
 
   return (
     <div className={cn(
@@ -27,20 +30,17 @@ export function IntegrationCard({ integration, status, onConnect, onDisconnect, 
         {/* Logo */}
         <div className={cn(
           "w-10 h-10 rounded-lg flex items-center justify-center shrink-0 overflow-hidden",
-          !integration.logoUrl && integration.logoColor,
-          !integration.logoUrl && "text-white text-xs font-bold"
+          (!integration.logoUrl || imgError) && integration.logoColor,
+          (!integration.logoUrl || imgError) && "text-white text-xs font-bold"
         )}>
-          {integration.logoUrl ? (
-            <img
+          {integration.logoUrl && !imgError ? (
+            <Image
               src={integration.logoUrl}
               alt={integration.name}
+              width={40}
+              height={40}
               className="w-full h-full object-contain rounded-lg"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-                target.parentElement!.classList.add(integration.logoColor, 'text-white', 'text-xs', 'font-bold');
-                target.parentElement!.textContent = integration.logo;
-              }}
+              onError={() => setImgError(true)}
             />
           ) : (
             integration.logo
@@ -53,7 +53,7 @@ export function IntegrationCard({ integration, status, onConnect, onDisconnect, 
             <h3 className="text-sm font-semibold text-gray-900 truncate">{integration.name}</h3>
             {isConnected && <Check className="w-3.5 h-3.5 text-teal-500 shrink-0" />}
           </div>
-          <p className="text-xs text-gray-400 truncate mt-0.5">{integration.description}</p>
+          <p className="text-xs text-gray-600 truncate mt-0.5">{integration.description}</p>
         </div>
 
         {/* Action */}

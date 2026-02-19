@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { MapPin, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -205,7 +206,7 @@ export function AddressAutocomplete({ onSelect, defaultValue = "", className }: 
             </button>
           ))}
           <div className="px-4 py-2 bg-gray-50/50">
-            <img src="https://developers.google.com/static/maps/documentation/images/powered_by_google_on_white.png" alt="Powered by Google" className="h-3 opacity-50" />
+            <Image src="https://developers.google.com/static/maps/documentation/images/powered_by_google_on_white.png" alt="Powered by Google" width={120} height={12} className="h-3 opacity-50" unoptimized />
           </div>
         </div>
       )}

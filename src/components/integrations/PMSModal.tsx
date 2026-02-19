@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useId } from "react";
+import Image from "next/image";
 import { X, Check, RefreshCw, Loader2, AlertCircle, Building2, Calendar, ChevronRight, Unlink } from "lucide-react";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 
@@ -269,7 +270,7 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
             {config.logoUrl ? (
-              <img src={config.logoUrl} alt={config.name} className="w-10 h-10 rounded-xl object-contain" />
+              <Image src={config.logoUrl} alt={config.name} width={40} height={40} className="rounded-xl object-contain" />
             ) : (
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold ${config.logoColor}`}>
                 {config.logoText}

@@ -15,6 +15,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { getCategoryConfig, EXPENSE_CATEGORY_CONFIG, getCategoryColorClasses } from "@/lib/expense-categories";
 import { 
   generatePropertyTaxSummary, 
@@ -230,6 +231,7 @@ export default function TaxPage() {
   const { properties: realProperties, expenses: realExpenses, revenue: realRevenue, loading } = useDashboardData();
   const [selectedYear, setSelectedYear] = useState(AVAILABLE_TAX_YEARS[0].key);
   const [showCPAModal, setShowCPAModal] = useState(false);
+  const cpaModalRef = useFocusTrap(showCPAModal);
   const [cpaEmail, setCpaEmail] = useState('');
   const [cpaSent, setCpaSent] = useState(false);
 
@@ -332,7 +334,7 @@ export default function TaxPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Tax Preparation</h1>
-          <p className="text-gray-500 mt-1.5 sm:mt-2 text-sm leading-relaxed">
+          <p className="text-gray-600 mt-1.5 sm:mt-2 text-sm leading-relaxed">
             Schedule E Expense Mapping for Your Rental Properties
           </p>
         </div>
@@ -511,7 +513,7 @@ export default function TaxPage() {
       {/* Share with CPA Modal */}
       {showCPAModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" onClick={() => setShowCPAModal(false)}>
-          <div className="bg-white rounded-2xl border border-gray-200 w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
+          <div ref={cpaModalRef} role="dialog" aria-modal="true" className="bg-white rounded-2xl border border-gray-200 w-full max-w-md p-6 space-y-5" onClick={e => e.stopPropagation()}>
             <div>
               <h3 className="text-lg font-semibold text-gray-900">Share with Your CPA</h3>
               <p className="text-sm text-gray-500 mt-1">

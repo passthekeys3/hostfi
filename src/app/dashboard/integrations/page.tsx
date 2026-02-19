@@ -1,26 +1,28 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { Zap, ExternalLink, RefreshCw, Check } from "lucide-react";
 import { UpgradeGate } from "@/components/upgrade-gate";
-import { PMSModal } from "@/components/integrations/PMSModal";
 import {
-
-  XeroModal,
-  SlackModal,
-  DropboxModal,
-  MakeModal,
-  GoogleSheetsModal,
-  TeamsModal,
-  GoogleDriveModal,
-  ZapierModal,
-  EmailAlertsModal,
-  PlaidModal,
   IntegrationCard,
   type Integration,
   type ConnectionStatus,
 } from "@/components/integrations";
+
+// Lazy-load modals - only loaded when opened
+const PMSModal = dynamic(() => import("@/components/integrations/PMSModal").then(m => ({ default: m.PMSModal })));
+const XeroModal = dynamic(() => import("@/components/integrations/XeroModal").then(m => ({ default: m.XeroConnectModal })));
+const SlackModal = dynamic(() => import("@/components/integrations/SlackModal").then(m => ({ default: m.SlackConnectModal })));
+const DropboxModal = dynamic(() => import("@/components/integrations/DropboxModal").then(m => ({ default: m.DropboxModal })));
+const MakeModal = dynamic(() => import("@/components/integrations/MakeModal").then(m => ({ default: m.MakeModal })));
+const GoogleSheetsModal = dynamic(() => import("@/components/integrations/GoogleSheetsModal").then(m => ({ default: m.GoogleSheetsModal })));
+const TeamsModal = dynamic(() => import("@/components/integrations/TeamsModal").then(m => ({ default: m.TeamsModal })));
+const GoogleDriveModal = dynamic(() => import("@/components/integrations/GoogleDriveModal").then(m => ({ default: m.GoogleDriveModal })));
+const ZapierModal = dynamic(() => import("@/components/integrations/ZapierModal").then(m => ({ default: m.ZapierModal })));
+const EmailAlertsModal = dynamic(() => import("@/components/integrations/EmailAlertsModal").then(m => ({ default: m.EmailAlertsModal })));
+const PlaidModal = dynamic(() => import("@/components/integrations/PlaidModal").then(m => ({ default: m.PlaidModal })));
 
 const INTEGRATIONS: Integration[] = [
   { id: "quickbooks", name: "QuickBooks Online", description: "Sync expenses and revenue to your ledger", category: "Accounting", status: "coming_soon", logo: "QB", logoColor: "bg-[#2CA01C]", logoUrl: "/logos/quickbooks.svg", tier: "business" },
@@ -225,7 +227,7 @@ export default function IntegrationsPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Integrations</h1>
-        <p className="text-gray-500 mt-1.5 text-sm">Connect Your Tools to Automate Your Workflow</p>
+        <p className="text-gray-600 mt-1.5 text-sm">Connect Your Tools to Automate Your Workflow</p>
       </div>
 
       {/* OAuth error banner */}
@@ -301,7 +303,7 @@ export default function IntegrationsPage() {
       <div className="bg-gray-50 rounded-xl border border-gray-100 p-6 text-center">
         <Zap className="w-5 h-5 text-gray-300 mx-auto mb-2" />
         <p className="text-sm font-medium text-gray-900 mb-1">Need Something Else?</p>
-        <p className="text-xs text-gray-400 mb-4">Let us know what tools you use.</p>
+        <p className="text-xs text-gray-600 mb-4">Let us know what tools you use.</p>
         <button className="px-4 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
           Request Integration
         </button>

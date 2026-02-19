@@ -6,6 +6,7 @@ import { formatCurrency, formatDate, cn, getStatusColor } from "@/lib/utils";
 import { Receipt, Plus, X, Loader2, Search, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface EditState {
   description: string;
@@ -33,6 +34,7 @@ export default function ExpensesPage() {
   const [editState, setEditState] = useState<EditState | null>(null);
   const [saving, setSaving] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const editModalRef = useFocusTrap(showEditModal);
   
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -244,7 +246,7 @@ export default function ExpensesPage() {
       <div className="flex items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Expenses</h1>
-          <p className="text-gray-500 mt-1 sm:mt-2 text-sm leading-relaxed">
+          <p className="text-gray-600 mt-1 sm:mt-2 text-sm leading-relaxed">
             <span className="tabular-nums">{expenses.length}</span> total expenses
           </p>
         </div>
@@ -301,7 +303,7 @@ export default function ExpensesPage() {
       {totalFilteredCount === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
           <Receipt className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-600 text-sm">
             {searchQuery || selectedCategory !== 'all' || selectedProperty !== 'all' || selectedStatus !== 'all'
               ? "No expenses match your filters"
               : "No expenses yet"
@@ -451,7 +453,7 @@ export default function ExpensesPage() {
       {/* Edit Expense Modal */}
       {showEditModal && editState && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/40 backdrop-blur-sm" onClick={closeEdit}>
-          <div role="dialog" aria-modal="true" className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
+          <div ref={editModalRef} role="dialog" aria-modal="true" className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <h3 className="text-base font-semibold text-gray-900">Edit Expense</h3>
               <button onClick={closeEdit} className="p-2.5 hover:bg-gray-100 rounded-lg transition-colors">

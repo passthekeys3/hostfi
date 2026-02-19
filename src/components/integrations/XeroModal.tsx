@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useId } from "react";
+import Image from "next/image";
 import { Check, X, ArrowRight, RefreshCw, ChevronRight, ExternalLink, Shield, Clock, Settings2, AlertCircle, Zap, Link2 } from "lucide-react";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import type { ModalProps } from "./types";
@@ -34,7 +35,7 @@ export function XeroConnectModal({ onClose }: ModalProps) {
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <img src="/logos/xero.svg" alt="Xero" className="w-10 h-10 rounded-xl object-contain" />
+            <Image src="/logos/xero.svg" alt="Xero" width={40} height={40} className="rounded-xl object-contain" />
             <div>
               <h2 id={titleId} className="text-base font-semibold text-gray-900">Connect Xero</h2>
               <p className="text-xs text-gray-500 mt-0.5">Accounting sync</p>

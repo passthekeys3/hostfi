@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { REVENUE_SOURCES, getRevenueBySource, type RevenueEntry, type RevenueSource } from "@/lib/revenue";
 import { parseRevenueCSV, SAMPLE_CSV } from "@/lib/revenue-csv-parser";
 import { StatCard } from "@/components/stat-card";
@@ -38,6 +39,9 @@ export default function RevenuePage() {
   const revenue: RevenueEntry[] = (dashRevenue as RevenueEntry[] || []);
   const revenueLoaded = !dashLoading;
   const [modal, setModal] = useState<ModalView>(null);
+  const addModalRef = useFocusTrap(modal === 'add');
+  const editModalRef = useFocusTrap(modal === 'edit');
+  const csvModalRef = useFocusTrap(modal === 'csv');
   const [filterProperty, setFilterProperty] = useState<string>('all');
   const [filterSource, setFilterSource] = useState<string>('all');
   const [csvText, setCsvText] = useState('');
@@ -517,7 +521,7 @@ export default function RevenuePage() {
       <div className="flex items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Revenue</h1>
-          <p className="text-gray-500 mt-1 sm:mt-2 text-sm leading-relaxed">
+          <p className="text-gray-600 mt-1 sm:mt-2 text-sm leading-relaxed">
             <span className="tabular-nums">{revenue.length}</span> total entries
           </p>
         </div>
@@ -535,8 +539,8 @@ export default function RevenuePage() {
       {showEmptyState && (
         <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
           <DollarSign className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">No revenue tracked yet</p>
-          <p className="text-gray-400 text-xs mt-1 max-w-md mx-auto">Track rental income from Airbnb, VRBO, direct bookings and more.</p>
+          <p className="text-gray-600 text-sm">No revenue tracked yet</p>
+          <p className="text-gray-600 text-xs mt-1 max-w-md mx-auto">Track rental income from Airbnb, VRBO, direct bookings and more.</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-4">
             <button onClick={() => setModal('csv')} className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-gray-700 font-medium rounded-xl text-sm border border-gray-200 hover:bg-gray-50 transition-colors">
               <Upload className="w-4 h-4" /> Import CSV
@@ -905,7 +909,7 @@ export default function RevenuePage() {
       {/* Add Revenue Modal */}
       {modal === 'add' && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/40 backdrop-blur-sm" onClick={() => setModal(null)}>
-          <div role="dialog" aria-modal="true" className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
+          <div ref={addModalRef} role="dialog" aria-modal="true" className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <h3 className="text-base font-semibold text-gray-900">Add Revenue</h3>
               <button onClick={() => setModal(null)} className="p-2.5 hover:bg-gray-100 rounded-lg transition-colors">
@@ -974,7 +978,7 @@ export default function RevenuePage() {
       {/* Edit Revenue Modal */}
       {modal === 'edit' && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/40 backdrop-blur-sm" onClick={() => { setModal(null); setEditingId(null); }}>
-          <div role="dialog" aria-modal="true" className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
+          <div ref={editModalRef} role="dialog" aria-modal="true" className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <h3 className="text-base font-semibold text-gray-900">Edit Revenue</h3>
               <button onClick={() => { setModal(null); setEditingId(null); }} className="p-2.5 hover:bg-gray-100 rounded-lg transition-colors">
@@ -1050,7 +1054,7 @@ export default function RevenuePage() {
       {/* CSV Import Modal */}
       {modal === 'csv' && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/40 backdrop-blur-sm" onClick={() => { if (!isImporting) { setModal(null); setCsvResult(null); setCsvText(''); setImportResult(null); setImportError(null); } }}>
-          <div role="dialog" aria-modal="true" className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
+          <div ref={csvModalRef} role="dialog" aria-modal="true" className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto safe-area-bottom" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
                 <FileSpreadsheet className="w-4 h-4 text-teal-500" /> Import CSV
