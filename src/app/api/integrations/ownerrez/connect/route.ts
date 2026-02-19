@@ -47,7 +47,18 @@ export async function GET() {
     const { data } = await supabase.from('integration_connections')
       .select('status, connected_at, active, credentials').eq('user_id', auth.userId).eq('provider', 'ownerrez').single();
     const isConnected = !!data && (data.status === 'connected' || data.active === true) && !!data.credentials;
-    return NextResponse.json({ connected: isConnected, connectedAt: data?.connected_at || null });
+    
+    // Check if user has synced any properties from this PMS
+    let syncedCount = 0;
+    if (isConnected) {
+      const { count } = await supabase.from('properties')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', auth.userId)
+        .not('ownerrez_property_id', 'is', null);
+      syncedCount = count || 0;
+    }
+    
+    return NextResponse.json({ connected: isConnected, connectedAt: data?.connected_at || null, syncedCount });
   } catch (error) {
     if (error instanceof NextResponse) return error;
     return NextResponse.json({ connected: false });

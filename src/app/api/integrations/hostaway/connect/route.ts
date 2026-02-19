@@ -63,7 +63,18 @@ export async function GET() {
     const { data } = await supabase.from('integration_connections')
       .select('status, connected_at, active').eq('user_id', auth.userId).eq('provider', 'hostaway').single();
 
-    return NextResponse.json({ connected: (data?.status === 'connected' || data?.active === true) && !!data, connectedAt: data?.connected_at || null });
+    const isConnected = (data?.status === 'connected' || data?.active === true) && !!data;
+    
+    let syncedCount = 0;
+    if (isConnected) {
+      const { count } = await supabase.from('properties')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', auth.userId)
+        .not('hostaway_listing_id', 'is', null);
+      syncedCount = count || 0;
+    }
+    
+    return NextResponse.json({ connected: isConnected, connectedAt: data?.connected_at || null, syncedCount });
   } catch (error) {
     if (error instanceof NextResponse) return error;
     return NextResponse.json({ connected: false });

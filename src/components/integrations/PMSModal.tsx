@@ -97,8 +97,14 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
         const res = await fetch(`/api/integrations/${provider}/connect`);
         const data = await res.json();
         if (data.connected) {
-          setStep("connected");
           setConnectedAt(data.connectedAt);
+          if (data.syncedCount === 0) {
+            // No properties synced yet — auto-trigger property selection
+            setStep("connected");
+            loadRemoteProperties();
+          } else {
+            setStep("connected");
+          }
         } else {
           setStep("connect");
         }

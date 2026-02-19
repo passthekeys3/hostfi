@@ -108,10 +108,21 @@ export async function GET() {
       .eq('provider', 'guesty')
       .single();
 
-    const isConnected = data?.status === 'connected' || data?.active === true;
+    const isConnected = (data?.status === 'connected' || data?.active === true) && !!data;
+    
+    let syncedCount = 0;
+    if (isConnected) {
+      const { count } = await supabase.from('properties')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', auth.userId)
+        .not('guesty_listing_id', 'is', null);
+      syncedCount = count || 0;
+    }
+    
     return NextResponse.json({
-      connected: isConnected && !!data,
+      connected: isConnected,
       connectedAt: data?.connected_at || null,
+      syncedCount,
     });
   } catch (error) {
     if (error instanceof NextResponse) return error;
