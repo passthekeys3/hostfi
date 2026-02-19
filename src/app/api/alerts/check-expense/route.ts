@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authenticateRequest } from '@/lib/auth';
 import { createClient } from '@supabase/supabase-js';
 import { triggerAnomalyAlert } from '@/lib/alerts/trigger';
+import { fireWebhookEvent } from '@/lib/integrations/webhooks';
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -61,6 +62,18 @@ export async function POST(request: NextRequest) {
       .single();
 
     const propertyName = property?.name || 'Unknown Property';
+
+    // Fire webhook event for expense creation
+    fireWebhookEvent(targetUserId, 'expense.created', {
+      expense_id: expense.id,
+      amount: expense.amount,
+      category: expense.category,
+      vendor: expense.vendor,
+      description: expense.description,
+      date: expense.date,
+      property_id: expense.property_id,
+      property_name: propertyName,
+    }).catch(err => console.error('[check-expense] Webhook error:', err));
 
     // Calculate average for this category (last 90 days, excluding this expense)
     const ninetyDaysAgo = new Date();
@@ -123,6 +136,18 @@ export async function POST(request: NextRequest) {
         averageAmount: Math.round(average * 100) / 100,
         date: expense.date,
       });
+
+      // Fire webhook event for anomaly detection
+      fireWebhookEvent(targetUserId, 'anomaly.detected', {
+        expense_id: expense.id,
+        amount: expenseAmount,
+        expected_amount: Math.round(average * 100) / 100,
+        deviation_percent: deviationPercent,
+        severity,
+        category: expense.category,
+        property_id: expense.property_id,
+        property_name: propertyName,
+      }).catch(err => console.error('[check-expense] Anomaly webhook error:', err));
 
       return NextResponse.json({
         anomaly: true,

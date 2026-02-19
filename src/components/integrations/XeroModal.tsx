@@ -150,7 +150,7 @@ export function XeroConnectModal({ onClose }: ModalProps) {
                 <p className="text-xs font-medium text-gray-700 mb-2">Tracking Categories</p>
                 <p className="text-xs text-gray-500 mb-3">Map properties to Xero Tracking Categories for per-property reporting in Xero.</p>
                 <div className="space-y-2">
-                  {["Venice Beach Unit", "Silver Lake Duplex", "Joshua Tree Cabin"].map((prop, i) => (
+                  {["Your Property 1", "Your Property 2", "Your Property 3"].map((prop, i) => (
                     <div key={i} className="flex items-center gap-3">
                       <span className="text-xs text-gray-700 font-medium w-32 shrink-0 truncate">{prop}</span>
                       <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />

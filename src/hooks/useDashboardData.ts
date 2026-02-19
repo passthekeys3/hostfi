@@ -19,7 +19,11 @@ interface DashboardData {
 /**
  * Generate real-time alerts from expense data
  */
-function generateAlertsFromExpenses(expenses: Expense[], properties: Property[]): Alert[] {
+function generateAlertsFromExpenses(
+  expenses: Expense[],
+  properties: Property[],
+  recurringExpenses: RecurringExpense[]
+): Alert[] {
   const alerts: Alert[] = [];
   const now = new Date();
   const today = now.toISOString().split('T')[0];
@@ -63,6 +67,45 @@ function generateAlertsFromExpenses(expenses: Expense[], properties: Property[])
     }
   }
 
+  // Generate missing_bill alerts from recurring expenses
+  // Check if a recurring expense is overdue based on its next_due date
+  for (const recurring of recurringExpenses) {
+    if (!recurring.next_due) continue;
+    
+    const property = properties.find(p => p.id === recurring.property_id);
+    const propertyName = property?.name || 'Unknown Property';
+    const nextDueDate = new Date(recurring.next_due);
+    
+    // Add a grace period of 3 days
+    const gracePeriod = 3 * 24 * 60 * 60 * 1000;
+    const overdueThreshold = new Date(nextDueDate.getTime() + gracePeriod);
+    
+    // If we're past the next_due date + grace period, check if there's a recent matching expense
+    if (now > overdueThreshold) {
+      // Look for expenses after the next_due date for this category + property
+      const hasRecentExpense = expenses.some(
+        e => e.property_id === recurring.property_id && 
+             e.category === recurring.category &&
+             new Date(e.date) >= nextDueDate
+      );
+      
+      // If no matching expense found, generate missing_bill alert
+      if (!hasRecentExpense) {
+        const daysMissing = Math.floor((now.getTime() - nextDueDate.getTime()) / (1000 * 60 * 60 * 24));
+        alerts.push({
+          id: `missing_bill-${recurring.id}`,
+          type: 'missing_bill',
+          title: `Missing ${recurring.vendor || recurring.description || recurring.category} bill`,
+          description: `Expected ${recurring.frequency} bill at ${propertyName} is ${daysMissing} day${daysMissing === 1 ? '' : 's'} overdue.`,
+          severity: daysMissing > 14 ? 'warning' : 'info',
+          read: false,
+          created_at: recurring.next_due,
+          property_id: recurring.property_id,
+        });
+      }
+    }
+  }
+
   // Sort by severity (critical > warning > info)
   const severityOrder = { critical: 0, warning: 1, info: 2 };
   return alerts.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
@@ -98,12 +141,13 @@ export function useDashboardData(): DashboardData {
           return;
         }
 
-        const [propertiesRes, expensesRes, revenueRes, recurringRes, anomalyRes] = await Promise.all([
+        const [propertiesRes, expensesRes, revenueRes, recurringRes, anomalyRes, parsedEmailsRes] = await Promise.all([
           supabase.from("properties").select("*").order("created_at", { ascending: false }),
           supabase.from("expenses").select("*").order("date", { ascending: false }),
           supabase.from("revenue").select("*").order("date", { ascending: false }),
           supabase.from("recurring_expenses").select("*").order("created_at", { ascending: false }),
           supabase.from("anomaly_logs").select("*").order("created_at", { ascending: false }),
+          supabase.from("parsed_emails").select("*").eq("status", "ready").order("received_at", { ascending: false }).limit(10),
         ]);
 
         const properties = (propertiesRes.data as Property[]) || [];
@@ -146,8 +190,24 @@ export function useDashboardData(): DashboardData {
           };
         });
 
-        // Generate real-time alerts from expense due dates
-        const alerts = generateAlertsFromExpenses(expenses, properties);
+        const recurringExpenses = (recurringRes.data as RecurringExpense[]) || [];
+        
+        // Generate real-time alerts from expense due dates and recurring expenses
+        const alerts = generateAlertsFromExpenses(expenses, properties, recurringExpenses);
+        
+        // Generate new_parsed alerts from unprocessed parsed emails
+        const parsedEmails = parsedEmailsRes.data || [];
+        for (const parsed of parsedEmails) {
+          alerts.push({
+            id: `new_parsed-${parsed.id}`,
+            type: 'new_parsed',
+            title: `New bill from ${parsed.vendor_name || 'Unknown'}`,
+            description: `$${(parsed.amount || 0).toFixed(2)} parsed from email. Review and approve in your Inbox.`,
+            severity: 'info',
+            read: false,
+            created_at: parsed.received_at || parsed.created_at,
+          });
+        }
 
         setData({
           properties,
@@ -155,7 +215,7 @@ export function useDashboardData(): DashboardData {
           anomalies,
           alerts,
           revenue: (revenueRes.data as RevenueEntry[]) || [],
-          recurringExpenses: (recurringRes.data as RecurringExpense[]) || [],
+          recurringExpenses,
           loading: false,
           refresh,
         });

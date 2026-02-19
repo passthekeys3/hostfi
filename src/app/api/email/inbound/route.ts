@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseBillFromText, parseBillFromAttachment } from '@/lib/email-parser';
 import { createRateLimiter } from '@/lib/rate-limit';
+import { fireWebhookEvent } from '@/lib/integrations/webhooks';
 
 const isRateLimited = createRateLimiter('email-inbound', 60, 60_000); // 60 emails per minute
 
@@ -180,6 +181,17 @@ export async function POST(req: NextRequest) {
       subject: payload.Subject,
       receivedAt: payload.Date || new Date().toISOString(),
     });
+
+    // Fire webhook event for receipt parsing
+    fireWebhookEvent(user.userId, 'receipt.parsed', {
+      vendor: parsed.vendor_name,
+      amount: parsed.amount,
+      due_date: parsed.due_date,
+      category: parsed.category_suggestion,
+      confidence: parsed.confidence,
+      source_from: payload.From,
+      source_subject: payload.Subject,
+    }).catch(err => console.error('[email-inbound] Webhook error:', err));
 
     return NextResponse.json({
       status: 'processed',

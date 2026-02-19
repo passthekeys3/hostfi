@@ -22,6 +22,7 @@ function NewExpenseForm() {
   const [loading, setLoading] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [receiptApplied, setReceiptApplied] = useState(false);
+  const [receiptImageData, setReceiptImageData] = useState<{ base64: string; mimeType: string } | null>(null);
   const [todayStr, setTodayStr] = useState("");
 
   // Form refs for auto-fill
@@ -46,6 +47,7 @@ function NewExpenseForm() {
     vendor: string;
     date: string;
     category: ExpenseCategory;
+    imageData?: { base64: string; mimeType: string };
   }) => {
     if (amountRef.current) amountRef.current.value = data.amount.toFixed(2);
     if (dateRef.current) dateRef.current.value = data.date;
@@ -53,6 +55,9 @@ function NewExpenseForm() {
     setSelectedCategory(data.category);
     setReceiptApplied(true);
     setReceiptOpen(false);
+    if (data.imageData) {
+      setReceiptImageData(data.imageData);
+    }
   };
 
   const [error, setError] = useState<string | null>(null);
@@ -123,6 +128,22 @@ function NewExpenseForm() {
             user_id: user.id,
           }),
         }).catch(() => {}); // Ignore errors - alerts are optional
+      }
+
+      // Fire-and-forget: upload receipt to Google Drive if connected and receipt was used
+      if (receiptImageData && selectedProperty) {
+        const ext = receiptImageData.mimeType.includes("png") ? "png" : receiptImageData.mimeType.includes("pdf") ? "pdf" : "jpg";
+        const fileName = `${date}-${vendor || selectedCategory || "receipt"}.${ext}`.replace(/[^a-zA-Z0-9.-]/g, "_");
+        fetch("/api/integrations/google/upload-receipt", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fileName,
+            fileContent: receiptImageData.base64,
+            mimeType: receiptImageData.mimeType,
+            propertyName: selectedProperty.name,
+          }),
+        }).catch(() => {}); // Ignore errors - Drive backup is optional
       }
 
       router.push("/dashboard/expenses");

@@ -186,10 +186,10 @@ export function GoogleDriveModal({ onClose, isConnected: initialConnected, onDis
                 <h4 className="text-sm font-semibold text-gray-900">Auto-organized file structure</h4>
                 <div className="bg-gray-50 rounded-xl p-4 font-mono text-xs text-gray-600 space-y-1">
                   <p className="text-gray-900 font-semibold">HostFi/</p>
-                  <p className="pl-4">Venice Beach Unit/</p>
+                  <p className="pl-4">[Your Property 1]/</p>
                   <p className="pl-8">2026-01/ receipts, invoices</p>
                   <p className="pl-8">2026-02/ receipts, invoices</p>
-                  <p className="pl-4">Silver Lake Duplex/</p>
+                  <p className="pl-4">[Your Property 2]/</p>
                   <p className="pl-8">2026-01/ ...</p>
                   <p className="pl-4">Reports/</p>
                   <p className="pl-8">Monthly-Summary-Jan-2026.pdf</p>

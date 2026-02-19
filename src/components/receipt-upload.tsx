@@ -13,6 +13,7 @@ interface ReceiptUploadProps {
     vendor: string;
     date: string;
     category: ExpenseCategory;
+    imageData?: { base64: string; mimeType: string };
   }) => void;
 }
 
@@ -100,6 +101,7 @@ export default function ReceiptUpload({ onDataReady }: ReceiptUploadProps) {
       vendor: parsedData.vendor_name,
       date: parsedData.date || new Date().toISOString().split("T")[0],
       category: parsedData.category_suggestion,
+      imageData: imageData || undefined,
     });
   };
 
