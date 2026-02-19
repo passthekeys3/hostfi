@@ -336,9 +336,10 @@ export function SlackConnectModal({ onClose, isConnected: initialConnected, onDi
 
           {/* CONNECTED — Manage existing connection */}
           {step === "connected" && (
-            <div className="space-y-6">
+            <div className="space-y-5">
+              {/* Status banner */}
               <div className="flex items-center gap-3 p-4 bg-teal-50 rounded-xl border border-teal-100">
-                <div className="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center shrink-0">
                   <Check className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -347,6 +348,7 @@ export function SlackConnectModal({ onClose, isConnected: initialConnected, onDi
                 </div>
               </div>
 
+              {/* Connection details */}
               <div className="bg-gray-50 rounded-xl p-4 space-y-2">
                 <div className="flex justify-between text-xs">
                   <span className="text-gray-500">Expense channel</span>
@@ -368,23 +370,22 @@ export function SlackConnectModal({ onClose, isConnected: initialConnected, onDi
                 </div>
               </div>
 
-              <button
-                onClick={async () => { await loadChannels(); setStep("channels"); }}
-                className="w-full py-3 text-sm font-medium text-[#4A154B] bg-[#4A154B]/5 hover:bg-[#4A154B]/10 rounded-xl transition-colors"
-              >
-                Edit Settings
-              </button>
+              {/* Action buttons */}
+              <div className="space-y-3">
+                <button
+                  onClick={async () => { await loadChannels(); setStep("channels"); }}
+                  className="w-full py-3 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+                >
+                  Edit Settings
+                </button>
 
-              <button
-                onClick={handleDisconnect}
-                className="w-full py-3 text-sm font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors flex items-center justify-center gap-2"
-              >
-                <Unlink className="w-4 h-4" /> Disconnect
-              </button>
-
-              <button onClick={onClose} className="w-full py-3 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors">
-                Close
-              </button>
+                <button
+                  onClick={handleDisconnect}
+                  className="w-full py-3 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  <Unlink className="w-4 h-4" /> Disconnect
+                </button>
+              </div>
             </div>
           )}
         </div>

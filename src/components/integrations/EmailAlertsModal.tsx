@@ -235,15 +235,19 @@ export function EmailAlertsModal({ onClose }: ModalProps) {
 
         {/* Connected state */}
         {step === "connected" && existingPrefs && (
-          <div className="p-6 space-y-6">
-            <div className="text-center py-4">
-              <div className="w-14 h-14 bg-teal-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Check className="w-7 h-7 text-teal-500" />
+          <div className="px-6 py-5 space-y-5">
+            {/* Status banner */}
+            <div className="flex items-center gap-3 p-4 bg-teal-50 rounded-xl border border-teal-100">
+              <div className="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center shrink-0">
+                <Check className="w-5 h-5 text-white" />
               </div>
-              <h4 className="text-lg font-semibold text-gray-900">Email Alerts Active</h4>
-              <p className="text-sm text-gray-500 mt-1">Your team is receiving alerts</p>
+              <div>
+                <p className="text-sm font-semibold text-teal-900">Connected</p>
+                <p className="text-xs text-teal-700">Email alerts are active</p>
+              </div>
             </div>
 
+            {/* Connection details */}
             <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-xs">
               <div className="flex justify-between">
                 <span className="text-gray-500">Recipients</span>
@@ -259,6 +263,7 @@ export function EmailAlertsModal({ onClose }: ModalProps) {
               </div>
             </div>
 
+            {/* Recipients list */}
             <div className="space-y-2">
               <p className="text-xs font-medium text-gray-500">Recipients</p>
               <div className="space-y-1">
@@ -270,17 +275,18 @@ export function EmailAlertsModal({ onClose }: ModalProps) {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            {/* Action buttons */}
+            <div className="space-y-3">
               <button
                 onClick={handleEdit}
-                className="flex-1 py-3 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                className="w-full py-3 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
               >
                 Edit Settings
               </button>
               <button
                 onClick={handleDisconnect}
                 disabled={syncing}
-                className="flex-1 py-3 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full py-3 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {syncing ? <RefreshCw className="w-4 h-4 animate-spin" /> : "Disable Alerts"}
               </button>

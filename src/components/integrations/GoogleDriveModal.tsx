@@ -315,10 +315,10 @@ export function GoogleDriveModal({ onClose, isConnected: initialConnected, onDis
           )}
 
           {step === "connected" && (
-            <div className="space-y-6">
-              {/* Connected status */}
+            <div className="space-y-5">
+              {/* Status banner */}
               <div className="flex items-center gap-3 p-4 bg-teal-50 rounded-xl border border-teal-100">
-                <div className="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center shrink-0">
                   <Check className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -349,7 +349,7 @@ export function GoogleDriveModal({ onClose, isConnected: initialConnected, onDis
                       href={connectionInfo.folderUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1 py-2 text-xs font-medium text-[#4285F4] bg-white border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-1.5"
+                      className="flex-1 py-2.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5"
                     >
                       <ExternalLink className="w-3 h-3" /> Open in Drive
                     </a>
@@ -358,7 +358,7 @@ export function GoogleDriveModal({ onClose, isConnected: initialConnected, onDis
                       href="https://drive.google.com"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex-1 py-2 text-xs font-medium text-[#4285F4] bg-white border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-1.5"
+                      className="flex-1 py-2.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5"
                     >
                       <ExternalLink className="w-3 h-3" /> Open Drive
                     </a>
@@ -369,7 +369,7 @@ export function GoogleDriveModal({ onClose, isConnected: initialConnected, onDis
                     onSelect={handleFolderSelect}
                     autoRefreshToken
                     buttonText={changingFolder ? "Changing..." : "Change Folder"}
-                    className="flex-1 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
+                    className="flex-1 py-2.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5"
                   />
                 </div>
               </div>
@@ -390,19 +390,15 @@ export function GoogleDriveModal({ onClose, isConnected: initialConnected, onDis
                 </div>
               </div>
 
-              {/* Actions */}
+              {/* Action buttons */}
               <div className="space-y-3">
                 <button
                   onClick={handleDisconnect}
-                  className="w-full py-3 text-sm font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-3 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
                   <Unlink className="w-4 h-4" /> Disconnect
                 </button>
               </div>
-
-              <button onClick={onClose} className="w-full py-3 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors">
-                Close
-              </button>
             </div>
           )}
         </div>

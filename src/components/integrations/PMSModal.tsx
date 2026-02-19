@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useId } from "react";
-import { X, Check, RefreshCw, Loader2, AlertCircle, Building2, Calendar, ChevronRight } from "lucide-react";
+import { X, Check, RefreshCw, Loader2, AlertCircle, Building2, Calendar, ChevronRight, Unlink } from "lucide-react";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface PMSConfig {
@@ -408,15 +408,19 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
           )}
 
           {step === "connected" && (
-            <>
-              <div className="flex items-center gap-3 p-3 bg-teal-50 border border-teal-200 rounded-xl">
-                <Check className="w-5 h-5 text-teal-600" />
+            <div className="space-y-5">
+              {/* Status banner */}
+              <div className="flex items-center gap-3 p-4 bg-teal-50 rounded-xl border border-teal-100">
+                <div className="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center shrink-0">
+                  <Check className="w-5 h-5 text-white" />
+                </div>
                 <div>
-                  <p className="text-sm font-medium text-teal-800">Connected to {config.name}</p>
-                  {connectedAt && <p className="text-xs text-teal-600">Since {new Date(connectedAt).toLocaleDateString()}</p>}
+                  <p className="text-sm font-semibold text-teal-900">Connected</p>
+                  <p className="text-xs text-teal-700">{config.name}{connectedAt ? ` since ${new Date(connectedAt).toLocaleDateString()}` : ""}</p>
                 </div>
               </div>
 
+              {/* Sync results (integration-specific info) */}
               {syncResults && (
                 <div className="space-y-2">
                   {syncResults.listings && (
@@ -449,27 +453,27 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
                 </div>
               )}
 
-              <div className="space-y-2">
-                <div className="flex gap-3">
-                  <button onClick={() => loadRemoteProperties()} disabled={syncing || loadingProperties}
-                    className="flex-1 py-2.5 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                    {syncing || loadingProperties ? (
-                      <><Loader2 className="w-4 h-4 animate-spin" /> Loading...</>
-                    ) : (
-                      <><RefreshCw className="w-4 h-4" /> {syncResults ? "Sync Again" : "Select & Import Properties"}</>
-                    )}
-                  </button>
-                  <button onClick={handleDisconnect}
-                    className="px-4 py-2.5 text-sm font-medium text-red-600 bg-red-50 rounded-xl hover:bg-red-100 transition-colors">
-                    Disconnect
-                  </button>
-                </div>
-                <button onClick={() => handleSync(true)} disabled={syncing}
-                  className="w-full py-2 text-xs font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors disabled:opacity-50">
-                  Force Re-sync (clears & re-imports all bookings)
+              {/* Action buttons */}
+              <div className="space-y-3">
+                <button onClick={() => loadRemoteProperties()} disabled={syncing || loadingProperties}
+                  className="w-full py-3 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                  {syncing || loadingProperties ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Loading...</>
+                  ) : (
+                    <><RefreshCw className="w-4 h-4" /> {syncResults ? "Sync Again" : "Select & Import Properties"}</>
+                  )}
+                </button>
+                <button onClick={handleDisconnect}
+                  className="w-full py-3 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors flex items-center justify-center gap-2">
+                  <Unlink className="w-4 h-4" /> Disconnect
                 </button>
               </div>
-            </>
+              
+              <button onClick={() => handleSync(true)} disabled={syncing}
+                className="w-full py-2 text-xs font-medium text-gray-500 hover:text-gray-700 text-center transition-colors disabled:opacity-50">
+                Force Re-sync (clears & re-imports all bookings)
+              </button>
+            </div>
           )}
         </div>
       </div>
