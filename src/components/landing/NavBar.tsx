@@ -45,7 +45,7 @@ export function NavBar() {
           <Image src="/logo.svg" alt="HostFi" width={32} height={32} className="rounded-lg" />
           <span className="text-lg font-semibold tracking-tight">HostFi</span>
         </Link>
-        <div className="hidden md:flex items-center gap-8 text-[13px] font-medium text-gray-500">
+        <div className="hidden md:flex items-center gap-8 text-[13px] font-medium text-gray-600">
           <button onClick={() => scrollTo("features")} className="hover:text-gray-900 transition-colors cursor-pointer">Features</button>
           <button onClick={() => scrollTo("how-it-works")} className="hover:text-gray-900 transition-colors cursor-pointer">How It Works</button>
           <button onClick={() => scrollTo("pricing")} className="hover:text-gray-900 transition-colors cursor-pointer">Pricing</button>

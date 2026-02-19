@@ -140,7 +140,7 @@ export default function LandingPage() {
           <div className="max-w-6xl mx-auto">
             <FadeIn className="max-w-3xl">
               <div 
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-8 text-white bg-gradient-to-r from-teal-600 via-teal-500 to-teal-400 animate-gradient-shift"
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-8 text-white bg-gradient-to-r from-teal-600 via-teal-500 to-teal-400 bg-[length:100%_100%]"
               >
                 <Sparkles className="w-3 h-3" aria-hidden="true" />
                 AI-Powered Expense Management for Rental Properties
@@ -270,7 +270,7 @@ export default function LandingPage() {
                     ].map((item, i) => (
                       <div key={i} className="flex items-start gap-3">
                         <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 mt-0.5" aria-hidden="true">
-                          <span className="text-gray-400 text-xs">✕</span>
+                          <span className="text-gray-500 text-xs">✕</span>
                         </div>
                         <p className="text-sm text-gray-600">{item}</p>
                       </div>
@@ -325,7 +325,7 @@ export default function LandingPage() {
                 <FadeIn key={i} delay={i * 50} withScale>
                   <div className="bg-white rounded-xl p-6 h-full border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all group">
                     <div className="w-8 sm:w-10 h-8 sm:h-10 rounded-lg bg-gray-50 flex items-center justify-center mb-4 group-hover:bg-teal-50 transition-colors">
-                      <f.icon className="w-4 sm:w-5 h-4 sm:h-5 text-gray-400 group-hover:text-teal-500 transition-colors" aria-hidden="true" />
+                      <f.icon className="w-4 sm:w-5 h-4 sm:h-5 text-gray-500 group-hover:text-teal-500 transition-colors" aria-hidden="true" />
                     </div>
                     <h3 className="text-sm font-semibold text-gray-900 mb-2">{f.title}</h3>
                     <p className="text-sm text-gray-600 leading-relaxed">{f.desc}</p>
@@ -395,7 +395,7 @@ export default function LandingPage() {
               <FadeIn delay={150}>
                 <div className="bg-gray-800 rounded-xl border border-gray-700 p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <p className="text-xs font-medium text-gray-400">Schedule E Preview — Unit 4B</p>
+                    <p className="text-xs font-medium text-gray-500">Schedule E Preview — Unit 4B</p>
                     <span className="text-[10px] text-teal-400 font-medium bg-teal-400/10 px-2 py-0.5 rounded">Auto-mapped</span>
                   </div>
                   <div className="space-y-2.5">

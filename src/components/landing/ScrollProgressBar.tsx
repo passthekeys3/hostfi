@@ -28,10 +28,10 @@ export function ScrollProgressBar() {
   }, []);
   
   return (
-    <div className="fixed top-0 left-0 right-0 h-[3px] z-[60] pointer-events-none">
+    <div className="fixed top-0 left-0 right-0 h-[3px] z-[60] pointer-events-none overflow-hidden">
       <div 
-        className="h-full bg-teal-500 rounded-r-full transition-[width] duration-75"
-        style={{ width: `${progress}%` }}
+        className="h-full bg-teal-500 rounded-r-full will-change-transform origin-left"
+        style={{ transform: `scaleX(${progress / 100})` }}
       />
     </div>
   );

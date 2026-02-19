@@ -8,7 +8,7 @@ function FAQItem({ q, a, id }: { q: string; a: string; id: string }) {
   const answerId = `faq-answer-${id}`;
   
   return (
-    <div className="border-b border-gray-100">
+    <div className="border-b border-gray-100" role="listitem">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between py-5 text-left cursor-pointer group"

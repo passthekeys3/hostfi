@@ -78,14 +78,14 @@ export function PricingToggle() {
                   <p className={`text-xs font-semibold uppercase tracking-widest mb-4 ${tier.highlighted ? "text-teal-400" : "text-teal-600"}`}>{tier.name}</p>
                   <div className="flex items-baseline gap-1">
                     <span className="text-4xl font-bold">${price}</span>
-                    <span className={`text-sm ${tier.highlighted ? "text-gray-400" : "text-gray-400"}`}>{tier.monthly === 0 ? "forever" : "/mo"}</span>
+                    <span className={`text-sm ${tier.highlighted ? "text-gray-300" : "text-gray-500"}`}>{tier.monthly === 0 ? "forever" : "/mo"}</span>
                   </div>
                   {annual && tier.monthly > 0 && (
                     <p className={`text-xs mt-1.5 ${tier.highlighted ? "text-teal-400" : "text-teal-600"} font-medium`}>
                       Billed ${price * 12}/year (save ${(tier.monthly - tier.yearly) * 12}/yr)
                     </p>
                   )}
-                  <p className={`text-sm mt-2 ${tier.highlighted ? "text-gray-400" : "text-gray-600"}`}>{tier.desc}</p>
+                  <p className={`text-sm mt-2 ${tier.highlighted ? "text-gray-300" : "text-gray-600"}`}>{tier.desc}</p>
                 </div>
                 <ul className="space-y-3 mb-8 flex-1">
                   {tier.features.map((f, j) => (
