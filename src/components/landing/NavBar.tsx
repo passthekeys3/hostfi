@@ -53,8 +53,8 @@ export function NavBar() {
           <Link href="/blog" className="hover:text-gray-900 transition-colors">Blog</Link>
         </div>
         <div className="hidden md:flex items-center gap-3">
-          <Link href={authTarget} className="px-4 py-2 text-[13px] font-medium text-gray-600 hover:text-gray-900 transition-colors">Log in</Link>
-          <Link href={authTarget} className="px-4 py-2 text-[13px] font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer">Get Started</Link>
+          <Link href={authTarget} prefetch={false} className="px-4 py-2 text-[13px] font-medium text-gray-600 hover:text-gray-900 transition-colors">Log in</Link>
+          <Link href={authTarget} prefetch={false} className="px-4 py-2 text-[13px] font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer">Get Started</Link>
         </div>
         <button 
           onClick={() => setMobileMenu(!mobileMenu)} 
@@ -74,8 +74,8 @@ export function NavBar() {
           ))}
           <Link href="/blog" onClick={() => setMobileMenu(false)} className="block w-full text-left py-2.5 text-sm text-gray-600">Blog</Link>
           <div className="pt-3 flex gap-2">
-            <Link href={authTarget} className="flex-1 text-center py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg">Log in</Link>
-            <Link href={authTarget} onClick={() => setMobileMenu(false)} className="flex-1 text-center py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg cursor-pointer">Get Started</Link>
+            <Link href={authTarget} prefetch={false} className="flex-1 text-center py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg">Log in</Link>
+            <Link href={authTarget} prefetch={false} onClick={() => setMobileMenu(false)} className="flex-1 text-center py-2.5 text-sm font-medium text-white bg-gray-900 rounded-lg cursor-pointer">Get Started</Link>
           </div>
         </div>
       )}

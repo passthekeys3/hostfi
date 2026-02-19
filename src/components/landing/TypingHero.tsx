@@ -1,18 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
-function useTypingEffect(text: string, startDelay = 500, speed = 50) {
+export function TypingHero({ text }: { text: string }) {
   const [displayedText, setDisplayedText] = useState("");
   const [isComplete, setIsComplete] = useState(false);
-  
+  const started = useRef(false);
+
   useEffect(() => {
-    let timeout: NodeJS.Timeout;
-    let interval: NodeJS.Timeout;
-    let index = 0;
-    
-    timeout = setTimeout(() => {
-      interval = setInterval(() => {
+    if (started.current) return;
+    started.current = true;
+
+    // Wait for idle before starting animation to avoid blocking main thread
+    const startTyping = () => {
+      let index = 0;
+      const interval = setInterval(() => {
         if (index < text.length) {
           setDisplayedText(text.slice(0, index + 1));
           index++;
@@ -20,27 +22,36 @@ function useTypingEffect(text: string, startDelay = 500, speed = 50) {
           clearInterval(interval);
           setIsComplete(true);
         }
-      }, speed);
-    }, startDelay);
-    
-    return () => {
-      clearTimeout(timeout);
-      clearInterval(interval);
+      }, 60);
+      return interval;
     };
-  }, [text, startDelay, speed]);
-  
-  return { displayedText, isComplete };
-}
 
-export function TypingHero({ text }: { text: string }) {
-  const { displayedText, isComplete } = useTypingEffect(text, 500, 60);
+    let interval: ReturnType<typeof setInterval>;
+    if ('requestIdleCallback' in window) {
+      const id = requestIdleCallback(() => {
+        interval = startTyping();
+      });
+      return () => {
+        cancelIdleCallback(id);
+        if (interval) clearInterval(interval);
+      };
+    } else {
+      const timeout = setTimeout(() => {
+        interval = startTyping();
+      }, 500);
+      return () => {
+        clearTimeout(timeout);
+        if (interval) clearInterval(interval);
+      };
+    }
+  }, [text]);
 
   return (
     <span className="text-teal-500" aria-label={text}>
       <span aria-hidden="true">
-        {displayedText}
+        {displayedText || "\u00A0"}
         {!isComplete && (
-          <span 
+          <span
             className="inline-block w-[3px] h-[0.9em] bg-teal-500 ml-1 align-middle animate-blink"
           />
         )}

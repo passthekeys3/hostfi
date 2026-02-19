@@ -28,6 +28,7 @@ export function GetStartedButton({ className = "", size = "default" }: { classNa
   return (
     <Link
       href={authTarget}
+      prefetch={false}
       className={`inline-flex items-center justify-center gap-2 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 transition-colors ${
         size === "large" ? "px-8 py-4 text-base" : "px-6 py-3 text-sm"
       } ${className}`}
