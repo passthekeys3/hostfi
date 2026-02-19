@@ -6,13 +6,19 @@ import { OnboardingFlow } from "@/components/onboarding";
 
 export function OnboardingGate({ children }: { children: React.ReactNode }) {
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-
-    // Check Supabase first, fall back to localStorage
     async function checkOnboarding() {
+      // 1. Check localStorage first (fast, avoids flash)
+      const localState = getOnboardingState();
+      if (localState.completed) {
+        setShowOnboarding(false);
+        setChecked(true);
+        return;
+      }
+
+      // 2. Always check Supabase — this is the source of truth
       try {
         const { createClient } = await import("@/lib/supabase/client");
         const supabase = createClient();
@@ -26,22 +32,26 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
               .single();
 
             if (profile?.onboarding_completed) {
-              // Sync localStorage so it doesn't flash next time
+              // Sync localStorage so future checks are instant
               completeOnboarding();
               setShowOnboarding(false);
+              setChecked(true);
               return;
             }
           }
         }
       } catch (error) {
         console.error("Failed to check onboarding status:", error);
+        // If Supabase check fails, DON'T show onboarding — assume completed
+        // Better to skip onboarding than re-show it to an existing user
+        setShowOnboarding(false);
+        setChecked(true);
+        return;
       }
 
-      // Fall back to localStorage
-      const state = getOnboardingState();
-      if (!state.completed) {
-        setShowOnboarding(true);
-      }
+      // 3. Neither localStorage nor Supabase say completed — show onboarding
+      setShowOnboarding(true);
+      setChecked(true);
     }
 
     checkOnboarding();
@@ -68,7 +78,7 @@ export function OnboardingGate({ children }: { children: React.ReactNode }) {
     setShowOnboarding(false);
   };
 
-  if (!mounted) return <>{children}</>;
+  if (!checked) return <>{children}</>;
 
   if (showOnboarding) {
     return <OnboardingFlow onComplete={handleComplete} />;

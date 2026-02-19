@@ -30,7 +30,7 @@ export default function LoginPage() {
       router.push("/dashboard");
       return;
     }
-    localStorage.removeItem('hostfi_onboarding_complete');
+    // Don't clear onboarding state — Supabase is source of truth
     sessionStorage.setItem('hostfi_tab_alive', '1');
     // Apply remember-me preference for Google sign-in too
     if (!rememberMe) {
@@ -86,7 +86,7 @@ export default function LoginPage() {
           body: JSON.stringify({ type: 'welcome', userId: result.data.user.id }),
         }).catch(() => {});
       }
-      localStorage.removeItem('hostfi_onboarding_complete');
+      // Don't clear onboarding state — Supabase is source of truth
       // Set tab-alive marker for session-only mode detection
       sessionStorage.setItem('hostfi_tab_alive', '1');
       router.push("/dashboard");
