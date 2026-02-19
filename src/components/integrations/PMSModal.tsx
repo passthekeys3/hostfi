@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useId } from "react";
 import { X, Check, RefreshCw, Loader2, AlertCircle, Building2, Calendar, ChevronRight } from "lucide-react";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface PMSConfig {
   id: string;
@@ -70,6 +71,8 @@ interface PMSModalProps {
 export function PMSModal({ provider, open, onClose }: PMSModalProps) {
   const config = PMS_CONFIGS[provider];
   const [step, setStep] = useState<"connect" | "connected" | "select-properties">("connect");
+  const titleId = useId();
+  const modalRef = useFocusTrap<HTMLDivElement>(open, { onEscape: onClose });
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [connecting, setConnecting] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -261,29 +264,28 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
   if (!open || !config) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4">
-      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-md max-h-[90vh] safe-area-bottom overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
+      <div ref={modalRef} role="dialog" aria-modal="true" aria-labelledby={titleId} className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-md max-h-[90vh] safe-area-bottom overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
             {config.logoUrl ? (
-              <img src={config.logoUrl} alt={config.name} className="w-9 h-9 rounded-lg object-contain" />
+              <img src={config.logoUrl} alt={config.name} className="w-10 h-10 rounded-xl object-contain" />
             ) : (
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center text-lg font-bold ${config.logoColor}`}>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold ${config.logoColor}`}>
                 {config.logoText}
               </div>
             )}
             <div>
-              <h3 className="font-semibold text-sm">{config.name}</h3>
-              <p className="text-xs text-gray-400">Property Management System</p>
+              <h2 id={titleId} className="text-base font-semibold text-gray-900">{config.name}</h2>
+              <p className="text-xs text-gray-500 mt-0.5">Property Management System</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <X className="w-4 h-4" />
+          <button onClick={onClose} aria-label="Close modal" className="p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500/40">
+            <X className="w-4 h-4 text-gray-400" aria-hidden="true" />
           </button>
         </div>
 
-        <div className="p-6 space-y-5 overflow-y-auto">
+        <div className="px-6 py-5 space-y-5">
           {error && (
             <div className="flex items-start gap-2.5 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
               <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /> {error}

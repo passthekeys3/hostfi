@@ -214,7 +214,7 @@ export function EmailAlertsModal({ onClose }: ModalProps) {
             <div className="w-10 h-10 bg-[#EA4335] rounded-xl flex items-center justify-center text-white text-sm font-bold" aria-hidden="true">EM</div>
             <div>
               <h2 id={titleId} className="text-base font-semibold text-gray-900">Custom Email Alerts</h2>
-              <p className="text-xs text-gray-400">Route alerts to your team</p>
+              <p className="text-xs text-gray-500 mt-0.5">Route alerts to your team</p>
             </div>
           </div>
           <button onClick={onClose} aria-label="Close modal" className="p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500/40"><X className="w-4 h-4 text-gray-400" aria-hidden="true" /></button>
@@ -314,7 +314,7 @@ export function EmailAlertsModal({ onClose }: ModalProps) {
           </div>
         )}
 
-        <div className="p-6">
+        <div className="px-6 py-5">
           {step === "recipients" && (
             <div className="space-y-6">
               <div>

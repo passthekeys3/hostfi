@@ -146,7 +146,7 @@ export function GoogleDriveModal({ onClose, isConnected: initialConnected, onDis
             <img src="/logos/googledrive.svg" alt="Google Drive" className="w-10 h-10 rounded-xl object-contain" />
             <div>
               <h2 id={titleId} className="text-base font-semibold text-gray-900">Connect Google Drive</h2>
-              <p className="text-xs text-gray-400">Auto-backup receipts & reports</p>
+              <p className="text-xs text-gray-500 mt-0.5">Auto-backup receipts & reports</p>
             </div>
           </div>
           <button onClick={onClose} aria-label="Close modal" className="p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500/40"><X className="w-4 h-4 text-gray-400" aria-hidden="true" /></button>
@@ -179,7 +179,7 @@ export function GoogleDriveModal({ onClose, isConnected: initialConnected, onDis
           </div>
         )}
 
-        <div className="p-6">
+        <div className="px-6 py-5">
           {step === "connect" && (
             <div className="space-y-6">
               <div className="space-y-3">

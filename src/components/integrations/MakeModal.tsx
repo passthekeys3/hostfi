@@ -133,7 +133,7 @@ export function MakeModal({ onClose }: ModalProps) {
             <img src="/logos/make.svg" alt="Make" className="w-10 h-10 rounded-xl object-contain" />
             <div>
               <h2 id={titleId} className="text-base font-semibold text-gray-900">Connect Make</h2>
-              <p className="text-xs text-gray-400">Visual automation platform</p>
+              <p className="text-xs text-gray-500 mt-0.5">Visual automation platform</p>
             </div>
           </div>
           <button onClick={onClose} aria-label="Close modal" className="p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500/40">
@@ -166,7 +166,7 @@ export function MakeModal({ onClose }: ModalProps) {
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="px-6 py-5">
           {/* TEMPLATES */}
           {step === "templates" && (
             <div className="space-y-6">

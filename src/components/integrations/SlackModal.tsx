@@ -199,17 +199,17 @@ export function SlackConnectModal({ onClose, isConnected: initialConnected, onDi
               <h2 id={titleId} className="text-base font-semibold text-gray-900">
                 {initialConnected ? "Manage Slack" : "Connect Slack"}
               </h2>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-500 mt-0.5">
                 {connectionInfo?.team_name ? `Connected to ${connectionInfo.team_name}` : "Two-way receipt & alert sync"}
               </p>
             </div>
           </div>
-          <button onClick={onClose} aria-label="Close modal" className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <X className="w-4 h-4 text-gray-400" />
+          <button onClick={onClose} aria-label="Close modal" className="p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500/40">
+            <X className="w-4 h-4 text-gray-400" aria-hidden="true" />
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="px-6 py-5">
           {/* INTRO — Not connected, show value prop + OAuth button */}
           {step === "intro" && (
             <div className="space-y-6">

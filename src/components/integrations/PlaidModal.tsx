@@ -131,7 +131,7 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
             <img src="/logos/plaid.svg" alt="Plaid" className="w-10 h-10 rounded-xl object-contain" />
             <div>
               <h2 id={titleId} className="text-base font-semibold text-gray-900">Connect Bank Account</h2>
-              <p className="text-xs text-gray-400">Powered by Plaid</p>
+              <p className="text-xs text-gray-500 mt-0.5">Powered by Plaid</p>
             </div>
           </div>
           <button onClick={onClose} aria-label="Close modal" className="p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500/40">
@@ -139,7 +139,7 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="px-6 py-5">
           {step === "intro" && (
             <div className="space-y-6">
               <div className="space-y-4">
