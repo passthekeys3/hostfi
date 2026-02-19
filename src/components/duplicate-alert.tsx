@@ -1,11 +1,31 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { AlertTriangle, ChevronDown, ChevronUp, X, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { findDuplicates, type DuplicateGroup } from "@/lib/duplicate-detection";
 import { useDashboardData } from "@/hooks/useDashboardData";
+
+const STORAGE_KEY = "hostfi_resolved_duplicates";
+
+function loadResolvedGroups(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return new Set(Array.isArray(parsed) ? parsed : []);
+    }
+  } catch {}
+  return new Set();
+}
+
+function saveResolvedGroups(groups: Set<string>) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...groups]));
+  } catch {}
+}
 
 interface DuplicateAlertProps {
   className?: string;
@@ -15,23 +35,33 @@ export function DuplicateAlert({ className }: DuplicateAlertProps) {
   const [dismissed, setDismissed] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [resolvedGroups, setResolvedGroups] = useState<Set<string>>(new Set());
+  const [hydrated, setHydrated] = useState(false);
   const { properties, expenses } = useDashboardData();
+
+  // Load persisted resolved groups on mount
+  useEffect(() => {
+    setResolvedGroups(loadResolvedGroups());
+    setHydrated(true);
+  }, []);
 
   const allDuplicates = useMemo(() => findDuplicates(expenses), [expenses]);
   const duplicates = allDuplicates.filter(g => !resolvedGroups.has(g.id));
 
-  if (dismissed || duplicates.length === 0) {
-    return null;
-  }
+  const totalDuplicates = useMemo(() => duplicates.reduce((sum, g) => sum + g.expenses.length, 0), [duplicates]);
 
-  const totalDuplicates = duplicates.reduce((sum, g) => sum + g.expenses.length, 0);
+  const resolveGroup = useCallback((groupId: string) => {
+    setResolvedGroups(prev => {
+      const next = new Set([...prev, groupId]);
+      saveResolvedGroups(next);
+      return next;
+    });
+  }, []);
 
-  const handleKeepBoth = (groupId: string) => {
-    setResolvedGroups(prev => new Set([...prev, groupId]));
-  };
+  const handleKeepBoth = useCallback((groupId: string) => {
+    resolveGroup(groupId);
+  }, [resolveGroup]);
 
-  const handleRemoveDuplicate = async (groupId: string, expenseIdToRemove?: string) => {
-    // If we have an expense ID to remove, delete it from Supabase
+  const handleRemoveDuplicate = useCallback(async (groupId: string, expenseIdToRemove?: string) => {
     if (expenseIdToRemove) {
       try {
         const { createClient } = await import("@/lib/supabase/client");
@@ -43,8 +73,12 @@ export function DuplicateAlert({ className }: DuplicateAlertProps) {
         console.error('Failed to delete duplicate:', error);
       }
     }
-    setResolvedGroups(prev => new Set([...prev, groupId]));
-  };
+    resolveGroup(groupId);
+  }, [resolveGroup]);
+
+  if (!hydrated || dismissed || duplicates.length === 0) {
+    return null;
+  }
 
   return (
     <div
