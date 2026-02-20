@@ -54,6 +54,16 @@ export const PMS_CONFIGS: Record<string, PMSConfig> = {
     ],
     helpText: "Find your API token in OwnerRez → Settings → API Access.",
   },
+  hospitable: {
+    id: "hospitable",
+    name: "Hospitable",
+    logoText: "H",
+    logoColor: "bg-indigo-50 text-indigo-600",
+    logoUrl: "/logos/hospitable.svg",
+    oauth: true,
+    fields: [], // OAuth only, no manual fields
+    helpText: "Connect your Hospitable account to import properties and reservations.",
+  },
 };
 
 interface RemoteProperty {

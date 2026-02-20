@@ -31,11 +31,11 @@ export async function POST(request: NextRequest) {
   const results: { provider: string; userId: string; status: string; error?: string }[] = [];
 
   try {
-    // Find all active Hostaway and Guesty connections
+    // Find all active Hostaway, Guesty, and Hospitable connections
     const { data: connections, error } = await supabase
       .from('integration_connections')
       .select('id, user_id, provider, credentials, metadata')
-      .in('provider', ['hostaway', 'guesty'])
+      .in('provider', ['hostaway', 'guesty', 'hospitable'])
       .eq('status', 'connected')
       .eq('active', true);
 

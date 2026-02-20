@@ -32,6 +32,7 @@ const INTEGRATIONS: Integration[] = [
   { id: "hostaway", name: "Hostaway", description: "Import reservations and revenue", category: "Property Management", status: "available", logo: "H", logoColor: "bg-white border border-gray-200", logoUrl: "/logos/hostaway.png", tier: "pro" },
   { id: "guesty", name: "Guesty", description: "Sync bookings, payouts, and property data", category: "Property Management", status: "available", logo: "G", logoColor: "bg-[#00695C]", logoUrl: "/logos/guesty.png", tier: "pro" },
   { id: "ownerrez", name: "OwnerRez", description: "Import reservations and financial data", category: "Property Management", status: "available", logo: "OR", logoColor: "bg-[#4CAF50]", logoUrl: "/logos/ownerrez.png", tier: "pro" },
+  { id: "hospitable", name: "Hospitable", description: "Sync properties and reservations", category: "Property Management", status: "available", logo: "H", logoColor: "bg-[#6366F1]", logoUrl: "/logos/hospitable.svg", tier: "pro" },
   { id: "google_sheets", name: "Google Sheets", description: "Live sync expenses and P&L to Sheets", category: "Productivity", status: "disconnected", logo: "GS", logoColor: "bg-[#0F9D58]", logoUrl: "/logos/googlesheets.svg", tier: "pro" },
   { id: "google_drive", name: "Google Drive", description: "Auto-backup receipts and reports", category: "Productivity", status: "disconnected", logo: "GD", logoColor: "bg-[#4285F4]", logoUrl: "/logos/googledrive.svg", tier: "pro" },
   { id: "dropbox", name: "Dropbox", description: "Sync receipts and reports by property", category: "Productivity", status: "coming_soon", logo: "DB", logoColor: "bg-[#0061FF]", logoUrl: "/logos/dropbox.svg", tier: "pro" },
@@ -98,6 +99,30 @@ export default function IntegrationsPage() {
         db_error: "Failed to save connection. Please try again.",
       };
       setOauthError(reasonMessages[reason] || `OwnerRez connection failed (${reason}). Please try again.`);
+      window.history.replaceState({}, "", "/dashboard/integrations");
+    }
+
+    // Handle Hospitable OAuth callback
+    const hospitableStatus = searchParams.get("hospitable");
+    if (hospitableStatus === "connected") {
+      setConnectedIds(prev => new Set(prev).add("hospitable"));
+      setOpenModal("hospitable");
+      window.history.replaceState({}, "", "/dashboard/integrations");
+    } else if (hospitableStatus === "denied") {
+      setOauthError("Hospitable authorization was denied. Please try again.");
+      window.history.replaceState({}, "", "/dashboard/integrations");
+    } else if (hospitableStatus === "error") {
+      const reason = searchParams.get("reason") || "unknown";
+      const reasonMessages: Record<string, string> = {
+        missing_params: "Missing authorization parameters. Please try connecting again.",
+        invalid_state: "Invalid authorization state. Please try connecting again.",
+        expired: "Authorization expired. Please try connecting again.",
+        not_configured: "Hospitable OAuth is not configured. Please contact support.",
+        token_exchange: `Failed to exchange authorization code. ${searchParams.get("detail") || "Please try connecting again."}`,
+        no_token: "Hospitable did not return an access token. Please try again.",
+        db_error: "Failed to save connection. Please try again.",
+      };
+      setOauthError(reasonMessages[reason] || `Hospitable connection failed (${reason}). Please try again.`);
       window.history.replaceState({}, "", "/dashboard/integrations");
     }
   }, [searchParams]);
@@ -191,7 +216,7 @@ export default function IntegrationsPage() {
   const [openModal, setOpenModal] = useState<string | null>(null);
 
   const handleConnect = (id: string) => {
-    const hasModal = ["xero", "slack", "google_sheets", "zapier", "teams", "google_drive", "dropbox", "make", "email_smtp", "plaid", "guesty", "hostaway", "ownerrez"].includes(id);
+    const hasModal = ["xero", "slack", "google_sheets", "zapier", "teams", "google_drive", "dropbox", "make", "email_smtp", "plaid", "guesty", "hostaway", "ownerrez", "hospitable"].includes(id);
     if (hasModal) { setOpenModal(id); return; }
     // Toggle for Melio
     setConnectedIds(prev => {
@@ -323,6 +348,7 @@ export default function IntegrationsPage() {
       {openModal === "guesty" && <PMSModal provider="guesty" open={true} onClose={() => setOpenModal(null)} />}
       {openModal === "hostaway" && <PMSModal provider="hostaway" open={true} onClose={() => setOpenModal(null)} />}
       {openModal === "ownerrez" && <PMSModal provider="ownerrez" open={true} onClose={() => setOpenModal(null)} />}
+      {openModal === "hospitable" && <PMSModal provider="hospitable" open={true} onClose={() => setOpenModal(null)} />}
       {/* Note: modals call onClose() without didConnect=true, so closing a modal
           does NOT mark the integration as connected. In production, the OAuth
           callback or API verification will call onClose with didConnect=true. */}
