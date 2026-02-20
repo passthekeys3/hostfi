@@ -476,9 +476,9 @@ export default function LandingPage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-14">
                 {[
                   { name: "Hospitable", logo: "/logos/hospitable.svg", status: "live" },
-                  { name: "OwnerRez", logo: "/logos/ownerrez.svg", status: "live" },
-                  { name: "Hostaway", logo: "/logos/hostaway.svg", status: "soon" },
-                  { name: "Guesty", logo: "/logos/guesty.svg", status: "soon" },
+                  { name: "OwnerRez", logo: "/logos/ownerrez.png", status: "live" },
+                  { name: "Hostaway", logo: "/logos/hostaway.png", status: "soon" },
+                  { name: "Guesty", logo: "/logos/guesty.png", status: "soon" },
                   { name: "Lodgify", logo: "/logos/lodgify.svg", status: "soon" },
                 ].map((pms, i) => (
                   <div key={i} className="flex flex-col items-center gap-3 p-5 rounded-xl border border-gray-100 bg-gray-50 hover:border-teal-200 hover:bg-teal-50/30 transition-colors">
@@ -494,21 +494,26 @@ export default function LandingPage() {
               </div>
             </FadeIn>
 
-            {/* Other Integrations */}
+            {/* Financial, Productivity & Automation */}
             <FadeIn delay={160}>
               <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-widest mb-6 text-center">Financial &amp; Productivity</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
                 {[
-                  { name: "Plaid", icon: Building2, desc: "Bank sync" },
-                  { name: "Google Sheets", icon: Layers, desc: "Export data" },
-                  { name: "Google Drive", icon: FileText, desc: "Receipt backup" },
-                  { name: "Slack", icon: MessageSquare, desc: "Notifications" },
-                  { name: "Zapier", icon: Zap, desc: "Automations" },
-                  { name: "QuickBooks", icon: Calculator, desc: "Coming soon" },
+                  { name: "Plaid", logo: "/logos/plaid.svg", desc: "Bank sync" },
+                  { name: "Google Sheets", logo: "/logos/googlesheets.svg", desc: "Export data" },
+                  { name: "Google Drive", logo: "/logos/googledrive.svg", desc: "Receipt backup" },
+                  { name: "Slack", logo: "/logos/slack.svg", desc: "Notifications" },
+                  { name: "Zapier", logo: "/logos/zapier.svg", desc: "Automations" },
+                  { name: "Make", logo: "/logos/make.svg", desc: "Workflows" },
+                  { name: "QuickBooks", logo: "/logos/quickbooks.svg", desc: "Coming soon" },
+                  { name: "Xero", logo: "/logos/xero.svg", desc: "Coming soon" },
+                  { name: "Dropbox", logo: "/logos/dropbox.svg", desc: "Coming soon" },
                 ].map((integration, i) => (
                   <div key={i} className="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 bg-gray-50 text-center">
-                    <integration.icon className="w-6 h-6 text-teal-600" />
-                    <span className="text-sm font-medium text-gray-900">{integration.name}</span>
+                    <div className="w-8 h-8 relative">
+                      <Image src={integration.logo} alt={integration.name} width={32} height={32} className="rounded-md" />
+                    </div>
+                    <span className="text-xs font-medium text-gray-900">{integration.name}</span>
                     <span className="text-[10px] text-gray-500">{integration.desc}</span>
                   </div>
                 ))}
