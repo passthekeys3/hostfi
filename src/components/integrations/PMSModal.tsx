@@ -64,6 +64,16 @@ export const PMS_CONFIGS: Record<string, PMSConfig> = {
     fields: [], // OAuth only, no manual fields
     helpText: "Connect your Hospitable account to import properties and reservations.",
   },
+  hospitable_connect: {
+    id: "hospitable_connect",
+    name: "Hospitable Connect",
+    logoText: "HC",
+    logoColor: "bg-emerald-50 text-emerald-600",
+    logoUrl: "/logos/hospitable-connect.svg",
+    oauth: false, // Not OAuth — we handle the auth code flow differently
+    fields: [], // No manual fields
+    helpText: "Connect your Airbnb or VRBO account directly — no PMS subscription needed.",
+  },
 };
 
 interface RemoteProperty {
@@ -79,8 +89,15 @@ interface PMSModalProps {
   onClose: () => void;
 }
 
+// Convert provider ID to API path (handles underscore to hyphen conversion)
+function getApiPath(provider: string): string {
+  // hospitable_connect → hospitable-connect
+  return provider.replace(/_/g, '-');
+}
+
 export function PMSModal({ provider, open, onClose }: PMSModalProps) {
   const config = PMS_CONFIGS[provider];
+  const apiPath = getApiPath(provider);
   const [step, setStep] = useState<"connect" | "connected" | "select-properties">("connect");
   const titleId = useId();
   const modalRef = useFocusTrap<HTMLDivElement>(open, { onEscape: onClose });
@@ -104,7 +121,7 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
     setSyncResults(null);
     (async () => {
       try {
-        const res = await fetch(`/api/integrations/${provider}/connect`);
+        const res = await fetch(`/api/integrations/${apiPath}/connect`);
         const data = await res.json();
         if (data.connected) {
           setConnectedAt(data.connectedAt);
@@ -123,13 +140,13 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
         setStep("connect");
       }
     })();
-  }, [open, provider]);
+  }, [open, provider, apiPath]);
 
   const handleOAuthConnect = async () => {
     setConnecting(true);
     setError(null);
     try {
-      const res = await fetch(`/api/integrations/${provider}/auth`);
+      const res = await fetch(`/api/integrations/${apiPath}/auth`);
       const data = await res.json();
       if (!res.ok || !data.url) {
         setOauthAvailable(false);
@@ -149,6 +166,31 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
       return handleOAuthConnect();
     }
 
+    // Special handling for Hospitable Connect — uses auth code flow
+    if (provider === "hospitable_connect") {
+      setConnecting(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/integrations/${apiPath}/connect`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+        const data = await res.json();
+        if (!res.ok || !data.url) {
+          setError(data.error || "Failed to initialize connection");
+          setConnecting(false);
+          return;
+        }
+        // Redirect to Hospitable Connect magic link
+        window.location.href = data.url;
+      } catch (error) {
+        console.error('Hospitable Connect redirect failed:', error);
+        setError("Connection failed. Please try again.");
+        setConnecting(false);
+      }
+      return;
+    }
+
     const missing = config.fields.find(f => !fieldValues[f.key]?.trim());
     if (missing) { setError(`${missing.label} is required`); return; }
 
@@ -158,7 +200,7 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
       const body: Record<string, string> = {};
       config.fields.forEach(f => { body[f.key] = fieldValues[f.key].trim(); });
 
-      const res = await fetch(`/api/integrations/${provider}/connect`, {
+      const res = await fetch(`/api/integrations/${apiPath}/connect`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -188,7 +230,7 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
     setError(null);
     try {
       // Sync listings only to discover properties
-      const res = await fetch(`/api/integrations/${provider}/sync`, {
+      const res = await fetch(`/api/integrations/${apiPath}/sync`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "listings", dryRun: true }),
@@ -232,7 +274,7 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
     const selectedIds = remoteProperties.filter(p => p.selected).map(p => p.id);
 
     try {
-      const res = await fetch(`/api/integrations/${provider}/sync`, {
+      const res = await fetch(`/api/integrations/${apiPath}/sync`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "all", selectedPropertyIds: selectedIds }),
@@ -253,7 +295,7 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
     setError(null);
     setSyncResults(null);
     try {
-      const res = await fetch(`/api/integrations/${provider}/sync`, {
+      const res = await fetch(`/api/integrations/${apiPath}/sync`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "all", force }),
@@ -267,7 +309,7 @@ export function PMSModal({ provider, open, onClose }: PMSModalProps) {
 
   const handleDisconnect = async () => {
     try {
-      await fetch(`/api/integrations/${provider}/connect`, { method: "DELETE" });
+      await fetch(`/api/integrations/${apiPath}/connect`, { method: "DELETE" });
       setStep("connect");
       setFieldValues({});
       setSyncResults(null);
