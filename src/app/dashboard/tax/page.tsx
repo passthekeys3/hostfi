@@ -419,7 +419,7 @@ export default function TaxPage() {
             </div>
             <span className="text-xs sm:text-sm text-muted-foreground">Properties</span>
           </div>
-          <p className="text-xl sm:text-3xl font-bold tabular-nums">{propertySummaries.length}</p>
+          <p className="text-xl sm:text-3xl font-bold tabular-nums">{realProperties.filter(p => p.property_type !== 'primary').length}</p>
         </div>
         
         <div 
