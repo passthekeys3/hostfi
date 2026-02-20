@@ -3,9 +3,13 @@ import { createClient } from '@supabase/supabase-js';
 import {
   mapPropertyToHostFi,
   mapReservationToRevenue,
+  fetchReservation,
+  authFromCredentials,
+  getAccessToken,
   type HospitableProperty,
   type HospitableReservation,
 } from '@/lib/integrations/hospitable';
+import { decryptCredentials } from '@/lib/crypto';
 import { PROPERTY_LIMITS, type Plan } from '@/lib/feature-gates';
 
 function getServiceClient() {
@@ -162,14 +166,52 @@ export async function POST(request: NextRequest) {
     // Reservation Events
     // ========================================================================
     if (action === 'reservation.created' || action === 'reservation.changed') {
-      const reservation = data as unknown as HospitableReservation & { properties?: Array<{ id: string }> };
+      let reservation = data as unknown as HospitableReservation & { properties?: Array<{ id: string }> };
       const hospReservationId = reservation.id;
       // property_id may come directly or via the properties include
-      const hospPropertyId = reservation.property_id 
+      let hospPropertyId = reservation.property_id 
         || (reservation.properties && reservation.properties.length > 0 ? reservation.properties[0].id : null);
 
       if (!hospReservationId) {
         return NextResponse.json({ received: true, note: 'No reservation ID' });
+      }
+
+      // If webhook payload lacks financials, fetch the full reservation via API
+      if (!reservation.financials && hospPropertyId) {
+        try {
+          // Find a user with this property to get credentials
+          const { data: propOwner } = await supabase
+            .from('properties')
+            .select('user_id')
+            .eq('hospitable_property_id', hospPropertyId)
+            .limit(1)
+            .single();
+
+          if (propOwner) {
+            const { data: conn } = await supabase
+              .from('integration_connections')
+              .select('credentials')
+              .eq('user_id', propOwner.user_id)
+              .eq('provider', 'hospitable')
+              .eq('status', 'connected')
+              .single();
+
+            if (conn?.credentials) {
+              const creds = typeof conn.credentials === 'string'
+                ? authFromCredentials(decryptCredentials(conn.credentials))
+                : authFromCredentials(conn.credentials);
+              const { auth: hospAuth } = await getAccessToken(creds);
+              const fullRes = await fetchReservation(hospAuth, hospReservationId);
+              // Preserve property_id since the single-reservation endpoint may not include it
+              fullRes.property_id = fullRes.property_id || hospPropertyId;
+              reservation = fullRes as typeof reservation;
+              hospPropertyId = reservation.property_id || hospPropertyId;
+            }
+          }
+        } catch (err) {
+          console.error(`Hospitable webhook: failed to fetch full reservation ${hospReservationId}:`, err);
+          // Continue with whatever data we have
+        }
       }
 
       // Find the HostFi property

@@ -286,6 +286,32 @@ export async function fetchReservations(
 }
 
 /**
+ * Fetch the authenticated user's profile
+ */
+export async function fetchUser(auth: HospitableAuth): Promise<{ id: string; email: string; name: string }> {
+  const res = await hospitableFetch<{ data: { id: string; email: string; name: string } }>(
+    '/v2/user',
+    auth
+  );
+  return res.data;
+}
+
+/**
+ * Fetch a single reservation by UUID with financials
+ */
+export async function fetchReservation(
+  auth: HospitableAuth,
+  uuid: string
+): Promise<HospitableReservation> {
+  const res = await hospitableFetch<{ data: HospitableReservation }>(
+    `/v2/reservations/${uuid}`,
+    auth,
+    { include: 'financials,properties' }
+  );
+  return res.data;
+}
+
+/**
  * Verify credentials by attempting to fetch properties
  */
 export async function verifyCredentials(auth: HospitableAuth): Promise<boolean> {

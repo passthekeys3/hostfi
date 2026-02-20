@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { encryptCredentials } from '@/lib/crypto';
+import { fetchUser } from '@/lib/integrations/hospitable';
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -97,6 +98,16 @@ export async function GET(request: NextRequest) {
       token_expires_at: tokenExpiresAt,
     };
 
+    // Fetch Hospitable user profile so we can match disconnect webhooks
+    let hospitableUserId: string | undefined;
+    try {
+      const user = await fetchUser({ accessToken });
+      hospitableUserId = user.id;
+    } catch (err) {
+      console.error('Failed to fetch Hospitable user profile:', err);
+      // Non-blocking — connection still works, just webhook matching won't
+    }
+
     const { error: dbError } = await supabase.from('integration_connections').upsert({
       user_id: state.userId,
       provider: 'hospitable',
@@ -109,6 +120,7 @@ export async function GET(request: NextRequest) {
       metadata: { 
         oauth: true,
         token_expires_at: tokenExpiresAt,
+        ...(hospitableUserId && { hospitable_user_id: hospitableUserId }),
       },
       active: true,
     }, { onConflict: 'user_id,provider' });
