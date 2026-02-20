@@ -167,11 +167,49 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="space-y-8 sm:space-y-12 animate-pulse">
-        <div className="h-8 w-48 bg-gray-200 rounded-lg" />
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-          {[1,2,3,4].map(i => <div key={i} className="h-28 bg-gray-100 rounded-2xl" />)}
+        {/* Header skeleton */}
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="h-8 w-40 bg-gray-200 rounded-lg" />
+            <div className="h-4 w-64 bg-gray-100 rounded mt-2" />
+          </div>
+          <div className="hidden sm:flex gap-3">
+            <div className="h-10 w-36 bg-gray-200 rounded-xl" />
+            <div className="h-10 w-36 bg-gray-100 rounded-xl" />
+          </div>
         </div>
-        <div className="h-64 bg-gray-100 rounded-2xl" />
+        {/* Stat cards skeleton */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          {[1,2,3,4,5,6].map(i => (
+            <div key={i} className="bg-white rounded-xl border border-gray-100 p-5 sm:p-6 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="h-3 w-24 bg-gray-100 rounded" />
+                <div className="w-9 h-9 bg-gray-50 rounded-lg" />
+              </div>
+              <div className="h-8 w-28 bg-gray-200 rounded" />
+              <div className="h-3 w-20 bg-gray-100 rounded" />
+            </div>
+          ))}
+        </div>
+        {/* Recent expenses skeleton */}
+        <div className="space-y-5">
+          <div className="flex items-center justify-between">
+            <div className="h-3 w-32 bg-gray-200 rounded" />
+            <div className="h-3 w-16 bg-gray-100 rounded" />
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            {[1,2,3,4,5].map(i => (
+              <div key={i} className="flex items-center gap-4 px-5 py-4 border-b border-gray-50 last:border-0">
+                <div className="w-9 h-9 bg-gray-100 rounded-xl" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-40 bg-gray-100 rounded" />
+                  <div className="h-3 w-24 bg-gray-50 rounded" />
+                </div>
+                <div className="h-4 w-20 bg-gray-100 rounded" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

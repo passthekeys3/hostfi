@@ -71,13 +71,14 @@ const steps = [
 
 /* ─── Schedule E Data ─── */
 const scheduleEItems = [
-  { line: "Line 5", label: "Advertising", amount: "$420" },
-  { line: "Line 9", label: "Insurance", amount: "$2,400" },
-  { line: "Line 12", label: "Mortgage Interest", amount: "$14,880" },
-  { line: "Line 14", label: "Repairs", amount: "$1,650" },
-  { line: "Line 16", label: "Taxes", amount: "$3,200" },
-  { line: "Line 17", label: "Utilities", amount: "$2,940" },
-  { line: "Line 18", label: "Depreciation", amount: "$8,500" },
+  { line: "Line 5", label: "Rents Received", amount: "$42,600", isRevenue: true },
+  { line: "Line 8", label: "Cleaning & Maintenance", amount: "$3,200", isRevenue: false },
+  { line: "Line 9", label: "Insurance", amount: "$2,400", isRevenue: false },
+  { line: "Line 12", label: "Mortgage Interest", amount: "$14,880", isRevenue: false },
+  { line: "Line 14", label: "Repairs", amount: "$1,650", isRevenue: false },
+  { line: "Line 16", label: "Taxes", amount: "$3,200", isRevenue: false },
+  { line: "Line 17", label: "Utilities", amount: "$2,940", isRevenue: false },
+  { line: "Line 18", label: "Depreciation", amount: "$8,500", isRevenue: false },
 ];
 
 /* ─── Personas Data ─── */
@@ -400,18 +401,18 @@ export default function LandingPage() {
                   </div>
                   <div className="space-y-2.5">
                     {scheduleEItems.map((item, i) => (
-                      <div key={i} className="flex items-center justify-between py-2 border-b border-gray-700/50 last:border-0">
+                      <div key={i} className={`flex items-center justify-between py-2 border-b border-gray-700/50 last:border-0${item.isRevenue ? " mb-1" : ""}`}>
                         <div className="flex items-center gap-3">
                           <span className="text-[10px] font-mono text-gray-500 w-12">{item.line}</span>
-                          <span className="text-sm text-gray-300">{item.label}</span>
+                          <span className={item.isRevenue ? "text-sm text-teal-300 font-medium" : "text-sm text-gray-300"}>{item.label}</span>
                         </div>
-                        <span className="text-sm font-medium text-white">{item.amount}</span>
+                        <span className={item.isRevenue ? "text-sm font-medium text-teal-400" : "text-sm font-medium text-white"}>{item.amount}</span>
                       </div>
                     ))}
                   </div>
                   <div className="mt-4 pt-3 border-t border-gray-700 flex items-center justify-between">
                     <span className="text-xs text-gray-500">Total deductions</span>
-                    <span className="text-base font-bold text-teal-400">$33,990</span>
+                    <span className="text-base font-bold text-teal-400">$36,770</span>
                   </div>
                 </div>
               </FadeIn>
