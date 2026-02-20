@@ -53,15 +53,29 @@ export async function POST(request: NextRequest) {
     // Integration Disconnected
     // ========================================================================
     if (action === 'integration.disconnected') {
-      const userId = data.user as string | undefined;
+      const hospUserId = data.user as string | undefined;
       
-      if (userId) {
-        // Find connection by user metadata if we stored it, otherwise disconnect all
-        // that match. In practice, we may need a different way to identify the user.
-        await supabase
+      if (hospUserId) {
+        // Find the connection that has this Hospitable user ID in metadata
+        const { data: connections } = await supabase
           .from('integration_connections')
-          .update({ status: 'disconnected', credentials: null, active: false })
-          .eq('provider', 'hospitable');
+          .select('user_id, metadata')
+          .eq('provider', 'hospitable')
+          .eq('status', 'connected');
+        
+        // Try to match by stored hospitable_user_id in metadata
+        const match = connections?.find(c => c.metadata?.hospitable_user_id === hospUserId);
+        
+        if (match) {
+          await supabase
+            .from('integration_connections')
+            .update({ status: 'disconnected', credentials: null, active: false })
+            .eq('user_id', match.user_id)
+            .eq('provider', 'hospitable');
+          console.log(`Hospitable webhook: disconnected user ${match.user_id}`);
+        } else {
+          console.log(`Hospitable webhook: integration.disconnected for unknown Hospitable user ${hospUserId}`);
+        }
       }
       
       return NextResponse.json({ received: true });
@@ -148,9 +162,11 @@ export async function POST(request: NextRequest) {
     // Reservation Events
     // ========================================================================
     if (action === 'reservation.created' || action === 'reservation.changed') {
-      const reservation = data as unknown as HospitableReservation;
+      const reservation = data as unknown as HospitableReservation & { properties?: Array<{ id: string }> };
       const hospReservationId = reservation.id;
-      const hospPropertyId = reservation.property_id;
+      // property_id may come directly or via the properties include
+      const hospPropertyId = reservation.property_id 
+        || (reservation.properties && reservation.properties.length > 0 ? reservation.properties[0].id : null);
 
       if (!hospReservationId) {
         return NextResponse.json({ received: true, note: 'No reservation ID' });

@@ -228,7 +228,9 @@ export async function fetchProperties(
 }
 
 /**
- * Fetch reservations for given properties, handling pagination
+ * Fetch reservations for given properties, handling pagination.
+ * Fetches per-property so we can tag each reservation with its property ID
+ * (the API response doesn't include a direct property_id field).
  */
 export async function fetchReservations(
   auth: HospitableAuth,
@@ -239,7 +241,6 @@ export async function fetchReservations(
   if (propertyIds.length === 0) return [];
 
   const allReservations: HospitableReservation[] = [];
-  let page = 1;
 
   // Default date range: last 2 years to now
   const now = new Date();
@@ -249,27 +250,36 @@ export async function fetchReservations(
   const start = startDate || twoYearsAgo.toISOString().split('T')[0];
   const end = endDate || now.toISOString().split('T')[0];
 
-  while (true) {
-    const params: Record<string, string | string[]> = {
-      properties: propertyIds,
-      include: 'financials',
-      per_page: '100',
-      page: String(page),
-      start_date: start,
-      end_date: end,
-      status: ['accepted'],
-    };
+  // Fetch per-property so we can tag each reservation with its property ID
+  for (const propertyId of propertyIds) {
+    let page = 1;
 
-    const response = await hospitableFetch<PaginatedResponse<HospitableReservation>>(
-      '/v2/reservations',
-      auth,
-      params
-    );
+    while (true) {
+      const params: Record<string, string | string[]> = {
+        properties: [propertyId],
+        include: 'financials',
+        per_page: '100',
+        page: String(page),
+        start_date: start,
+        end_date: end,
+        status: ['accepted'],
+      };
 
-    allReservations.push(...response.data);
+      const response = await hospitableFetch<PaginatedResponse<HospitableReservation>>(
+        '/v2/reservations',
+        auth,
+        params
+      );
 
-    if (page >= response.meta.last_page) break;
-    page++;
+      // Tag each reservation with the property ID it was fetched for
+      for (const res of response.data) {
+        res.property_id = propertyId;
+        allReservations.push(res);
+      }
+
+      if (page >= response.meta.last_page) break;
+      page++;
+    }
   }
 
   return allReservations;
