@@ -497,17 +497,14 @@ export default function LandingPage() {
             {/* Financial, Productivity & Automation */}
             <FadeIn delay={160}>
               <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-widest mb-6 text-center">Financial &amp; Productivity</h3>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-4">
                 {[
                   { name: "Plaid", logo: "/logos/plaid.svg", desc: "Bank sync" },
                   { name: "Google Sheets", logo: "/logos/googlesheets.svg", desc: "Export data" },
                   { name: "Google Drive", logo: "/logos/googledrive.svg", desc: "Receipt backup" },
                   { name: "Slack", logo: "/logos/slack.svg", desc: "Notifications" },
                   { name: "Zapier", logo: "/logos/zapier.svg", desc: "Automations" },
-                  { name: "Make", logo: "/logos/make.svg", desc: "Workflows" },
                   { name: "QuickBooks", logo: "/logos/quickbooks.svg", desc: "Coming soon" },
-                  { name: "Xero", logo: "/logos/xero.svg", desc: "Coming soon" },
-                  { name: "Dropbox", logo: "/logos/dropbox.svg", desc: "Coming soon" },
                 ].map((integration, i) => (
                   <div key={i} className="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 bg-gray-50 text-center">
                     <div className="w-8 h-8 relative">
