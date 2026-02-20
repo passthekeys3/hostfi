@@ -26,10 +26,13 @@ export async function GET() {
       ts: Date.now(),
     })).toString('base64url');
 
-    // Hospitable OAuth: redirect_uri is configured in Partner Portal, not passed here
+    const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL || 'https://hostfi.ai'}/api/integrations/hospitable/callback`;
+
     const authUrl = new URL('https://auth.hospitable.com/oauth/authorize');
     authUrl.searchParams.set('response_type', 'code');
     authUrl.searchParams.set('client_id', clientId);
+    authUrl.searchParams.set('redirect_uri', redirectUri);
+    authUrl.searchParams.set('scope', 'property:read reservation:read financials:read');
     authUrl.searchParams.set('state', state);
 
     return NextResponse.json({ url: authUrl.toString() });

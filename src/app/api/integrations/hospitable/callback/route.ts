@@ -56,6 +56,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Exchange code for access token
+    const redirectUri = `${appUrl}/api/integrations/hospitable/callback`;
     const tokenRes = await fetch('https://auth.hospitable.com/oauth/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -64,6 +65,7 @@ export async function GET(request: NextRequest) {
         client_secret: clientSecret,
         grant_type: 'authorization_code',
         code,
+        redirect_uri: redirectUri,
       }),
     });
 
