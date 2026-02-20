@@ -443,6 +443,80 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* ─── INTEGRATIONS ─── */}
+        <section id="integrations" className="py-24 sm:py-28 px-5 bg-white scroll-mt-16" aria-labelledby="integrations-heading">
+          <div className="max-w-6xl mx-auto">
+            <FadeIn className="text-center max-w-2xl mx-auto mb-16">
+              <p className="text-xs font-semibold text-teal-600 uppercase tracking-widest mb-3">Integrations</p>
+              <h2 id="integrations-heading" className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">
+                Connects to the Tools You Already Use
+              </h2>
+              <p className="text-gray-600">
+                Sync your properties and bookings automatically — or connect your Airbnb and VRBO accounts directly, no PMS needed.
+              </p>
+            </FadeIn>
+
+            {/* Direct OTA Connection callout */}
+            <FadeIn className="mb-14">
+              <div className="bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 rounded-2xl p-8 sm:p-10 text-center">
+                <div className="inline-flex items-center gap-2 bg-teal-100 text-teal-700 text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  New
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Connect Airbnb &amp; VRBO Directly</h3>
+                <p className="text-gray-600 max-w-lg mx-auto">
+                  No PMS subscription required. Link your OTA accounts and HostFi automatically imports your properties, bookings, and financials.
+                </p>
+              </div>
+            </FadeIn>
+
+            {/* PMS Integrations */}
+            <FadeIn delay={80}>
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-widest mb-6 text-center">Property Management Systems</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-14">
+                {[
+                  { name: "Hospitable", logo: "/logos/hospitable.svg", status: "live" },
+                  { name: "OwnerRez", logo: "/logos/ownerrez.svg", status: "live" },
+                  { name: "Hostaway", logo: "/logos/hostaway.svg", status: "soon" },
+                  { name: "Guesty", logo: "/logos/guesty.svg", status: "soon" },
+                  { name: "Lodgify", logo: "/logos/lodgify.svg", status: "soon" },
+                ].map((pms, i) => (
+                  <div key={i} className="flex flex-col items-center gap-3 p-5 rounded-xl border border-gray-100 bg-gray-50 hover:border-teal-200 hover:bg-teal-50/30 transition-colors">
+                    <div className="w-10 h-10 relative">
+                      <Image src={pms.logo} alt={pms.name} width={40} height={40} className="rounded-lg" />
+                    </div>
+                    <span className="text-sm font-medium text-gray-900">{pms.name}</span>
+                    {pms.status === "soon" && (
+                      <span className="text-[10px] font-medium text-gray-400 uppercase">Coming Soon</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </FadeIn>
+
+            {/* Other Integrations */}
+            <FadeIn delay={160}>
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-widest mb-6 text-center">Financial &amp; Productivity</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+                {[
+                  { name: "Plaid", icon: Building2, desc: "Bank sync" },
+                  { name: "Google Sheets", icon: Layers, desc: "Export data" },
+                  { name: "Google Drive", icon: FileText, desc: "Receipt backup" },
+                  { name: "Slack", icon: MessageSquare, desc: "Notifications" },
+                  { name: "Zapier", icon: Zap, desc: "Automations" },
+                  { name: "QuickBooks", icon: Calculator, desc: "Coming soon" },
+                ].map((integration, i) => (
+                  <div key={i} className="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 bg-gray-50 text-center">
+                    <integration.icon className="w-6 h-6 text-teal-600" />
+                    <span className="text-sm font-medium text-gray-900">{integration.name}</span>
+                    <span className="text-[10px] text-gray-500">{integration.desc}</span>
+                  </div>
+                ))}
+              </div>
+            </FadeIn>
+          </div>
+        </section>
+
         {/* ─── TESTIMONIALS ─── */}
         <section className="py-24 sm:py-28 px-5 bg-gray-50" aria-labelledby="testimonials-heading">
           <div className="max-w-6xl mx-auto">

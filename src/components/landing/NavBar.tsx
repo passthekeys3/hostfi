@@ -48,6 +48,7 @@ export function NavBar() {
         <div className="hidden md:flex items-center gap-8 text-[13px] font-medium text-gray-600">
           <button onClick={() => scrollTo("features")} className="hover:text-gray-900 transition-colors cursor-pointer">Features</button>
           <button onClick={() => scrollTo("how-it-works")} className="hover:text-gray-900 transition-colors cursor-pointer">How It Works</button>
+          <button onClick={() => scrollTo("integrations")} className="hover:text-gray-900 transition-colors cursor-pointer">Integrations</button>
           <button onClick={() => scrollTo("pricing")} className="hover:text-gray-900 transition-colors cursor-pointer">Pricing</button>
           <button onClick={() => scrollTo("faq")} className="hover:text-gray-900 transition-colors cursor-pointer">FAQ</button>
           <Link href="/blog" className="hover:text-gray-900 transition-colors">Blog</Link>
@@ -69,7 +70,7 @@ export function NavBar() {
       </div>
       {mobileMenu && (
         <div className="md:hidden bg-white border-t border-gray-100 px-5 py-4 space-y-1">
-          {["features", "how-it-works", "pricing", "faq"].map(id => (
+          {["features", "how-it-works", "integrations", "pricing", "faq"].map(id => (
             <button key={id} onClick={() => scrollTo(id)} className="block w-full text-left py-2.5 text-sm text-gray-600 capitalize cursor-pointer">{id.replace("-", " ")}</button>
           ))}
           <Link href="/blog" onClick={() => setMobileMenu(false)} className="block w-full text-left py-2.5 text-sm text-gray-600">Blog</Link>
