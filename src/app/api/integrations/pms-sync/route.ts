@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     const { data: connections, error } = await supabase
       .from('integration_connections')
       .select('id, user_id, provider, credentials, metadata')
-      .in('provider', ['hostaway', 'guesty', 'hospitable'])
+      .in('provider', ['hostaway', 'guesty', 'hospitable', 'hospitable_connect'])
       .eq('status', 'connected')
       .eq('active', true);
 
@@ -54,7 +54,9 @@ export async function POST(request: NextRequest) {
     // Trigger sync for each connection
     for (const conn of connections) {
       try {
-        const syncUrl = `${appUrl}/api/integrations/${conn.provider}/sync`;
+        // Convert provider DB name to URL path (hospitable_connect → hospitable-connect)
+        const providerPath = conn.provider.replace(/_/g, '-');
+        const syncUrl = `${appUrl}/api/integrations/${providerPath}/sync`;
         
         // Call the existing sync endpoint with service-level auth
         // We pass the user context in the body since this is a server-to-server call

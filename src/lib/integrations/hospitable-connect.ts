@@ -112,8 +112,6 @@ export interface HospitableConnectReservation {
   guest?: HospitableConnectGuest;
   listing?: HospitableConnectListing;
   listing_id?: string;
-  host?: HospitableConnectReservationFinancials['host'];
-  // When _select includes financials breakdown
   financials?: HospitableConnectReservationFinancials;
 }
 
@@ -121,11 +119,9 @@ interface PaginatedResponse<T> {
   data: T[];
   meta: {
     current_page: number;
-    last_page: number;
-    total?: number;
-    per_page?: number;
     from?: number;
     to?: number;
+    per_page?: number;
     path?: string;
   };
   links: {
@@ -225,8 +221,8 @@ async function fetchAllPages<T>(
 
     all.push(...response.data);
 
-    // Check if there are more pages
-    if (response.links.next === null || page >= response.meta.last_page) {
+    // Check if there are more pages (Connect API uses links.next, not meta.last_page)
+    if (!response.links.next) {
       break;
     }
     page++;
@@ -359,11 +355,17 @@ export async function fetchReservations(
   const start = startDate || twoYearsAgo.toISOString().split('T')[0];
   const end = endDate || now.toISOString().split('T')[0];
 
-  // Use _select to include financials breakdown
   const params: Record<string, string> = {
     'arrival_date[after]': start,
     'departure_date[before]': end,
-    '_select': 'id,platform,platform_id,booking_date,arrival_date,departure_date,nights,status,guest,listing,listing_id,host',
+    '_select': [
+      'id', 'platform', 'platform_id', 'booking_date',
+      'arrival_date', 'departure_date', 'status',
+      'guest', 'guest.first_name', 'guest.last_name', 'guest.email',
+      'listing', 'listing.id', 'listing.platform', 'listing.platform_id',
+      'listing.public_name', 'listing.address',
+      'financials',
+    ].join(','),
   };
 
   return fetchAllPages<HospitableConnectReservation>(
@@ -419,7 +421,7 @@ export function mapReservationToRevenue(
   propertyId: string
 ) {
   // Get financials from the host object (direct or from financials wrapper)
-  const hostFinancials = reservation.host || reservation.financials?.host;
+  const hostFinancials = reservation.financials?.host;
   
   // Amount is in CENTS — divide by 100
   const payoutAmount = hostFinancials?.payout?.amount || 0;
@@ -491,7 +493,7 @@ export function extractExpenses(
     source: 'pms_sync';
   }> = [];
 
-  const hostFinancials = reservation.host || reservation.financials?.host;
+  const hostFinancials = reservation.financials?.host;
   if (!hostFinancials) return expenses;
 
   const checkIn = reservation.arrival_date?.split('T')[0] || new Date().toISOString().split('T')[0];

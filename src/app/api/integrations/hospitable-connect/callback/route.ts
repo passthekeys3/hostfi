@@ -51,14 +51,26 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${appUrl}/dashboard/integrations?hospitable_connect=error&reason=${encodeURIComponent(error)}`);
     }
 
+    // Fetch existing metadata to merge (don't overwrite customer_id)
+    const { data: existingConn } = await supabase
+      .from('integration_connections')
+      .select('metadata')
+      .eq('user_id', user.id)
+      .eq('provider', 'hospitable_connect')
+      .single();
+
+    const existingMeta = existingConn?.metadata || {};
+
     // Mark connection as connected
     const { error: updateError } = await supabase
       .from('integration_connections')
       .update({
         status: 'connected',
         active: true,
+        connected_at: new Date().toISOString(),
         metadata: {
-          hospitable_connect_customer_id: customerId || user.id,
+          ...existingMeta,
+          hospitable_connect_customer_id: customerId || existingMeta.hospitable_connect_customer_id || user.id,
           ...(channelId && { last_channel_id: channelId }),
           connected_at: new Date().toISOString(),
         },
