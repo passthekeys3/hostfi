@@ -5,7 +5,7 @@ import Link from "next/link";
 import { StatCard } from "@/components/stat-card";
 import { getCategoryConfig, getCategoryColorClasses } from "@/lib/expense-categories";
 import { formatCurrency, formatDate, cn, getStatusColor } from "@/lib/utils";
-import { DollarSign, Building2, Receipt, Plus, Search, CheckCircle2, ArrowRight, Sparkles, Link2 } from "lucide-react";
+import { DollarSign, Building2, Receipt, Plus, Search, CheckCircle2, ArrowRight, Sparkles, Link2, Wallet, TrendingUp } from "lucide-react";
 import { AnomalySummary } from "@/components/anomaly-summary";
 import { OnboardingGate } from "@/components/onboarding-gate";
 import { DuplicateAlert } from "@/components/duplicate-alert";
@@ -141,7 +141,7 @@ function WelcomeChecklist({
 }
 
 export default function DashboardPage() {
-  const { properties, expenses, anomalies, loading } = useDashboardData();
+  const { properties, expenses, anomalies, revenue, loading } = useDashboardData();
   const [welcomeDismissed, setWelcomeDismissed] = useState(false);
 
   // Check localStorage for dismissed state
@@ -182,6 +182,9 @@ export default function DashboardPage() {
 
   const currentMonthExpenses = currentMonthStr ? expenses.filter((e) => e.date?.startsWith(currentMonthStr)) : [];
   const totalSpend = currentMonthExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const currentMonthRevenue = currentMonthStr ? revenue.filter((r) => (r.date || r.payout_date)?.startsWith(currentMonthStr)) : [];
+  const totalRevenue = currentMonthRevenue.reduce((sum, r) => sum + (r.payout_amount ?? r.amount ?? 0), 0);
+  const netProfit = totalRevenue - totalSpend;
   const pendingExpenses = expenses.filter((e) => e.status === 'pending');
   const overdueExpenses = expenses.filter((e) => e.status === 'overdue');
   const recentExpenses = [...expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
@@ -233,12 +236,27 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+        <StatCard
+          title="Monthly Revenue"
+          value={formatCurrency(totalRevenue)}
+          icon={Wallet}
+          accent="teal"
+          href="/dashboard/revenue"
+        />
         <StatCard
           title="Monthly Spend"
           value={formatCurrency(totalSpend)}
           icon={DollarSign}
-          accent="teal"
+          accent="amber"
+          href="/dashboard/expenses"
+        />
+        <StatCard
+          title="Net Profit"
+          value={(netProfit < 0 ? '-' : '') + formatCurrency(Math.abs(netProfit))}
+          subtitle={netProfit >= 0 ? 'Profitable' : 'Loss'}
+          icon={TrendingUp}
+          accent={netProfit >= 0 ? 'teal' : 'rose'}
           href="/dashboard/analytics"
         />
         <StatCard
@@ -264,7 +282,7 @@ export default function DashboardPage() {
           icon={Search}
           accent="rose"
           href="/dashboard/alerts"
-          trend={{ value: `${newCount} new`, positive: false }}
+          trend={newCount > 0 ? { value: `${newCount} new`, positive: false } : undefined}
         />
       </div>
 

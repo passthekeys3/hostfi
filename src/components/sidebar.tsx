@@ -6,20 +6,46 @@ import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Building2, Receipt, Settings, Menu, X, Inbox, BarChart3, Bell, GitCompareArrows, FileText, Calculator, Upload, MessageSquare, DollarSign, Link2, CreditCard, LogOut, Lock, Handshake } from "lucide-react";
 import { usePlan } from "@/hooks/usePlan";
+import { useDashboardData } from "@/hooks/useDashboardData";
 import { canAccessFeature } from "@/lib/feature-gates";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 
-const mainNav = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard, badge: 0 },
-  { href: "/dashboard/inbox", label: "Inbox", icon: Inbox, badge: 0 },
-  { href: "/dashboard/properties", label: "Properties", icon: Building2, badge: 0 },
-  { href: "/dashboard/expenses", label: "Expenses", icon: Receipt, badge: 0 },
-  { href: "/dashboard/revenue", label: "Revenue", icon: DollarSign, badge: 0 },
-  { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3, badge: 0 },
-  { href: "/dashboard/tax", label: "Tax Prep", icon: Calculator, badge: 0, feature: 'tax-prep' },
-  { href: "/dashboard/ask", label: "Ask AI", icon: MessageSquare, badge: 0, feature: 'ask-ai' },
-  { href: "/dashboard/alerts", label: "Alerts", icon: Bell, badge: 0, badgeColor: 'red' as const },
-];
+interface NavItem {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  badge: number;
+  badgeColor?: 'red';
+  feature?: string;
+}
+
+function useNavItems() {
+  const { alerts, anomalies, loading } = useDashboardData();
+
+  return useMemo(() => {
+    // Inbox: count of unprocessed parsed emails (new_parsed alerts)
+    const inboxCount = loading ? 0 : alerts.filter(a => a.type === 'new_parsed').length;
+    // Alerts: count of active (non-resolved) anomalies + overdue/due_soon alerts
+    const alertCount = loading ? 0 : (
+      anomalies.filter(a => a.status === 'new' || a.status === 'acknowledged').length +
+      alerts.filter(a => a.type === 'overdue').length
+    );
+
+    const mainNav: NavItem[] = [
+      { href: "/dashboard", label: "Overview", icon: LayoutDashboard, badge: 0 },
+      { href: "/dashboard/inbox", label: "Inbox", icon: Inbox, badge: inboxCount },
+      { href: "/dashboard/properties", label: "Properties", icon: Building2, badge: 0 },
+      { href: "/dashboard/expenses", label: "Expenses", icon: Receipt, badge: 0 },
+      { href: "/dashboard/revenue", label: "Revenue", icon: DollarSign, badge: 0 },
+      { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3, badge: 0 },
+      { href: "/dashboard/tax", label: "Tax Prep", icon: Calculator, badge: 0, feature: 'tax-prep' },
+      { href: "/dashboard/ask", label: "Ask AI", icon: MessageSquare, badge: 0, feature: 'ask-ai' },
+      { href: "/dashboard/alerts", label: "Alerts", icon: Bell, badge: alertCount, badgeColor: 'red' as const },
+    ];
+
+    return mainNav;
+  }, [alerts, anomalies, loading]);
+}
 
 const bottomNav = [
   { href: "/dashboard/reports", label: "Reports", icon: FileText, badge: 0, feature: 'reports' },
@@ -93,6 +119,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const { plan } = usePlan();
+  const mainNav = useNavItems();
 
   // Close sidebar on route change (mobile)
   const prevPathname = useRef(pathname);
@@ -103,7 +130,7 @@ export function Sidebar() {
     }
   }, [pathname]);
 
-  const NavLink = ({ item }: { item: typeof mainNav[0] }) => {
+  const NavLink = ({ item }: { item: NavItem }) => {
     const isActive = item.href === "/dashboard"
       ? pathname === "/dashboard"
       : pathname.startsWith(item.href);
