@@ -100,7 +100,7 @@ function ScheduleELineRow({
             "font-semibold tabular-nums text-sm",
             lineItem.amount > 0 ? "text-foreground" : "text-muted-foreground"
           )}>
-            {lineItem.line === 5 ? '—' : formatCurrency(lineItem.amount)}
+            {lineItem.amount > 0 ? formatCurrency(lineItem.amount) : '—'}
           </span>
         </td>
       </tr>
@@ -268,7 +268,16 @@ export default function TaxPage() {
   const allProperties = realProperties;
   const allPropertySummaries = allProperties
     .filter(p => p.property_type !== 'primary')
-    .map(property => generatePropertyTaxSummary(property, yearExpenses));
+    .map(property => {
+      const summary = generatePropertyTaxSummary(property, yearExpenses);
+      // Inject revenue into Line 5 (Rents received)
+      const propRevenue = revenueByProperty[property.id] || [];
+      const totalRevenue = propRevenue.reduce((sum, r) => sum + r.payout_amount, 0);
+      summary.lineItems = summary.lineItems.map(li => 
+        li.line === 5 ? { ...li, amount: totalRevenue } : li
+      );
+      return summary;
+    });
   const propertySummaries = allPropertySummaries
     .filter(summary => summary.totalDeductions > 0 || summary.lineItems.some(l => l.expenses.length > 0));
   // Properties with no expenses for the selected year
