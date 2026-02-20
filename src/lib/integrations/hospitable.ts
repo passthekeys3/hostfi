@@ -15,6 +15,7 @@ export interface HospitableCredentials {
   access_token: string;
   refresh_token: string;
   token_expires_at: number; // Unix timestamp in ms
+  connected_at?: number; // Unix timestamp in ms — when OAuth was first established
 }
 
 export interface HospitableAuth {
@@ -139,6 +140,7 @@ export async function refreshAccessToken(
     access_token: data.access_token,
     refresh_token: data.refresh_token || credentials.refresh_token,
     token_expires_at: Date.now() + expiresIn * 1000,
+    connected_at: credentials.connected_at, // preserve original connection time
   };
 }
 
@@ -180,34 +182,33 @@ export function authFromCredentials(creds: Record<string, string | number>): Hos
     access_token: String(creds.access_token || ''),
     refresh_token: String(creds.refresh_token || ''),
     token_expires_at: Number(creds.token_expires_at) || 0,
+    connected_at: creds.connected_at ? Number(creds.connected_at) : undefined,
   };
 }
 
 /**
  * Check if refresh token is nearing expiry (90-day lifetime).
- * Returns true if token was issued more than 80 days ago.
- * Call this during sync to proactively warn users to reconnect.
+ * 
+ * NOTE: We can't perfectly track refresh token age because each access token
+ * refresh resets token_expires_at. Hospitable may also rotate refresh tokens.
+ * The safest approach: if we can't determine age, don't warn.
+ * The real guard is that refreshAccessToken() will fail with a clear error
+ * if the refresh token is actually expired, which we handle in the sync route.
  */
 export function refreshTokenExpiringSoon(credentials: HospitableCredentials): boolean {
-  // Refresh tokens last 90 days. The token_expires_at tracks the ACCESS token.
-  // We estimate refresh token age from access token expiry:
-  // If access token expires in 12h, it was issued at (token_expires_at - 12h).
-  // Refresh token was issued at the same time.
-  const accessTokenIssuedAt = credentials.token_expires_at - (12 * 60 * 60 * 1000);
-  const refreshTokenMaxAge = 90 * 24 * 60 * 60 * 1000; // 90 days
-  const warningThreshold = 80 * 24 * 60 * 60 * 1000; // warn at 80 days
-  const age = Date.now() - accessTokenIssuedAt;
+  if (!credentials.connected_at) return false;
+  const age = Date.now() - credentials.connected_at;
+  const warningThreshold = 80 * 24 * 60 * 60 * 1000; // 80 days
   return age > warningThreshold;
 }
 
 /**
- * Check if refresh token is definitely expired (>90 days)
+ * Check if refresh token is definitely expired (>90 days).
  */
 export function refreshTokenExpired(credentials: HospitableCredentials): boolean {
-  const accessTokenIssuedAt = credentials.token_expires_at - (12 * 60 * 60 * 1000);
-  const refreshTokenMaxAge = 90 * 24 * 60 * 60 * 1000;
-  const age = Date.now() - accessTokenIssuedAt;
-  return age > refreshTokenMaxAge;
+  if (!credentials.connected_at) return false;
+  const maxAge = 90 * 24 * 60 * 60 * 1000;
+  return (Date.now() - credentials.connected_at) > maxAge;
 }
 
 async function hospitableFetch<T>(
@@ -484,8 +485,7 @@ export function extractExpensesFromReservation(
   description: string;
   amount: number;
   date: string;
-  source: 'api_sync';
-  hospitable_reservation_id: string;
+  source: 'pms_sync';
 }> {
   const expenses: Array<{
     property_id: string;
@@ -493,8 +493,7 @@ export function extractExpensesFromReservation(
     description: string;
     amount: number;
     date: string;
-    source: 'api_sync';
-    hospitable_reservation_id: string;
+    source: 'pms_sync';
   }> = [];
   const host = reservation.financials?.host;
   if (!host) return expenses;
@@ -514,8 +513,7 @@ export function extractExpensesFromReservation(
       description: `${label} — Booking ${code}`,
       amount: amt,
       date: checkIn,
-      source: 'api_sync',
-      hospitable_reservation_id: reservation.id,
+      source: 'pms_sync',
     });
   }
 
@@ -529,8 +527,7 @@ export function extractExpensesFromReservation(
       description: `${tax.label || 'Tax'} — Booking ${code}`,
       amount: amt,
       date: checkIn,
-      source: 'api_sync',
-      hospitable_reservation_id: reservation.id,
+      source: 'pms_sync',
     });
   }
 

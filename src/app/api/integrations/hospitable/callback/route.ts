@@ -96,6 +96,7 @@ export async function GET(request: NextRequest) {
       access_token: accessToken,
       refresh_token: refreshToken,
       token_expires_at: tokenExpiresAt,
+      connected_at: Date.now(),
     };
 
     // Fetch Hospitable user profile so we can match disconnect webhooks
