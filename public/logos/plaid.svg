@@ -1,1 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40"><rect width="40" height="40" rx="8" fill="#111"/><rect x="10" y="10" width="6" height="6" rx="1" fill="#fff"/><rect x="17" y="10" width="6" height="6" rx="1" fill="#fff"/><rect x="24" y="10" width="6" height="6" rx="1" fill="#fff"/><rect x="10" y="17" width="6" height="6" rx="1" fill="#fff"/><rect x="17" y="17" width="6" height="6" rx="1" fill="#fff"/><rect x="10" y="24" width="6" height="6" rx="1" fill="#fff"/><rect x="17" y="24" width="6" height="6" rx="1" fill="#fff"/><rect x="24" y="24" width="6" height="6" rx="1" fill="#fff"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="plaid-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#56E1E9"/>
+      <stop offset="50%" stop-color="#C4B5FD"/>
+      <stop offset="100%" stop-color="#F0ABFC"/>
+    </linearGradient>
+  </defs>
+  <rect width="48" height="48" rx="12" fill="#0A2540"/>
+  <!-- Plaid interlocking pattern -->
+  <g fill="none" stroke="url(#plaid-grad)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Top-left diamond -->
+    <path d="M18 12L12 18L18 24L24 18Z"/>
+    <!-- Top-right diamond -->
+    <path d="M30 12L24 18L30 24L36 18Z"/>
+    <!-- Bottom-left diamond -->
+    <path d="M18 24L12 30L18 36L24 30Z"/>
+    <!-- Bottom-right diamond -->
+    <path d="M30 24L24 30L30 36L36 30Z"/>
+  </g>
+</svg>
