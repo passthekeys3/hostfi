@@ -6,3 +6,4 @@ export { FAQAccordion } from "./FAQAccordion";
 export { PricingToggle } from "./PricingToggle";
 export { StatsCounter } from "./StatsCounter";
 export { GetStartedButton } from "./GetStartedButton";
+export { InteractiveDemo } from "./InteractiveDemo";

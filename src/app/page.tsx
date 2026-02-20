@@ -4,7 +4,7 @@ import {
   Mail, BarChart3, Bot, Camera, Bell, TrendingUp,
   FileText, Shield, Zap, Building2, Calculator,
   MessageSquare, CheckCircle2, Sparkles,
-  DollarSign, Home, Layers, PieChart, AlertTriangle
+  Layers, AlertTriangle
 } from "lucide-react";
 
 import {
@@ -16,6 +16,7 @@ import {
   PricingToggle,
   StatsCounter,
   GetStartedButton,
+  InteractiveDemo,
 } from "@/components/landing";
 
 /* ─── JSON-LD Structured Data ─── */
@@ -106,21 +107,6 @@ const aiLinks = [
 
 const aiQuery = encodeURIComponent("What is HostFi (hostfi.ai)? Summarize what it does, who it's for, and how it compares to using spreadsheets or QuickBooks for rental property expense tracking.");
 
-/* ─── Dashboard Mock Data ─── */
-const dashboardStats = [
-  { label: "Total Expenses", value: "$14,280", change: "-3.2% from last month", icon: DollarSign, accent: "border-teal-400" },
-  { label: "Properties", value: "8", change: "All synced", icon: Home, accent: "border-blue-400" },
-  { label: "Avg / Property", value: "$1,785", change: "-$92 vs average", icon: PieChart, accent: "border-amber-400" },
-  { label: "Anomalies", value: "2", change: "Action needed", icon: AlertTriangle, accent: "border-rose-400" },
-];
-
-const recentActivity = [
-  { label: "SoCalEdison", prop: "Unit 4B", amount: "$187.40", tag: "Parsed", tagColor: "bg-teal-50 text-teal-600" },
-  { label: "Water bill spike", prop: "Unit 2A", amount: "+142%", tag: "Anomaly", tagColor: "bg-rose-50 text-rose-600" },
-  { label: "Cleaning service", prop: "Unit 1A", amount: "$150.00", tag: "Receipt", tagColor: "bg-blue-50 text-blue-600" },
-  { label: "Insurance renewal", prop: "All units", amount: "$2,400", tag: "Due soon", tagColor: "bg-amber-50 text-amber-600" },
-];
-
 /* ─── Main Page (Server Component) ─── */
 export default function LandingPage() {
   return (
@@ -157,82 +143,9 @@ export default function LandingPage() {
               <p className="text-xs text-gray-600 mt-3">Free for up to 3 properties. No credit card required.</p>
             </FadeIn>
 
-            {/* Dashboard Preview */}
+            {/* Interactive Dashboard Demo */}
             <FadeIn className="mt-16 sm:mt-20" delay={200}>
-              <div className="relative animate-float">
-                <div className="absolute inset-0 bg-gradient-to-b from-teal-500/5 via-transparent to-transparent rounded-3xl -m-4" />
-                <div className="relative bg-white rounded-2xl border border-gray-200 shadow-xl shadow-gray-200/50 overflow-hidden">
-                  {/* Browser bar */}
-                  <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 border-b border-gray-100">
-                    <div className="flex gap-1.5" aria-hidden="true">
-                      <div className="w-2.5 h-2.5 rounded-full bg-gray-200" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-gray-200" />
-                      <div className="w-2.5 h-2.5 rounded-full bg-gray-200" />
-                    </div>
-                    <div className="flex-1 max-w-sm mx-auto">
-                      <div className="bg-white border border-gray-200 rounded-md px-3 py-1 text-[11px] text-gray-600 text-center">hostfi.ai/dashboard</div>
-                    </div>
-                  </div>
-
-                  {/* Dashboard content */}
-                  <div className="p-5 sm:p-8 bg-[#f8f9fa]">
-                    {/* Stat cards row */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
-                      {dashboardStats.map((stat, i) => (
-                        <div key={i} className={`bg-white rounded-xl p-4 border-t-2 ${stat.accent} shadow-sm`}>
-                          <div className="flex items-center justify-between mb-2">
-                            <p className="text-[11px] text-gray-600 font-medium uppercase tracking-wide">{stat.label}</p>
-                            <stat.icon className="w-3.5 h-3.5 text-gray-300" aria-hidden="true" />
-                          </div>
-                          <p className="text-xl sm:text-2xl font-bold text-gray-900">{stat.value}</p>
-                          <p className="text-[11px] text-gray-600 mt-1">{stat.change}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Chart + Recent activity */}
-                    <div className="grid lg:grid-cols-5 gap-3 sm:gap-4">
-                      <div className="lg:col-span-3 bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                        <div className="flex items-center justify-between mb-4">
-                          <p className="text-xs font-medium text-gray-700">Monthly Spend Trend</p>
-                          <span className="text-[10px] text-gray-600 font-medium">Last 12 months</span>
-                        </div>
-                        <svg className="w-full h-32" viewBox="0 0 500 120" preserveAspectRatio="none" aria-label="Monthly spend trend chart showing expenses over 12 months" role="img">
-                          <defs>
-                            <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#14B8A6" stopOpacity="0.12" />
-                              <stop offset="100%" stopColor="#14B8A6" stopOpacity="0" />
-                            </linearGradient>
-                          </defs>
-                          <polyline fill="url(#chartGrad)" stroke="none" points="0,80 42,70 84,75 126,55 168,60 210,45 252,50 294,42 336,55 378,35 420,45 462,30 500,28 500,120 0,120" />
-                          <polyline fill="none" stroke="#14B8A6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" points="0,80 42,70 84,75 126,55 168,60 210,45 252,50 294,42 336,55 378,35 420,45 462,30 500,28" />
-                          <circle cx="500" cy="28" r="3" fill="#14B8A6" />
-                        </svg>
-                        <div className="flex justify-between text-[9px] text-gray-600 mt-1 px-1" aria-hidden="true">
-                          {["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"].map(m => <span key={m}>{m}</span>)}
-                        </div>
-                      </div>
-                      <div className="lg:col-span-2 bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                        <p className="text-xs font-medium text-gray-700 mb-4">Recent Activity</p>
-                        <div className="space-y-3">
-                          {recentActivity.map((item, i) => (
-                            <div key={i} className="flex items-center justify-between">
-                              <div className="min-w-0">
-                                <p className="text-xs font-medium text-gray-800 truncate">{item.label}</p>
-                                <p className="text-[10px] text-gray-600">{item.prop}</p>
-                              </div>
-                              <div className="flex items-center gap-2 flex-shrink-0">
-                                <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${item.tagColor}`}>{item.tag}</span>
-                                <span className="text-xs font-semibold text-gray-900 w-16 text-right">{item.amount}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <InteractiveDemo />
             </FadeIn>
           </div>
         </section>
