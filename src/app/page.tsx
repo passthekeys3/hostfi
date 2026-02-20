@@ -263,10 +263,8 @@ export default function LandingPage() {
                   <div className="space-y-4">
                     {[
                       "Manually Entering Bills Into Spreadsheets",
-                      "No Idea Which Property Costs the Most",
+                      "No Per-Property Visibility Into Costs",
                       "Missing Bills Until You Get a Late Fee",
-                      "Hours Categorizing Expenses for Taxes",
-                      "Water Leak Runs for Months Unnoticed",
                       "Guessing at Schedule E Line Items",
                     ].map((item, i) => (
                       <div key={i} className="flex items-start gap-3">
@@ -290,10 +288,8 @@ export default function LandingPage() {
                     {[
                       "Forward a Bill → AI Parses and Categorizes It",
                       "Per-Property P&L Updated in Real Time",
-                      "Alerts Before a Bill Is Due or Overdue",
-                      "Schedule E Auto-Mapped at Year End",
                       "Anomaly Detection Catches Spikes Instantly",
-                      "One Click to Export Tax-Ready Reports",
+                      "Schedule E Auto-Mapped — One Click Export",
                     ].map((item, i) => (
                       <div key={i} className="flex items-start gap-3">
                         <CheckCircle2 className="w-5 h-5 text-teal-500 flex-shrink-0 mt-0.5" aria-hidden="true" />
@@ -518,6 +514,19 @@ export default function LandingPage() {
               </div>
             </FadeIn>
           </div>
+        </section>
+
+        {/* ─── MID-PAGE CTA ─── */}
+        <section className="py-16 sm:py-20 px-5 bg-gray-900">
+          <FadeIn className="max-w-2xl mx-auto text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-4">
+              Ready to Stop Chasing Receipts?
+            </h2>
+            <p className="text-gray-400 mb-8">
+              Free for up to 3 properties. Set up in under 5 minutes.
+            </p>
+            <GetStartedButton size="large" variant="white" />
+          </FadeIn>
         </section>
 
         {/* ─── TESTIMONIALS ─── */}

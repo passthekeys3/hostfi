@@ -52,10 +52,10 @@ function AnimatedNumber({ value, prefix = "", suffix = "", visible }: { value: n
 }
 
 const stats = [
+  { type: "animated", value: 15, suffix: "+", label: "IRS Schedule E line items mapped", prefix: "" },
   { type: "static", display: "< 30s", label: "Average bill parse time" },
-  { type: "static", display: "100%", label: "Schedule E coverage" },
-  { type: "animated", value: 5, suffix: " min", label: "Setup time", prefix: "" },
-  { type: "static", display: "$0", label: "To get started" },
+  { type: "animated", value: 11, suffix: "", label: "Integrations supported", prefix: "" },
+  { type: "static", display: "$0", label: "To start tracking" },
 ] as const;
 
 export function StatsCounter() {

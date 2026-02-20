@@ -443,17 +443,52 @@ export default function DashboardPage() {
           })}
         </div>
 
-        {/* Empty state for Recent Expenses */}
+        {/* Empty state — show preview of what dashboard looks like with data */}
         {recentExpenses.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
-            <Receipt className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-            <p className="text-gray-600 text-sm">No expenses yet</p>
-            <Link 
-              href="/dashboard/expenses/new" 
-              className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-gray-900 text-white font-medium rounded-xl text-sm hover:bg-gray-800 transition-colors"
-            >
-              <Plus className="w-4 h-4" /> Add Expense
-            </Link>
+          <div className="relative">
+            {/* Preview overlay */}
+            <div className="absolute inset-0 z-10 bg-gradient-to-b from-white/0 via-white/60 to-white flex flex-col items-center justify-end pb-8 rounded-2xl">
+              <div className="bg-white rounded-xl shadow-lg border border-gray-200 px-6 py-5 text-center max-w-sm">
+                <Sparkles className="w-6 h-6 text-teal-500 mx-auto mb-2" />
+                <p className="text-sm font-semibold text-gray-900 mb-1">Here&apos;s what your dashboard will look like</p>
+                <p className="text-xs text-gray-500 mb-4">Add your first expense to start tracking</p>
+                <Link
+                  href="/dashboard/expenses/new"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white font-medium rounded-xl text-sm hover:bg-gray-800 transition-colors"
+                >
+                  <Plus className="w-4 h-4" /> Add Expense
+                </Link>
+              </div>
+            </div>
+            {/* Blurred sample data */}
+            <div className="opacity-60 pointer-events-none select-none" aria-hidden="true">
+              <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+                <div className="px-5 py-3 border-b border-gray-100">
+                  <p className="text-sm font-semibold uppercase tracking-widest text-gray-400">Recent Expenses</p>
+                </div>
+                {[
+                  { desc: "SoCalEdison", cat: "Utility", prop: "Unit 4B · Mar 15", amount: "$187.40", color: "bg-yellow-50 border-yellow-200" },
+                  { desc: "City Water", cat: "Utility", prop: "Unit 2A · Mar 12", amount: "$94.20", color: "bg-blue-50 border-blue-200" },
+                  { desc: "Deep Clean Service", cat: "Cleaning", prop: "Unit 1A · Mar 10", amount: "$150.00", color: "bg-teal-50 border-teal-200" },
+                  { desc: "Allstate Insurance", cat: "Insurance", prop: "All units · Mar 1", amount: "$2,400.00", color: "bg-purple-50 border-purple-200" },
+                  { desc: "Plumber - Leak Fix", cat: "Maintenance", prop: "Unit 3C · Feb 28", amount: "$325.00", color: "bg-orange-50 border-orange-200" },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-3 px-5 py-3.5 border-b border-gray-50 last:border-0">
+                    <div className={`w-9 h-9 rounded-xl border ${item.color} flex items-center justify-center`}>
+                      <Receipt className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800">{item.desc}</p>
+                      <p className="text-xs text-gray-500">{item.prop}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-semibold tabular-nums">{item.amount}</p>
+                      <p className="text-[10px] text-gray-400">{item.cat}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </section>
