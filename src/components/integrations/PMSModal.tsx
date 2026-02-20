@@ -58,7 +58,7 @@ export const PMS_CONFIGS: Record<string, PMSConfig> = {
     id: "hospitable",
     name: "Hospitable",
     logoText: "H",
-    logoColor: "bg-indigo-50 text-indigo-600",
+    logoColor: "bg-pink-50 text-pink-600",
     logoUrl: "/logos/hospitable.svg",
     oauth: true,
     fields: [], // OAuth only, no manual fields

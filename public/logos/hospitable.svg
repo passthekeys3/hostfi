@@ -1,14 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
-  <defs>
-    <linearGradient id="hospitable-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#4F46E5"/>
-      <stop offset="100%" stop-color="#7C3AED"/>
-    </linearGradient>
-  </defs>
-  <rect width="48" height="48" rx="12" fill="url(#hospitable-grad)"/>
-  <!-- House icon -->
-  <path d="M24 10L8 22h4v14h8v-8h8v8h8V22h4L24 10z" fill="white" fill-opacity="0.95"/>
-  <!-- Small chat bubble to represent messaging/PMS -->
-  <rect x="30" y="8" width="12" height="9" rx="3" fill="white"/>
-  <polygon points="33,17 36,17 33,20" fill="white"/>
+  <rect width="48" height="48" rx="12" fill="#E84670"/>
+  <!-- Ring/circle -->
+  <circle cx="24" cy="20" r="11" fill="white"/>
+  <circle cx="24" cy="20" r="6" fill="#E84670"/>
+  <!-- Dash below -->
+  <rect x="17" y="35" width="14" height="5" rx="2.5" fill="white"/>
 </svg>
