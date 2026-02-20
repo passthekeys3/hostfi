@@ -66,11 +66,16 @@ export interface HospitableReservation {
     infants?: number;
     name?: string;
   };
+  stay_type?: 'guest_stay' | 'owner_stay';
   financials?: {
     guest?: Record<string, unknown>;
     host?: {
       accommodation?: { amount: number; formatted: string };
-      host_fees?: Array<{ amount: number; label: string }>;
+      guest_fees?: Array<{ amount: number; formatted: string; label: string; category: string }>;
+      host_fees?: Array<{ amount: number; formatted: string; label: string; category: string }>;
+      discounts?: Array<{ amount: number; formatted: string; label: string; category: string }>;
+      adjustments?: Array<{ amount: number; formatted: string; label: string; category: string }>;
+      taxes?: Array<{ amount: number; formatted: string; label: string; category: string }>;
       revenue?: { amount: number; formatted: string; label: string };
     };
     currency?: string;
@@ -272,7 +277,9 @@ export async function fetchReservations(
       );
 
       // Tag each reservation with the property ID it was fetched for
+      // Skip owner stays — they're not revenue
       for (const res of response.data) {
+        if (res.stay_type === 'owner_stay') continue;
         res.property_id = propertyId;
         allReservations.push(res);
       }
@@ -365,6 +372,13 @@ function mapPlatform(platform: string): string {
 }
 
 /**
+ * Check if a reservation is an owner stay (personal use, not revenue)
+ */
+export function isOwnerStay(reservation: HospitableReservation): boolean {
+  return reservation.stay_type === 'owner_stay';
+}
+
+/**
  * Map Hospitable reservation to HostFi revenue schema
  */
 export function mapReservationToRevenue(
@@ -374,6 +388,10 @@ export function mapReservationToRevenue(
   // Amount is in CENTS — divide by 100
   const revenueAmount = reservation.financials?.host?.revenue?.amount || 0;
   const amount = revenueAmount / 100;
+
+  // Sum host service fees (e.g. "Host Service Fee") — these are negative amounts in cents
+  const hostFees = reservation.financials?.host?.host_fees || [];
+  const totalPlatformFee = hostFees.reduce((sum, fee) => sum + Math.abs(fee.amount), 0) / 100;
 
   const platform = mapPlatform(reservation.platform);
   const checkIn = reservation.arrival_date?.split('T')[0] || null;
@@ -387,7 +405,7 @@ export function mapReservationToRevenue(
     description: `Hospitable Booking — ${checkIn || 'Reservation'}`,
     guest_name: guestName,
     amount,
-    platform_fee: 0,
+    platform_fee: totalPlatformFee,
     check_in: checkIn,
     check_out: checkOut,
     date: checkIn || new Date().toISOString().split('T')[0],
@@ -395,4 +413,71 @@ export function mapReservationToRevenue(
     confirmation_code: reservation.platform_id || null,
     hospitable_reservation_id: reservation.id,
   };
+}
+
+/**
+ * Extract host-side fees from a reservation as HostFi expense entries.
+ * Returns cleaning fees, host taxes, and adjustments as individual expense items.
+ * These are costs deducted from the host payout.
+ */
+export function extractExpensesFromReservation(
+  reservation: HospitableReservation,
+  propertyId: string
+): Array<{
+  property_id: string;
+  category: string;
+  description: string;
+  amount: number;
+  date: string;
+  source: 'api_sync';
+  hospitable_reservation_id: string;
+}> {
+  const expenses: Array<{
+    property_id: string;
+    category: string;
+    description: string;
+    amount: number;
+    date: string;
+    source: 'api_sync';
+    hospitable_reservation_id: string;
+  }> = [];
+  const host = reservation.financials?.host;
+  if (!host) return expenses;
+
+  const checkIn = reservation.arrival_date?.split('T')[0] || new Date().toISOString().split('T')[0];
+  const code = reservation.platform_id || reservation.id;
+
+  // Guest fees charged by host (cleaning fee, etc.) — these are costs the host pays for
+  for (const fee of host.guest_fees || []) {
+    const amt = Math.abs(fee.amount) / 100;
+    if (amt === 0) continue;
+    const label = fee.label || 'Guest Fee';
+    const category = label.toLowerCase().includes('clean') ? 'cleaning' : 'management';
+    expenses.push({
+      property_id: propertyId,
+      category,
+      description: `${label} — Booking ${code}`,
+      amount: amt,
+      date: checkIn,
+      source: 'api_sync',
+      hospitable_reservation_id: reservation.id,
+    });
+  }
+
+  // Host taxes
+  for (const tax of host.taxes || []) {
+    const amt = Math.abs(tax.amount) / 100;
+    if (amt === 0) continue;
+    expenses.push({
+      property_id: propertyId,
+      category: 'tax',
+      description: `${tax.label || 'Tax'} — Booking ${code}`,
+      amount: amt,
+      date: checkIn,
+      source: 'api_sync',
+      hospitable_reservation_id: reservation.id,
+    });
+  }
+
+  return expenses;
 }

@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import {
   mapPropertyToHostFi,
   mapReservationToRevenue,
+  extractExpensesFromReservation,
+  isOwnerStay,
   fetchReservation,
   authFromCredentials,
   getAccessToken,
@@ -214,6 +216,12 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Skip owner stays — personal use isn't revenue
+      if (isOwnerStay(reservation)) {
+        console.log(`Hospitable webhook: skipping owner_stay reservation ${hospReservationId}`);
+        return NextResponse.json({ received: true, note: 'Owner stay skipped' });
+      }
+
       // Find the HostFi property
       const { data: properties } = await supabase
         .from('properties')
@@ -237,11 +245,11 @@ export async function POST(request: NextRequest) {
         const mapped = mapReservationToRevenue(reservation, prop.id);
 
         if (existing) {
-          // Update existing
           await supabase
             .from('revenue')
             .update({
               amount: mapped.amount,
+              platform_fee: mapped.platform_fee,
               check_in: mapped.check_in,
               check_out: mapped.check_out,
               date: mapped.date,
@@ -255,7 +263,6 @@ export async function POST(request: NextRequest) {
           
           console.log(`Hospitable webhook: updated reservation ${hospReservationId}`);
         } else {
-          // Create new
           const { error } = await supabase
             .from('revenue')
             .insert({ user_id: prop.user_id, ...mapped });
@@ -264,6 +271,30 @@ export async function POST(request: NextRequest) {
             console.log(`Hospitable webhook: created reservation ${hospReservationId}`);
           } else {
             console.error(`Hospitable webhook: failed to create reservation:`, error.message);
+          }
+        }
+
+        // Extract host-side fees/taxes as expenses (cleaning fees, host taxes)
+        const expenses = extractExpensesFromReservation(reservation, prop.id);
+        for (const expense of expenses) {
+          // Upsert by reservation ID + description to avoid duplicates
+          const { data: existingExpense } = await supabase
+            .from('expenses')
+            .select('id')
+            .eq('user_id', prop.user_id)
+            .eq('property_id', prop.id)
+            .eq('description', expense.description)
+            .single();
+
+          if (existingExpense) {
+            await supabase
+              .from('expenses')
+              .update({ amount: expense.amount, date: expense.date, category: expense.category })
+              .eq('id', existingExpense.id);
+          } else {
+            await supabase
+              .from('expenses')
+              .insert({ user_id: prop.user_id, ...expense });
           }
         }
       }

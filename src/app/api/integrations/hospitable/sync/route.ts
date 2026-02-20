@@ -7,6 +7,7 @@ import {
   fetchReservations,
   mapPropertyToHostFi,
   mapReservationToRevenue,
+  extractExpensesFromReservation,
   authFromCredentials,
   getAccessToken,
   type HospitableProperty,
@@ -285,6 +286,17 @@ export async function POST(request: NextRequest) {
 
           if (!error) {
             imported++;
+
+            // Extract host-side fees/taxes as expenses
+            const expenses = extractExpensesFromReservation(reservation, propertyId);
+            for (const expense of expenses) {
+              await supabase
+                .from('expenses')
+                .insert({ user_id: userId, ...expense })
+                .then(({ error: expErr }) => {
+                  if (expErr) console.error('Hospitable expense insert error:', expErr.message);
+                });
+            }
           } else {
             skipped++;
             skipReasons['db_error'] = (skipReasons['db_error'] || 0) + 1;
