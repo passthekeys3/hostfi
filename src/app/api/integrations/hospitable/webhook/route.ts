@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { createHmac } from 'crypto';
 import {
   mapPropertyToHostFi,
   mapReservationToRevenue,
@@ -22,6 +23,32 @@ function getServiceClient() {
 }
 
 /**
+ * Verify Hospitable webhook signature (HMAC SHA256)
+ * Header: Signature
+ * Secret: from Partner Portal (env HOSPITABLE_WEBHOOK_SECRET)
+ */
+function verifySignature(rawBody: string, signature: string | null): boolean {
+  const secret = process.env.HOSPITABLE_WEBHOOK_SECRET;
+  if (!secret) {
+    // No secret configured — skip verification (log warning)
+    console.warn('Hospitable webhook: HOSPITABLE_WEBHOOK_SECRET not set, skipping signature verification');
+    return true;
+  }
+  if (!signature) {
+    console.error('Hospitable webhook: missing Signature header');
+    return false;
+  }
+  const expected = createHmac('sha256', secret).update(rawBody).digest('hex');
+  // Constant-time comparison
+  if (expected.length !== signature.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < expected.length; i++) {
+    mismatch |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
+  }
+  return mismatch === 0;
+}
+
+/**
  * Hospitable Webhook Handler
  * POST /api/integrations/hospitable/webhook
  * 
@@ -37,7 +64,16 @@ function getServiceClient() {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    // Read raw body for signature verification, then parse
+    const rawBody = await request.text();
+    const signature = request.headers.get('signature');
+
+    if (!verifySignature(rawBody, signature)) {
+      console.error('Hospitable webhook: invalid signature');
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    }
+
+    const body = JSON.parse(rawBody);
     const supabase = getServiceClient();
     
     if (!supabase) {

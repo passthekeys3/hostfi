@@ -86,6 +86,11 @@ export async function POST(request: NextRequest) {
         .eq('provider', 'hospitable');
     }
 
+    // Warn if refresh token is nearing 90-day expiry
+    const refreshWarning = tokenResult.refreshExpiringSoon
+      ? 'Hospitable connection expires soon. Please reconnect to avoid interruption.'
+      : undefined;
+
     // Get user's plan for property limits
     const { data: profile } = await supabase
       .from('profiles')
@@ -317,11 +322,31 @@ export async function POST(request: NextRequest) {
       .eq('user_id', userId)
       .eq('provider', 'hospitable');
 
-    return NextResponse.json({ success: true, results });
+    return NextResponse.json({ success: true, results, ...(refreshWarning && { warning: refreshWarning }) });
   } catch (error) {
     if (error instanceof NextResponse) return error;
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('Hospitable sync error:', message);
+
+    // If refresh token expired, mark connection as needing reconnect
+    if (message.includes('refresh token expired')) {
+      const supabase2 = getServiceClient();
+      if (supabase2) {
+        // Try to get userId from the error context
+        try {
+          const session = await authenticateRequest();
+          if (session.authenticated) {
+            await supabase2
+              .from('integration_connections')
+              .update({ status: 'expired', active: false })
+              .eq('user_id', session.userId)
+              .eq('provider', 'hospitable');
+          }
+        } catch { /* best effort */ }
+      }
+      return NextResponse.json({ error: 'Hospitable connection expired. Please reconnect.', reconnect: true }, { status: 401 });
+    }
+
     return NextResponse.json({ error: `Sync failed: ${message}` }, { status: 500 });
   }
 }

@@ -148,19 +148,27 @@ export async function refreshAccessToken(
  */
 export async function getAccessToken(
   credentials: HospitableCredentials
-): Promise<{ auth: HospitableAuth; credentials: HospitableCredentials; refreshed: boolean }> {
+): Promise<{ auth: HospitableAuth; credentials: HospitableCredentials; refreshed: boolean; refreshExpiringSoon: boolean }> {
+  const expiringSoon = refreshTokenExpiringSoon(credentials);
+
+  if (refreshTokenExpired(credentials)) {
+    throw new Error('Hospitable refresh token expired (90 days). User must reconnect.');
+  }
+
   if (needsRefresh(credentials)) {
     const newCredentials = await refreshAccessToken(credentials);
     return {
       auth: { accessToken: newCredentials.access_token },
       credentials: newCredentials,
       refreshed: true,
+      refreshExpiringSoon: expiringSoon,
     };
   }
   return {
     auth: { accessToken: credentials.access_token },
     credentials,
     refreshed: false,
+    refreshExpiringSoon: expiringSoon,
   };
 }
 
@@ -173,6 +181,33 @@ export function authFromCredentials(creds: Record<string, string | number>): Hos
     refresh_token: String(creds.refresh_token || ''),
     token_expires_at: Number(creds.token_expires_at) || 0,
   };
+}
+
+/**
+ * Check if refresh token is nearing expiry (90-day lifetime).
+ * Returns true if token was issued more than 80 days ago.
+ * Call this during sync to proactively warn users to reconnect.
+ */
+export function refreshTokenExpiringSoon(credentials: HospitableCredentials): boolean {
+  // Refresh tokens last 90 days. The token_expires_at tracks the ACCESS token.
+  // We estimate refresh token age from access token expiry:
+  // If access token expires in 12h, it was issued at (token_expires_at - 12h).
+  // Refresh token was issued at the same time.
+  const accessTokenIssuedAt = credentials.token_expires_at - (12 * 60 * 60 * 1000);
+  const refreshTokenMaxAge = 90 * 24 * 60 * 60 * 1000; // 90 days
+  const warningThreshold = 80 * 24 * 60 * 60 * 1000; // warn at 80 days
+  const age = Date.now() - accessTokenIssuedAt;
+  return age > warningThreshold;
+}
+
+/**
+ * Check if refresh token is definitely expired (>90 days)
+ */
+export function refreshTokenExpired(credentials: HospitableCredentials): boolean {
+  const accessTokenIssuedAt = credentials.token_expires_at - (12 * 60 * 60 * 1000);
+  const refreshTokenMaxAge = 90 * 24 * 60 * 60 * 1000;
+  const age = Date.now() - accessTokenIssuedAt;
+  return age > refreshTokenMaxAge;
 }
 
 async function hospitableFetch<T>(
@@ -198,6 +233,26 @@ async function hospitableFetch<T>(
       'Accept': 'application/json',
     },
   });
+
+  // Handle rate limiting with retry-after
+  if (res.status === 429) {
+    const retryAfter = parseInt(res.headers.get('retry-after') || '5', 10);
+    const waitMs = Math.min(retryAfter * 1000, 60000); // Cap at 60s
+    await new Promise(resolve => setTimeout(resolve, waitMs));
+    // Single retry after backoff
+    const retryRes = await fetch(url.toString(), {
+      headers: {
+        'Authorization': `Bearer ${auth.accessToken}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    });
+    if (!retryRes.ok) {
+      const err = await retryRes.text();
+      throw new Error(`Hospitable API error after retry (${retryRes.status} ${path}): ${err}`);
+    }
+    return retryRes.json();
+  }
 
   if (!res.ok) {
     const err = await res.text();
