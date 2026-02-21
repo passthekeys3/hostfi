@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
         customerId = customer.id;
       } catch (error) {
         // Customer may already exist (422 error) — try to get them
+        console.error(error);
         const errMsg = error instanceof Error ? error.message : '';
         if (errMsg.includes('422') || errMsg.includes('already been taken')) {
           try {
@@ -129,9 +130,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     if (error instanceof NextResponse) return error;
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Hospitable Connect connect error:', message);
-    return NextResponse.json({ error: `Connection failed: ${message}` }, { status: 500 });
+    console.error(error);
+    
+    return NextResponse.json({ error: 'Connection failed' }, { status: 500 });
   }
 }
 
@@ -194,9 +195,9 @@ export async function GET() {
     });
   } catch (error) {
     if (error instanceof NextResponse) return error;
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Hospitable Connect status error:', message);
-    return NextResponse.json({ error: `Status check failed: ${message}` }, { status: 500 });
+    console.error(error);
+    
+    return NextResponse.json({ error: 'Status check failed' }, { status: 500 });
   }
 }
 
@@ -250,8 +251,8 @@ export async function DELETE() {
     return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof NextResponse) return error;
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Hospitable Connect disconnect error:', message);
-    return NextResponse.json({ error: `Disconnect failed: ${message}` }, { status: 500 });
+    console.error(error);
+    
+    return NextResponse.json({ error: 'Disconnect failed' }, { status: 500 });
   }
 }

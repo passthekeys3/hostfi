@@ -106,8 +106,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, splits: splitRows });
   } catch (error) {
     if (error instanceof NextResponse) return error;
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error(error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
 
@@ -167,8 +167,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ splits: splits || [] });
   } catch (error) {
     if (error instanceof NextResponse) return error;
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error(error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
 
@@ -220,7 +220,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof NextResponse) return error;
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error(error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

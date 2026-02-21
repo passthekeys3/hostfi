@@ -50,7 +50,7 @@ export async function GET() {
     });
   } catch (error) {
     if (error instanceof NextResponse) return error;
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error(error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

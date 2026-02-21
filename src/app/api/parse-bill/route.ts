@@ -114,15 +114,16 @@ export async function POST(request: NextRequest) {
       attachmentDescriptions
     );
 
-    // Fetch user's properties for matching
+    // Fetch properties for matching — scoped by user_id from request body if provided
     let properties: Array<{ id: string; address_line1: string; city: string; state: string; zip: string }> = [];
     try {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-      if (supabaseUrl && serviceKey) {
+      const userId = typeof body.user_id === 'string' ? body.user_id : null;
+      if (supabaseUrl && serviceKey && userId) {
         const { createClient } = await import('@supabase/supabase-js');
         const admin = createClient(supabaseUrl, serviceKey);
-        const { data } = await admin.from('properties').select('id, address_line1, city, state, zip');
+        const { data } = await admin.from('properties').select('id, address_line1, city, state, zip').eq('user_id', userId);
         if (data) properties = data;
       }
     } catch (err) {
@@ -149,7 +150,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('parse-bill error:', error);
+    return NextResponse.json({ error: "Failed to parse bill" }, { status: 500 });
   }
 }

@@ -328,8 +328,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, results, ...(refreshWarning && { warning: refreshWarning }) });
   } catch (error) {
     if (error instanceof NextResponse) return error;
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('Hospitable sync error:', message);
+    console.error('Hospitable sync error:', error);
+    const message = error instanceof Error ? error.message : '';
 
     // If refresh token expired, mark connection as needing reconnect
     if (message.includes('refresh token expired')) {
@@ -350,6 +350,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Hospitable connection expired. Please reconnect.', reconnect: true }, { status: 401 });
     }
 
-    return NextResponse.json({ error: `Sync failed: ${message}` }, { status: 500 });
+    return NextResponse.json({ error: 'Sync failed' }, { status: 500 });
   }
 }

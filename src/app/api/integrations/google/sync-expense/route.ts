@@ -40,8 +40,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     if (error instanceof NextResponse) return error;
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('sync-expense error:', message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('sync-expense error:', error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

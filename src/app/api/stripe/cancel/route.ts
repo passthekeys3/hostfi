@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: unknown) {
     console.error('Stripe cancel error:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : '';
 
     if (message.includes('API key') || message.includes('placeholder')) {
       return NextResponse.json({

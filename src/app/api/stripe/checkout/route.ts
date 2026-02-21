@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: session.url });
   } catch (error: unknown) {
     console.error('Stripe checkout error:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const message = error instanceof Error ? error.message : '';
 
     if (message.includes('API key') || message.includes('placeholder')) {
       return NextResponse.json({

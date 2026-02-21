@@ -188,9 +188,9 @@ export async function POST(request: NextRequest) {
           const mapped = mapBookingToRevenue(booking, propertyId);
           const { error } = await supabase.from('revenue').insert({ user_id: session.userId, ...mapped });
           if (!error) { imported++; }
-          else { skipped++; skipReasons['db_error'] = (skipReasons['db_error'] || 0) + 1; skipReasons['db_detail'] = error.message as unknown as number; console.error('Booking insert error:', error.message, 'Data:', JSON.stringify(mapped)); }
+          else { skipped++; skipReasons['db_error'] = (skipReasons['db_error'] || 0) + 1; console.error('Booking insert error:', error.message, 'Data:', JSON.stringify(mapped)); }
         }
-        results.reservations = { imported, skipped, total: allBookings.length, skipReasons, debug_raw_first_booking: debugRawBooking } as typeof results.reservations;
+        results.reservations = { imported, skipped, total: allBookings.length, skipReasons } as typeof results.reservations;
       } else {
         results.reservations = { imported: 0, skipped: 0, total: 0 };
       }
@@ -200,8 +200,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, results });
   } catch (error) {
     if (error instanceof NextResponse) return error;
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('OwnerRez sync error:', message);
-    return NextResponse.json({ error: `Sync failed: ${message}` }, { status: 500 });
+    console.error('OwnerRez sync error:', error);
+    return NextResponse.json({ error: 'Sync failed' }, { status: 500 });
   }
 }

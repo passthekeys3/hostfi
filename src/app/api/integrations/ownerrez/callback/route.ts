@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
         redirectUri,
         codePrefix: code?.substring(0, 8),
       });
-      return NextResponse.redirect(`${redirectBase}?ownerrez=error&reason=token_exchange&detail=${encodeURIComponent(err.substring(0, 200))}`);
+      return NextResponse.redirect(`${redirectBase}?ownerrez=error&reason=token_exchange`);
     }
 
     const tokenData = await tokenRes.json();

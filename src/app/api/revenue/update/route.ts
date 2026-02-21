@@ -33,6 +33,24 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
     }
 
+    // Validate numeric fields
+    const numericFields = ['amount', 'payout_amount', 'platform_fee', 'nights'];
+    for (const field of numericFields) {
+      if (field in updates) {
+        const val = Number(updates[field]);
+        if (!Number.isFinite(val)) {
+          return NextResponse.json({ error: `Invalid value for ${field}` }, { status: 400 });
+        }
+        if (field === 'amount' && (val <= 0 || val > 10_000_000)) {
+          return NextResponse.json({ error: 'Amount must be between 0 and 10,000,000' }, { status: 400 });
+        }
+        if (field === 'nights' && (val < 0 || val > 3650)) {
+          return NextResponse.json({ error: 'Nights must be between 0 and 3650' }, { status: 400 });
+        }
+        updates[field] = val;
+      }
+    }
+
     // Only update rows belonging to this user
     const { error } = await supabase
       .from('revenue')
@@ -40,11 +58,14 @@ export async function PUT(request: NextRequest) {
       .eq('id', id)
       .eq('user_id', session.userId);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('Revenue update error:', error);
+      return NextResponse.json({ error: 'Failed to update revenue' }, { status: 500 });
+    }
     return NextResponse.json({ success: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Revenue update error:', error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
 
@@ -66,10 +87,13 @@ export async function DELETE(request: NextRequest) {
       .eq('id', id)
       .eq('user_id', session.userId);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('Revenue delete error:', error);
+      return NextResponse.json({ error: 'Failed to delete revenue' }, { status: 500 });
+    }
     return NextResponse.json({ success: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Revenue delete error:', error);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

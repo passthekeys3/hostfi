@@ -130,8 +130,8 @@ ${context}`,
   } catch (error: unknown) {
     console.error('Ask AI error:', error);
     if (error instanceof NextResponse) return error;
-    const errMsg = error instanceof Error ? error.message : 'Unknown error';
 
+    const errMsg = error instanceof Error ? error.message : '';
     if (errMsg.includes('API key') || errMsg.includes('authentication')) {
       return NextResponse.json({
         answer: 'AI service is temporarily unavailable. Please try again later.',

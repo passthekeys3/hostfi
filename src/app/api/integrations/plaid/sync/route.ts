@@ -219,9 +219,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     if (error instanceof NextResponse) return error;
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error(error);
     console.error('Plaid sync error:', error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
 
