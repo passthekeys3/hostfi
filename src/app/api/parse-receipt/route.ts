@@ -79,7 +79,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const result = await parseReceipt(imageBase64, mimeType || "image/jpeg");
+    // Validate mime type to prevent abuse
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
+    const validatedMimeType = allowedMimeTypes.includes(mimeType) ? mimeType : 'image/jpeg';
+
+    const result = await parseReceipt(imageBase64, validatedMimeType);
     return NextResponse.json(result);
   } catch (error) {
     const message =

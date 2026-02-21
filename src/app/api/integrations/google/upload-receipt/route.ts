@@ -30,7 +30,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields: fileName, fileContent, mimeType' }, { status: 400 });
     }
 
+    // Validate file type
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
+    if (!allowedMimeTypes.includes(mimeType)) {
+      return NextResponse.json({ error: 'Invalid file type. Allowed: JPEG, PNG, WebP, GIF, PDF' }, { status: 400 });
+    }
+
     const buffer = Buffer.from(fileContent, 'base64');
+
+    // Validate file size (10MB max)
+    if (buffer.length > 10_485_760) {
+      return NextResponse.json({ error: 'File too large. Maximum size is 10MB.' }, { status: 413 });
+    }
 
     const result = await backupReceiptToDrive(
       auth.userId,

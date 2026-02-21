@@ -116,10 +116,13 @@ export function detectAnomalies(
   config: AnomalyConfig = DEFAULT_CONFIG,
 ): AnomalyResult[] {
   const anomalies: AnomalyResult[] = [];
-  const amounts = historicalBills.map(b => b.amount).sort((a, b) => a - b);
-  if (amounts.length < 3) return anomalies;
+  if (historicalBills.length < 3) return anomalies;
 
-  const recentAmounts = amounts.slice(-config.rolling_window);
+  // Sort by month (chronological) to get the most recent bills for rolling window
+  const sortedBills = [...historicalBills].sort((a, b) => a.month.localeCompare(b.month));
+  const recentBills = sortedBills.slice(-config.rolling_window);
+  const recentAmounts = recentBills.map(b => b.amount);
+  const amounts = sortedBills.map(b => b.amount);
   const rollingAvg = recentAmounts.reduce((s, v) => s + v, 0) / recentAmounts.length;
   const stdDev = calcStdDev(recentAmounts);
   const deviationPercent = rollingAvg > 0 ? ((currentBill.amount - rollingAvg) / rollingAvg) * 100 : 0;

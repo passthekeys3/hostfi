@@ -30,7 +30,7 @@ export default function RecurringExpensesPage() {
         const { createClient } = await import("@/lib/supabase/client");
         const supabase = createClient();
         if (!supabase) return;
-        const { data } = await supabase.from('recurring_expenses').select('*').order('created_at', { ascending: false });
+        const { data } = await supabase.from('recurring_expenses').select('*').order('created_at', { ascending: false }).limit(200);
         if (data) setRecurringExpenses(data as RecurringExpense[]);
       } catch (error) {
         console.error('Failed to fetch recurring expenses:', error);

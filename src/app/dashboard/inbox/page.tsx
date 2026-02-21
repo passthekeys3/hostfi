@@ -438,7 +438,7 @@ export default function InboxPage() {
           setInboxLoading(false);
           return;
         }
-        const { data, error } = await supabase.from("parsed_emails").select("*").order("received_at", { ascending: false });
+        const { data, error } = await supabase.from("parsed_emails").select("*").order("received_at", { ascending: false }).limit(500);
         
         if (error) {
           console.error("Failed to fetch inbox items:", error);
