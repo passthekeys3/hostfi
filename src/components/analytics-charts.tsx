@@ -5,6 +5,8 @@ import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   BarChart, Bar, PieChart, Pie, Cell, Legend,
 } from "recharts";
+type TooltipValue = number | string | readonly (number | string)[] | undefined;
+type TooltipName = string | number | undefined;
 import {
   type MonthlyBill, type UtilityType, type MonthlyRevenue,
   UTILITY_LABELS, ALL_EXPENSE_TYPES, PLATFORM_LABELS,
@@ -169,8 +171,7 @@ export function UtilityBreakdownChart({ data }: { data: MonthlyBill[] }) {
             </Pie>
             <Tooltip
               {...tooltipStyle}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              formatter={((v: unknown, name: unknown) => { const n = Number(v); return [fmt(n) + ` (${((n / total) * 100).toFixed(1)}%)`, String(name)]; }) as any}
+              formatter={(v: TooltipValue, name: TooltipName) => { const n = Number(v); return [fmt(n) + ` (${((n / total) * 100).toFixed(1)}%)`, String(name)]; }}
             />
           </PieChart>
         </ResponsiveContainer>
@@ -382,8 +383,7 @@ export function RevenueVsExpensesChart({ expenses, revenue }: { expenses: Monthl
               <YAxis stroke="#6b7280" fontSize={11} fontWeight={500} tickFormatter={fmt} tickLine={false} axisLine={false} dx={-8} />
               <Tooltip 
                 {...tooltipStyle} 
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                formatter={((v: unknown, name: unknown) => [fmt(Number(v)), String(name) === 'revenue' ? 'Revenue' : 'Expenses']) as any} 
+                formatter={(v: TooltipValue, name: TooltipName) => [fmt(Number(v)), String(name) === 'revenue' ? 'Revenue' : 'Expenses']} 
               />
               <Legend 
                 wrapperStyle={{ fontSize: 12, color: '#6b7280', paddingTop: '16px' }}
@@ -475,8 +475,7 @@ export function RevenueByPlatformChart({ data }: { data: MonthlyRevenue[] }) {
             </Pie>
             <Tooltip
               {...tooltipStyle}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              formatter={((v: unknown, name: unknown) => { const n = Number(v); return [fmt(n) + ` (${((n / total) * 100).toFixed(1)}%)`, String(name)]; }) as any}
+              formatter={(v: TooltipValue, name: TooltipName) => { const n = Number(v); return [fmt(n) + ` (${((n / total) * 100).toFixed(1)}%)`, String(name)]; }}
             />
           </PieChart>
         </ResponsiveContainer>

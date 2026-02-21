@@ -2,24 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { stripe, PLANS, type PlanId } from '@/lib/stripe';
 import { createClient } from '@/lib/supabase/server';
+import { createAsyncRateLimiter } from '@/lib/rate-limit';
 
-// Rate limiting
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + 60_000 });
-    return false;
-  }
-  entry.count++;
-  return entry.count > 5; // 5 checkout attempts per minute
-}
+const isRateLimited = createAsyncRateLimiter('stripe-checkout', 5, 60_000);
 
 export async function POST(request: NextRequest) {
   try {
     const ip = request.headers.get('x-forwarded-for') || 'unknown';
-    if (isRateLimited(ip)) {
+    if (await isRateLimited(ip)) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
     }
 

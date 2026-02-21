@@ -57,20 +57,20 @@ export async function GET() {
       conn = driveConn;
     }
 
-    // Read credentials through decryption layer
+    // Read credentials through decryption layer (with legacy plaintext fallback)
     const creds = readCredentials(conn.credentials);
-    if (!creds) {
-      // Fall back to plaintext columns for legacy data
-      if (!conn.access_token) {
-        return NextResponse.json(
-          { error: "No valid credentials found" },
-          { status: 500 }
-        );
-      }
-    }
+    const legacyAccessToken = conn.access_token as string | undefined;
+    const legacyRefreshToken = conn.refresh_token as string | undefined;
 
-    let accessToken = creds?.access_token || conn.access_token;
-    const refreshToken = creds?.refresh_token || conn.refresh_token;
+    let accessToken = creds?.access_token || legacyAccessToken;
+    const refreshToken = creds?.refresh_token || legacyRefreshToken;
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { error: "No valid credentials found" },
+        { status: 500 }
+      );
+    }
     const tokenExpiresAt = conn.token_expires_at
       ? new Date(conn.token_expires_at).getTime()
       : 0;
