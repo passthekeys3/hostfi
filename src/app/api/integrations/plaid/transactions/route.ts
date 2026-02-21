@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
           vendor: t.merchant_name || t.name || null,
           amount: Math.abs(t.amount),
           date: t.date,
-          source: 'csv_import' as const,
+          source: 'plaid' as const,
           status: 'paid' as const,
           notes: `Imported from Plaid (${t.transaction_id})`,
         }));
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
           description: t.name || t.merchant_name || 'Bank deposit',
           amount: Math.abs(t.amount),
           date: t.date,
-          source: 'csv_import' as const,
+          source: 'plaid' as const,
           notes: `Imported from Plaid (${t.transaction_id})`,
         }));
         await supabase.from('revenue').insert(revenueRows);
