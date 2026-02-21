@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
         break;
       }
       default:
-        console.log(`Unhandled Plaid webhook type: ${webhook_type}`);
+        console.info(`Unhandled Plaid webhook type: ${webhook_type}`);
     }
 
     return NextResponse.json({ received: true });

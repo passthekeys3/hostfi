@@ -12,7 +12,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
   const serverToken = process.env.POSTMARK_SERVER_TOKEN;
 
   if (!serverToken) {
-    console.log('[Email] No POSTMARK_SERVER_TOKEN — skipping email send');
+    console.warn('[Email] No POSTMARK_SERVER_TOKEN — skipping email send');
     return false;
   }
 

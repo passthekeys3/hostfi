@@ -32,7 +32,7 @@ export async function sendSlackAlert(
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !serviceKey) {
-    console.log('[sendSlackAlert] Supabase not configured');
+    console.warn('[sendSlackAlert] Supabase not configured');
     return;
   }
 
@@ -54,7 +54,7 @@ export async function sendSlackAlert(
 
   const metadata = connection.metadata as SlackConfig | null;
   if (!metadata) {
-    console.log('[sendSlackAlert] No Slack metadata for user:', userId);
+    console.warn('[sendSlackAlert] No Slack metadata for user:', userId);
     return;
   }
 
@@ -68,7 +68,7 @@ export async function sendSlackAlert(
   // Get the alert channel
   const channelId = metadata.alert_channel_id;
   if (!channelId) {
-    console.log('[sendSlackAlert] No alert channel configured for user:', userId);
+    console.warn('[sendSlackAlert] No alert channel configured for user:', userId);
     return;
   }
 

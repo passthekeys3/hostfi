@@ -23,7 +23,7 @@ export async function triggerAlert(
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   
   if (!serviceKey) {
-    console.log('[triggerAlert] No service key configured — skipping');
+    console.warn('[triggerAlert] No service key configured — skipping');
     return;
   }
 

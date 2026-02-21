@@ -225,7 +225,14 @@ async function processSpendingQuery(
     expense_count: expenseCount,
     top_category: topCategory,
     top_property: topProperty,
-    anomalies: 0, // TODO: could query anomaly_logs table
+    anomalies: await (async () => {
+      const { count } = await supabase
+        .from('anomaly_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', connection.userId)
+        .gte('created_at', sevenDaysAgo.toISOString());
+      return count || 0;
+    })(),
     period,
   });
 

@@ -222,8 +222,29 @@ export async function getRevenueByPropertyId(propertyId: string): Promise<Revenu
 // ============================================================================
 
 export async function getAlerts(userId?: string): Promise<Alert[]> {
-  // TODO: Implement real alerts from database
-  return [];
+  try {
+    const { createClient } = await import('@/lib/supabase/client');
+    const supabase = createClient();
+    if (!supabase) return [];
+    const { data } = await supabase
+      .from('anomaly_logs')
+      .select('id, anomaly_type, message, severity, status, created_at, property_id, expense_id')
+      .order('created_at', { ascending: false })
+      .limit(20);
+    if (!data) return [];
+    return data.map(row => ({
+      id: row.id,
+      type: 'unusual_amount' as const,
+      title: `Expense anomaly detected`,
+      description: row.message || 'Unusual expense amount',
+      severity: row.severity === 'critical' ? 'critical' as const : row.severity === 'high' ? 'warning' as const : 'info' as const,
+      read: row.status === 'dismissed',
+      created_at: row.created_at,
+      property_id: row.property_id,
+    }));
+  } catch {
+    return [];
+  }
 }
 
 export async function getAnomalies(userId?: string): Promise<AnomalyResult[]> {

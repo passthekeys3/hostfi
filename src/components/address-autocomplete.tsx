@@ -96,8 +96,7 @@ export function AddressAutocomplete({ onSelect, defaultValue = "", className }: 
         includedPrimaryTypes: ["street_address", "subpremise", "premise"],
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mapped: Suggestion[] = (results || []).slice(0, 5).map((s: any) => {
+      const mapped: Suggestion[] = (results || []).slice(0, 5).map((s: google.maps.places.AutocompleteSuggestion) => {
         const prediction = s.placePrediction;
         const mainText = prediction?.mainText?.text || "";
         const secondaryText = prediction?.secondaryText?.text || "";

@@ -173,7 +173,7 @@ async function connectFetch<T>(
   if (res.status === 429) {
     const retryAfter = parseInt(res.headers.get('retry-after') || '5', 10);
     const waitMs = Math.min(retryAfter * 1000, 60000); // Cap at 60s
-    console.log(`Hospitable Connect rate limited, waiting ${waitMs}ms...`);
+    console.info(`Hospitable Connect rate limited, waiting ${waitMs}ms...`);
     await new Promise(resolve => setTimeout(resolve, waitMs));
     
     // Single retry after backoff

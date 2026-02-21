@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { buildUserContext } from '@/lib/query-context';
 import { authenticateRequest } from '@/lib/auth';
-import { createRateLimiter } from '@/lib/rate-limit';
+import { createRateLimiter, createAsyncRateLimiter } from '@/lib/rate-limit';
 
 const client = new Anthropic();
 
 // Guardrails: rate limits
-const perMinuteLimit = createRateLimiter('ask-ai-minute', 10, 60_000);       // 10 req/min per IP
-const perDayLimit = createRateLimiter('ask-ai-daily', 50, 24 * 60 * 60_000); // 50 req/day per IP
+const perMinuteLimit = createRateLimiter('ask-ai-minute', 10, 60_000);                  // 10 req/min per IP
+const perDayLimit = createAsyncRateLimiter('ask-ai-daily', 50, 24 * 60 * 60_000);       // 50 req/day per IP (Supabase-backed)
 
 // Guardrails: input constraints
 const MAX_QUESTION_LENGTH = 500;
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     if (perMinuteLimit(ip)) {
       return NextResponse.json({ error: 'Too many requests. Please wait a moment.' }, { status: 429 });
     }
-    if (perDayLimit(ip)) {
+    if (await perDayLimit(ip)) {
       return NextResponse.json({ 
         error: 'You\'ve reached the daily limit of 50 questions. Resets at midnight.',
       }, { status: 429 });

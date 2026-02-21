@@ -17,15 +17,9 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     }));
 
-    // TODO: Add specific handlers for different webhook events
-    // Common events might include:
-    // - channel.connected
-    // - channel.disconnected
-    // - reservation.created
-    // - reservation.updated
-    // - reservation.cancelled
-    // - listing.created
-    // - listing.updated
+    // Hospitable Connect webhook events are handled by the main Hospitable webhook handler
+    // at /api/integrations/hospitable/webhook. This endpoint exists for Connect-specific
+    // events (channel.connected, channel.disconnected) which are logged above.
 
     // Acknowledge receipt
     return NextResponse.json({ received: true });

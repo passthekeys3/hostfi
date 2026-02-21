@@ -83,7 +83,7 @@ export async function POST(req: Request) {
     }
 
     // If no Resend key, just return success (for development)
-    console.log(`[DEV] Would send test email to: ${billingEmail}`);
+    console.info(`[DEV] Would send test email to: ${billingEmail}`);
     return NextResponse.json({ success: true, message: 'Test email simulated (no email service configured)' });
   } catch (err) {
     console.error('Test email error:', err);

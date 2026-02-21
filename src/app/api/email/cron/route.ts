@@ -199,7 +199,16 @@ async function handleCron(type: string) {
             expenseCount: weekExpenses.length,
             topCategory: topCategory?.[0] || 'N/A',
             topCategoryAmount: topCategory?.[1] || 0,
-            anomalies: [], // TODO: pull from anomaly detection engine
+            anomalies: await (async () => {
+              const { data: anomalyRows } = await supabase
+                .from('anomaly_logs')
+                .select('message')
+                .eq('user_id', profile.id)
+                .gte('created_at', oneWeekAgo.toISOString())
+                .order('created_at', { ascending: false })
+                .limit(5);
+              return (anomalyRows || []).map(r => r.message as string).filter(Boolean);
+            })()
           });
 
           await sendEmail({

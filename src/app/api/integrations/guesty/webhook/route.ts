@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { createHmac } from 'crypto';
 import {
   mapListingToProperty,
   mapReservationToRevenue,
@@ -16,19 +17,27 @@ function getServiceClient() {
 }
 
 /**
- * Verify webhook authenticity using Guesty's webhook secret
+ * Verify webhook authenticity using Guesty's webhook secret (HMAC SHA256)
  * Guesty sends signature in X-Guesty-Signature header
  */
-function verifyWebhook(request: NextRequest): boolean {
+function verifyWebhook(rawBody: string, signature: string | null): boolean {
   const secret = process.env.GUESTY_WEBHOOK_SECRET;
-  if (!secret) return true; // No secret configured, allow all (dev mode)
-  
-  const signature = request.headers.get('x-guesty-signature');
-  if (!signature) return false;
-  
-  // In production, verify signature
-  // Guesty uses HMAC-SHA256
-  return true; // TODO: Implement proper HMAC verification
+  if (!secret) {
+    console.warn('Guesty webhook: GUESTY_WEBHOOK_SECRET not set, skipping signature verification');
+    return true;
+  }
+  if (!signature) {
+    console.error('Guesty webhook: missing X-Guesty-Signature header');
+    return false;
+  }
+  const expected = createHmac('sha256', secret).update(rawBody).digest('hex');
+  // Constant-time comparison
+  if (expected.length !== signature.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < expected.length; i++) {
+    mismatch |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
+  }
+  return mismatch === 0;
 }
 
 /**
@@ -45,11 +54,15 @@ function verifyWebhook(request: NextRequest): boolean {
  */
 export async function POST(request: NextRequest) {
   try {
-    if (!verifyWebhook(request)) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const rawBody = await request.text();
+    const signature = request.headers.get('x-guesty-signature');
+
+    if (!verifyWebhook(rawBody, signature)) {
+      console.error('Guesty webhook: invalid signature');
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body = JSON.parse(rawBody);
     const supabase = getServiceClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Not configured' }, { status: 500 });

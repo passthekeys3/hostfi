@@ -20,7 +20,7 @@ async function sendViaPostmark(to: string, subject: string, html: string): Promi
   const fromEmail = process.env.POSTMARK_FROM_EMAIL || 'alerts@hostfi.ai';
 
   if (!serverToken) {
-    console.log('[Alerts] No POSTMARK_SERVER_TOKEN — skipping send');
+    console.warn('[Alerts] No POSTMARK_SERVER_TOKEN — skipping send');
     return false;
   }
 
