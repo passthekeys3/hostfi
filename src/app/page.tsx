@@ -386,9 +386,10 @@ export default function LandingPage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-14">
                 {[
                   { name: "Hospitable", logo: "/logos/hospitable.svg", status: "live" },
-                  { name: "OwnerRez", logo: "/logos/ownerrez.png", status: "live" },
-                  { name: "Hostaway", logo: "/logos/hostaway.png", status: "soon" },
-                  { name: "Guesty", logo: "/logos/guesty.png", status: "soon" },
+                  { name: "Hospitable Connect", logo: "/logos/hospitable-connect.svg", status: "live" },
+                  { name: "OwnerRez", logo: "/logos/ownerrez.svg", status: "live" },
+                  { name: "Hostaway", logo: "/logos/hostaway.svg", status: "soon" },
+                  { name: "Guesty", logo: "/logos/guesty.svg", status: "soon" },
                   { name: "Lodgify", logo: "/logos/lodgify.svg", status: "soon" },
                 ].map((pms, i) => (
                   <div key={i} className="flex flex-col items-center gap-3 p-5 rounded-xl border border-gray-100 bg-gray-50 hover:border-teal-200 hover:bg-teal-50/30 transition-colors">
@@ -414,7 +415,12 @@ export default function LandingPage() {
                   { name: "Google Drive", logo: "/logos/googledrive.svg", desc: "Receipt backup" },
                   { name: "Slack", logo: "/logos/slack.svg", desc: "Notifications" },
                   { name: "Zapier", logo: "/logos/zapier.svg", desc: "Automations" },
+                  { name: "Make", logo: "/logos/make.svg", desc: "Automations" },
+                  { name: "Dropbox", logo: "/logos/dropbox.svg", desc: "File storage" },
                   { name: "QuickBooks", logo: "/logos/quickbooks.svg", desc: "Coming soon" },
+                  { name: "Xero", logo: "/logos/xero.svg", desc: "Coming soon" },
+                  { name: "Melio", logo: "/logos/melio.svg", desc: "Coming soon" },
+                  { name: "Microsoft Teams", logo: "/logos/teams.svg", desc: "Coming soon" },
                 ].map((integration, i) => (
                   <div key={i} className="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 bg-gray-50 text-center">
                     <div className="w-8 h-8 relative">
