@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
     if (!tokenRes.ok) {
       const err = await tokenRes.text();
       console.error('Hospitable token exchange failed:', tokenRes.status, err);
-      return NextResponse.redirect(`${redirectBase}?hospitable=error&reason=token_exchange&detail=${encodeURIComponent(err.substring(0, 200))}`);
+      return NextResponse.redirect(`${redirectBase}?hospitable=error&reason=token_exchange`);
     }
 
     const tokenData = await tokenRes.json();

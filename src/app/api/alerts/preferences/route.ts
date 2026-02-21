@@ -73,8 +73,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'recipients must be an array' }, { status: 400 });
     }
 
-    if (!alert_types || typeof alert_types !== 'object') {
+    if (!alert_types || typeof alert_types !== 'object' || Array.isArray(alert_types)) {
       return NextResponse.json({ error: 'alert_types must be an object' }, { status: 400 });
+    }
+
+    // Only allow known alert type keys with boolean values
+    const VALID_ALERT_TYPES = ['overdue', 'due_soon', 'missing_bill', 'anomaly', 'new_parsed', 'weekly_digest', 'monthly_report'];
+    const sanitizedAlertTypes: Record<string, boolean> = {};
+    for (const key of VALID_ALERT_TYPES) {
+      if (key in alert_types) {
+        sanitizedAlertTypes[key] = Boolean(alert_types[key as keyof typeof alert_types]);
+      }
     }
 
     // Validate email formats
@@ -89,7 +98,7 @@ export async function POST(request: NextRequest) {
       .upsert({
         user_id: auth.userId,
         recipients: validRecipients,
-        alert_types,
+        alert_types: sanitizedAlertTypes,
         active: active ?? true,
         updated_at: new Date().toISOString(),
       }, {

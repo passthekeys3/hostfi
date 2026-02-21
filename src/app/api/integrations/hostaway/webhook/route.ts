@@ -68,11 +68,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not configured' }, { status: 500 });
     }
 
-    const { event, data, account_id } = body as {
+    const { event, data, account_id, timestamp } = body as {
       event: string;
       data: Record<string, unknown>;
       account_id?: number;
+      timestamp?: string;
     };
+
+    // Reject stale webhooks (older than 5 minutes) to prevent replay attacks
+    if (timestamp) {
+      const webhookTime = new Date(timestamp).getTime();
+      if (Number.isFinite(webhookTime) && Math.abs(Date.now() - webhookTime) > 5 * 60 * 1000) {
+        console.warn('Hostaway webhook: stale timestamp, possible replay attack');
+        return NextResponse.json({ error: 'Stale webhook' }, { status: 401 });
+      }
+    }
 
     console.info(`Hostaway webhook: event=${event} account_id=${account_id}`);
 

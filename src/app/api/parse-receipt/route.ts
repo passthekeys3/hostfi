@@ -86,8 +86,7 @@ export async function POST(request: NextRequest) {
     const result = await parseReceipt(imageBase64, validatedMimeType);
     return NextResponse.json(result);
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unknown error";
+    console.error('parse-receipt error:', error);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
