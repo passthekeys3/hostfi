@@ -7,6 +7,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { sendSlackMessage, buildAlertBlocks, buildWeeklyDigestBlocks } from './slack';
+import { readCredentials } from '@/lib/crypto';
 import type { SlackConfig } from './types';
 
 type AlertType = 'anomaly' | 'bill_due' | 'bill_overdue' | 'weekly_digest' | 'monthly_report';
@@ -41,7 +42,7 @@ export async function sendSlackAlert(
   // Get user's Slack connection
   const { data: connection, error } = await supabase
     .from('integration_connections')
-    .select('access_token, metadata')
+    .select('access_token, credentials, metadata')
     .eq('user_id', userId)
     .eq('provider', 'slack')
     .eq('active', true)
@@ -51,6 +52,11 @@ export async function sendSlackAlert(
     // User doesn't have Slack connected — silent return
     return;
   }
+
+  // Read token through decryption layer
+  const creds = readCredentials(connection.credentials);
+  const slackToken = creds?.access_token || connection.access_token;
+  if (!slackToken) return;
 
   const metadata = connection.metadata as SlackConfig | null;
   if (!metadata) {
@@ -183,7 +189,7 @@ export async function sendSlackAlert(
   }
 
   try {
-    await sendSlackMessage(connection.access_token, channelId, text, blocks);
+    await sendSlackMessage(slackToken, channelId, text, blocks);
   } catch (err) {
     console.error('[sendSlackAlert] Failed to send Slack message:', err);
   }

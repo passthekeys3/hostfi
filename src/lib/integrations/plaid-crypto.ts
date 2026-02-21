@@ -13,10 +13,9 @@ export function decryptPlaidToken(storedToken: string): string {
   // Try to decrypt — if it fails, assume plaintext
   try {
     const decrypted = readCredentials(storedToken);
-    return decrypted.token || storedToken;
-  } catch (error) {
+    return decrypted?.token || storedToken;
+  } catch {
     // Decryption failed — assume plaintext token
-    console.error('Plaid token decryption failed, assuming plaintext:', error);
     return storedToken;
   }
 }

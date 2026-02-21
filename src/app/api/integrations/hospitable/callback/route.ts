@@ -36,6 +36,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${redirectBase}?hospitable=error&reason=missing_params`);
     }
 
+    // CSRF validation: compare state param with cookie
+    const cookieState = request.cookies.get('oauth_state')?.value;
+    if (!cookieState || cookieState !== stateParam) {
+      console.error('Hospitable OAuth CSRF validation failed: state mismatch');
+      return NextResponse.redirect(`${redirectBase}?hospitable=error&reason=csrf_validation_failed`);
+    }
+
     // Decode state
     let state: { userId: string; csrf: string; ts: number };
     try {
@@ -133,7 +140,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${redirectBase}?hospitable=error&reason=db_error`);
     }
 
-    return NextResponse.redirect(`${redirectBase}?hospitable=connected`);
+    const response = NextResponse.redirect(`${redirectBase}?hospitable=connected`);
+    response.cookies.delete('oauth_state');
+    return response;
   } catch (error) {
     console.error('Hospitable callback error:', error);
     return NextResponse.redirect(`${redirectBase}?hospitable=error`);

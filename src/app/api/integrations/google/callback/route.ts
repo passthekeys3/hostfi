@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { exchangeGoogleCode, createSpreadsheet, appendRows } from '@/lib/integrations/google';
 import { encryptCredentials } from '@/lib/crypto';
+import { authenticateRequest } from '@/lib/auth';
 
 /**
  * GET /api/integrations/google/callback — Google OAuth callback
@@ -24,6 +25,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // CSRF validation: compare state param with cookie
+    const cookieState = request.cookies.get('oauth_state')?.value;
+    if (!cookieState || cookieState !== state) {
+      console.error('Google OAuth CSRF validation failed: state mismatch');
+      return NextResponse.redirect(
+        new URL('/dashboard/integrations?error=csrf_validation_failed', request.url)
+      );
+    }
+
     // Decode state
     let stateData: { userId: string; nonce: string };
     try {
@@ -32,6 +42,22 @@ export async function GET(request: NextRequest) {
       console.error('Invalid Google OAuth state:', error);
       return NextResponse.redirect(
         new URL('/dashboard/integrations?error=invalid_state', request.url)
+      );
+    }
+
+    // Session verification: ensure the current user matches who started the flow
+    try {
+      const auth = await authenticateRequest();
+      if (auth.userId !== stateData.userId) {
+        console.error('Google OAuth session mismatch: expected', stateData.userId, 'got', auth.userId);
+        return NextResponse.redirect(
+          new URL('/dashboard/integrations?error=session_mismatch', request.url)
+        );
+      }
+    } catch {
+      // If auth fails, redirect to login
+      return NextResponse.redirect(
+        new URL('/login?returnTo=/dashboard/integrations', request.url)
       );
     }
 
@@ -91,9 +117,12 @@ export async function GET(request: NextRequest) {
       ]);
     }
 
-    return NextResponse.redirect(
+    // Clear the OAuth state cookie
+    const response = NextResponse.redirect(
       new URL('/dashboard/integrations?connected=google_sheets&connected=google_drive', request.url)
     );
+    response.cookies.delete('oauth_state');
+    return response;
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     console.error('Google OAuth callback error:', message);

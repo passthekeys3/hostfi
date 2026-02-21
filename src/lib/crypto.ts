@@ -79,18 +79,27 @@ export function isEncrypted(value: unknown): boolean {
  * Safely read credentials — handles both encrypted (string) and legacy plaintext (object) formats.
  * This allows gradual migration without breaking existing connections.
  */
-export function readCredentials(credentials: unknown): Record<string, string> {
-  if (!credentials) throw new Error('No credentials');
+export function readCredentials(credentials: unknown): Record<string, string> | null {
+  if (!credentials) {
+    console.error('[readCredentials] No credentials provided');
+    return null;
+  }
   
-  // Legacy: plaintext JSON object stored directly
-  if (typeof credentials === 'object') {
-    return credentials as Record<string, string>;
-  }
+  try {
+    // Legacy: plaintext JSON object stored directly
+    if (typeof credentials === 'object') {
+      return credentials as Record<string, string>;
+    }
 
-  // New: encrypted base64 string
-  if (typeof credentials === 'string') {
-    return decryptCredentials(credentials);
-  }
+    // New: encrypted base64 string
+    if (typeof credentials === 'string') {
+      return decryptCredentials(credentials);
+    }
 
-  throw new Error('Unknown credentials format');
+    console.error('[readCredentials] Unknown credentials format:', typeof credentials);
+    return null;
+  } catch (error) {
+    console.error('[readCredentials] Decryption failed:', error);
+    return null;
+  }
 }

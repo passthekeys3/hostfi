@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { sendSlackMessage, buildWeeklyDigestBlocks, buildAlertBlocks } from '@/lib/integrations/slack';
+import { readCredentials } from '@/lib/crypto';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Supabase = SupabaseClient<any>;
@@ -36,13 +37,16 @@ async function getConnection(teamId: string) {
   const supabase = createClient(supabaseUrl, serviceKey);
   const { data } = await supabase
     .from('integration_connections')
-    .select('access_token, user_id')
+    .select('access_token, credentials, user_id')
     .eq('provider', 'slack')
     .eq('active', true)
     .filter('metadata->>team_id', 'eq', teamId)
     .single();
 
-  return data ? { token: data.access_token, userId: data.user_id } : null;
+  if (!data) return null;
+  const creds = readCredentials(data.credentials);
+  const token = creds?.access_token || data.access_token;
+  return { token, userId: data.user_id };
 }
 
 /**

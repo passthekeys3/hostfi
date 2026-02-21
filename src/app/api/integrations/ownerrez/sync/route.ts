@@ -38,7 +38,11 @@ export async function POST(request: NextRequest) {
     }
 
     const { readCredentials } = await import('@/lib/crypto');
-    const auth = authFromCredentials(readCredentials(connection.credentials));
+    const rawCreds = readCredentials(connection.credentials);
+    if (!rawCreds) {
+      return NextResponse.json({ error: 'Failed to read OwnerRez credentials' }, { status: 500 });
+    }
+    const auth = authFromCredentials(rawCreds);
 
     // Get user's plan for property limits
     const { data: profile } = await supabase

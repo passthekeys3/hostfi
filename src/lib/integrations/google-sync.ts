@@ -5,6 +5,7 @@
 
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { appendRows, refreshGoogleToken, uploadToDrive, createDriveFolder } from './google';
+import { readCredentials, encryptCredentials } from '@/lib/crypto';
 
 type GoogleProvider = 'google_sheets' | 'google_drive';
 
@@ -59,7 +60,10 @@ export async function getGoogleConnection(
 
   if (error || !connection) return null;
 
-  let accessToken = connection.access_token;
+  // Read credentials through decryption layer
+  const creds = readCredentials(connection.credentials);
+  let accessToken = creds?.access_token || connection.access_token;
+  const refreshToken = creds?.refresh_token || connection.refresh_token;
   const metadata = (connection.metadata || {}) as Record<string, unknown>;
   const tokenExpiresAt = connection.token_expires_at
     ? new Date(connection.token_expires_at).getTime()
@@ -68,15 +72,21 @@ export async function getGoogleConnection(
   // Refresh token if expired or expiring within 1 minute
   if (tokenExpiresAt && Date.now() > tokenExpiresAt - 60_000) {
     try {
-      const refreshed = await refreshGoogleToken(connection.refresh_token);
+      const refreshed = await refreshGoogleToken(refreshToken);
       accessToken = refreshed.access_token;
 
-      // Update stored token
+      // Update stored token (both plaintext + encrypted)
       const newExpiresAt = new Date(Date.now() + refreshed.expires_in * 1000).toISOString();
+      const newCreds = { access_token: refreshed.access_token, refresh_token: refreshToken };
+      const encryptedCreds = process.env.CREDENTIALS_ENCRYPTION_KEY
+        ? encryptCredentials(newCreds)
+        : newCreds;
+
       await supabase
         .from('integration_connections')
         .update({
           access_token: refreshed.access_token,
+          credentials: encryptedCreds,
           token_expires_at: newExpiresAt,
         })
         .eq('user_id', userId)
@@ -90,7 +100,7 @@ export async function getGoogleConnection(
 
   return {
     accessToken,
-    refreshToken: connection.refresh_token,
+    refreshToken,
     metadata,
   };
 }

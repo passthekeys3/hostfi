@@ -18,15 +18,27 @@ export async function GET(request: NextRequest) {
     }
 
     // State token encodes user ID + CSRF protection
+    const nonce = crypto.randomBytes(16).toString('hex');
     const state = Buffer.from(
       JSON.stringify({
         userId: auth.userId,
-        nonce: crypto.randomBytes(16).toString('hex'),
+        nonce,
       })
     ).toString('base64url');
 
     const url = getGoogleAuthUrl(state);
-    return NextResponse.redirect(url);
+    const response = NextResponse.redirect(url);
+
+    // Store state in HttpOnly cookie for CSRF validation in callback
+    response.cookies.set('oauth_state', state, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 600, // 10 minutes
+    });
+
+    return response;
   } catch (error) {
     if (error instanceof NextResponse) return error;
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

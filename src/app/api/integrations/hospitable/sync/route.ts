@@ -61,6 +61,9 @@ export async function POST(request: NextRequest) {
 
     const { readCredentials } = await import('@/lib/crypto');
     const rawCredentials = readCredentials(connection.credentials);
+    if (!rawCredentials) {
+      return NextResponse.json({ error: 'Failed to read Hospitable credentials' }, { status: 500 });
+    }
     let credentials = authFromCredentials(rawCredentials);
 
     // Get valid access token (auto-refresh if needed)

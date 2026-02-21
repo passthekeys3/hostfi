@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { authenticateRequest } from '@/lib/auth';
 import { createClient } from '@supabase/supabase-js';
+import { readCredentials } from '@/lib/crypto';
 
 /**
  * GET /api/integrations/slack/channels — List Slack channels the bot can access
@@ -18,7 +19,7 @@ export async function GET() {
     const supabase = createClient(supabaseUrl, serviceKey);
     const { data: connection } = await supabase
       .from('integration_connections')
-      .select('access_token')
+      .select('access_token, credentials')
       .eq('user_id', auth.userId)
       .eq('provider', 'slack')
       .eq('active', true)
@@ -28,9 +29,13 @@ export async function GET() {
       return NextResponse.json({ error: 'Slack not connected' }, { status: 404 });
     }
 
+    // Read token through decryption layer
+    const creds = readCredentials(connection.credentials);
+    const slackToken = creds?.access_token || connection.access_token;
+
     // Fetch channels from Slack API
     const res = await fetch('https://slack.com/api/conversations.list?types=public_channel&limit=200&exclude_archived=true', {
-      headers: { Authorization: `Bearer ${connection.access_token}` },
+      headers: { Authorization: `Bearer ${slackToken}` },
     });
 
     const data = await res.json();

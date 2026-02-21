@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import { handleSlackFileUpload, buildWeeklyDigestBlocks, sendSlackMessage } from '@/lib/integrations/slack';
+import { readCredentials } from '@/lib/crypto';
 
 /**
  * Get bot token from Supabase by Slack team ID
@@ -19,7 +20,7 @@ async function getBotTokenByTeam(teamId: string): Promise<{ token: string; userI
   
   const { data, error } = await supabase
     .from('integration_connections')
-    .select('access_token, user_id')
+    .select('access_token, credentials, user_id')
     .eq('provider', 'slack')
     .eq('active', true)
     .filter('metadata->>team_id', 'eq', teamId)
@@ -30,7 +31,9 @@ async function getBotTokenByTeam(teamId: string): Promise<{ token: string; userI
     return null;
   }
   
-  return { token: data.access_token, userId: data.user_id };
+  const creds = readCredentials(data.credentials);
+  const token = creds?.access_token || data.access_token;
+  return { token, userId: data.user_id };
 }
 
 /**

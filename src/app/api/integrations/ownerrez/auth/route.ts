@@ -34,7 +34,18 @@ export async function GET() {
     authUrl.searchParams.set('redirect_uri', redirectUri);
     authUrl.searchParams.set('state', state);
 
-    return NextResponse.json({ url: authUrl.toString() });
+    const response = NextResponse.json({ url: authUrl.toString() });
+
+    // Store state in HttpOnly cookie for CSRF validation in callback
+    response.cookies.set('oauth_state', state, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 900, // 15 minutes
+    });
+
+    return response;
   } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('OwnerRez auth error:', error);

@@ -35,7 +35,18 @@ export async function GET() {
     authUrl.searchParams.set('scope', 'property:read reservation:read financials:read');
     authUrl.searchParams.set('state', state);
 
-    return NextResponse.json({ url: authUrl.toString() });
+    const response = NextResponse.json({ url: authUrl.toString() });
+
+    // Store state in HttpOnly cookie for CSRF validation in callback
+    response.cookies.set('oauth_state', state, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 900, // 15 minutes (matches state.ts expiry)
+    });
+
+    return response;
   } catch (error) {
     if (error instanceof NextResponse) return error;
     console.error('Hospitable auth error:', error);

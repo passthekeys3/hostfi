@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { exchangeSlackCode } from '@/lib/integrations/slack';
 import { encryptCredentials } from '@/lib/crypto';
+import { authenticateRequest } from '@/lib/auth';
 
 /**
  * GET /api/integrations/slack/callback — Slack OAuth callback
@@ -23,6 +24,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // CSRF validation: compare state param with cookie
+    const cookieState = request.cookies.get('oauth_state')?.value;
+    if (!cookieState || cookieState !== state) {
+      console.error('Slack OAuth CSRF validation failed: state mismatch');
+      return NextResponse.redirect(
+        new URL('/dashboard/integrations?error=csrf_validation_failed', request.url)
+      );
+    }
+
     let stateData: { userId: string; nonce: string };
     try {
       stateData = JSON.parse(Buffer.from(state, 'base64url').toString());
@@ -30,6 +40,21 @@ export async function GET(request: NextRequest) {
       console.error('Invalid Slack OAuth state:', error);
       return NextResponse.redirect(
         new URL('/dashboard/integrations?error=invalid_state', request.url)
+      );
+    }
+
+    // Session verification: ensure the current user matches who started the flow
+    try {
+      const auth = await authenticateRequest();
+      if (auth.userId !== stateData.userId) {
+        console.error('Slack OAuth session mismatch: expected', stateData.userId, 'got', auth.userId);
+        return NextResponse.redirect(
+          new URL('/dashboard/integrations?error=session_mismatch', request.url)
+        );
+      }
+    } catch {
+      return NextResponse.redirect(
+        new URL('/login?returnTo=/dashboard/integrations', request.url)
       );
     }
 
@@ -59,12 +84,12 @@ export async function GET(request: NextRequest) {
       }, { onConflict: 'user_id,provider' });
     }
 
-    return NextResponse.redirect(
-      new URL(
-        `/dashboard/integrations?connected=slack`,
-        request.url
-      )
+    // Clear the OAuth state cookie
+    const response = NextResponse.redirect(
+      new URL('/dashboard/integrations?connected=slack', request.url)
     );
+    response.cookies.delete('oauth_state');
+    return response;
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     console.error('Slack OAuth callback error:', message);

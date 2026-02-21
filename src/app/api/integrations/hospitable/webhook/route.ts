@@ -222,9 +222,11 @@ export async function POST(request: NextRequest) {
               .single();
 
             if (conn?.credentials) {
-              const creds = typeof conn.credentials === 'string'
-                ? authFromCredentials(readCredentials(conn.credentials))
-                : authFromCredentials(conn.credentials);
+              const rawCreds = typeof conn.credentials === 'string'
+                ? readCredentials(conn.credentials)
+                : conn.credentials;
+              if (!rawCreds) throw new Error('Failed to decrypt credentials');
+              const creds = authFromCredentials(rawCreds);
               const { auth: hospAuth } = await getAccessToken(creds);
               const fullRes = await fetchReservation(hospAuth, hospReservationId);
               // Preserve property_id since the single-reservation endpoint may not include it
