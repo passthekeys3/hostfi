@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateRequest } from '@/lib/auth';
 import { createClient } from '@supabase/supabase-js';
+import { canAccessFeature, type Plan } from '@/lib/feature-gates';
 import {
   createCustomer,
   getCustomer,
@@ -35,6 +36,17 @@ export async function POST(request: NextRequest) {
     const supabase = getServiceClient();
     if (!supabase) {
       return NextResponse.json({ error: 'Not configured' }, { status: 500 });
+    }
+
+    // Server-side plan check: Integrations require Pro plan
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('plan')
+      .eq('id', session.userId)
+      .single();
+    const userPlan = (profile?.plan || 'free') as Plan;
+    if (!canAccessFeature(userPlan, 'integrations')) {
+      return NextResponse.json({ error: 'Integrations require a Pro plan.' }, { status: 403 });
     }
 
     // Check if already connected

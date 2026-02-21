@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateRequest } from '@/lib/auth';
 import { getSlackAuthUrl } from '@/lib/integrations/slack';
+import { canAccessFeature, type Plan } from '@/lib/feature-gates';
+import { getServiceClient } from '@/lib/supabase/service';
 import crypto from 'crypto';
 
 /**
@@ -9,6 +11,20 @@ import crypto from 'crypto';
 export async function GET(request: NextRequest) {
   try {
     const auth = await authenticateRequest();
+
+    // Server-side plan check: Slack requires Business plan
+    const supabase = getServiceClient();
+    if (supabase) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('plan')
+        .eq('id', auth.userId)
+        .single();
+      const userPlan = (profile?.plan || 'free') as Plan;
+      if (!canAccessFeature(userPlan, 'slack')) {
+        return NextResponse.json({ error: 'Slack integration requires a Business plan.' }, { status: 403 });
+      }
+    }
 
     if (!process.env.SLACK_CLIENT_ID) {
       return NextResponse.json({

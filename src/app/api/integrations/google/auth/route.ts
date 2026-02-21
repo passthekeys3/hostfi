@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateRequest } from '@/lib/auth';
 import { getGoogleAuthUrl } from '@/lib/integrations/google';
+import { canAccessFeature, type Plan } from '@/lib/feature-gates';
+import { getServiceClient } from '@/lib/supabase/service';
 import crypto from 'crypto';
 
 /**
@@ -10,6 +12,20 @@ import crypto from 'crypto';
 export async function GET(request: NextRequest) {
   try {
     const auth = await authenticateRequest();
+
+    // Server-side plan check: Integrations require Pro plan
+    const supabase = getServiceClient();
+    if (supabase) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('plan')
+        .eq('id', auth.userId)
+        .single();
+      const userPlan = (profile?.plan || 'free') as Plan;
+      if (!canAccessFeature(userPlan, 'integrations')) {
+        return NextResponse.json({ error: 'Integrations require a Pro plan.' }, { status: 403 });
+      }
+    }
 
     if (!process.env.GOOGLE_CLIENT_ID) {
       return NextResponse.json({

@@ -40,9 +40,9 @@ export const ARBITRAGE_SCHEDULE_E_LINES: ScheduleELine[] = [
   { line: 9, description: 'Insurance', categories: ['insurance'], arbitrageOnly: true },
   { line: 10, description: 'Legal and professional fees', categories: [], arbitrageOnly: true },
   { line: 15, description: 'Supplies', categories: ['supplies'], arbitrageOnly: true },
+  { line: 14, description: 'Repairs', categories: ['maintenance'], arbitrageOnly: true },
   { line: 17, description: 'Utilities', categories: ['utility'], arbitrageOnly: true },
-  { line: 14, description: 'Rent paid to landlord', categories: ['rent', 'mortgage'], arbitrageOnly: true },
-  { line: 19, description: 'Other (management, subscriptions)', categories: ['management', 'subscription', 'taxes', 'other'], arbitrageOnly: true },
+  { line: 19, description: 'Other (rent, management, subscriptions)', categories: ['rent', 'mortgage', 'management', 'subscription', 'taxes', 'improvement', 'other'], arbitrageOnly: true },
 ];
 
 export function getScheduleELinesForPropertyType(propertyType: PropertyType): ScheduleELine[] {

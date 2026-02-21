@@ -97,6 +97,11 @@ export async function POST(request: NextRequest) {
           updateData.plan = plan;
         }
 
+        // Downgrade to free on unpaid/canceled status (subscription is effectively dead)
+        if (status === 'unpaid' || status === 'canceled') {
+          updateData.plan = 'free';
+        }
+
         const { error } = await supabase
           .from('profiles')
           .update(updateData)

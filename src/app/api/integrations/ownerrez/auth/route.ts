@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { authenticateRequest } from '@/lib/auth';
+import { canAccessFeature, type Plan } from '@/lib/feature-gates';
+import { getServiceClient } from '@/lib/supabase/service';
 import crypto from 'crypto';
 
 /**
@@ -11,6 +13,20 @@ export async function GET() {
     const auth = await authenticateRequest();
     if (!auth.authenticated) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Server-side plan check: Integrations require Pro plan
+    const supabase = getServiceClient();
+    if (supabase) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('plan')
+        .eq('id', auth.userId)
+        .single();
+      const userPlan = (profile?.plan || 'free') as Plan;
+      if (!canAccessFeature(userPlan, 'integrations')) {
+        return NextResponse.json({ error: 'Integrations require a Pro plan.' }, { status: 403 });
+      }
     }
 
     const clientId = process.env.OWNERREZ_OAUTH_CLIENT_ID;

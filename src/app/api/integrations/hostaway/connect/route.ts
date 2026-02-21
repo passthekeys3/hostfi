@@ -3,6 +3,7 @@ import { authenticateRequest } from '@/lib/auth';
 import { createClient } from '@supabase/supabase-js';
 import { getHostawayToken } from '@/lib/integrations/hostaway';
 import { encryptCredentials } from '@/lib/crypto';
+import { canAccessFeature, type Plan } from '@/lib/feature-gates';
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -18,6 +19,17 @@ export async function POST(request: Request) {
 
     const supabase = getServiceClient();
     if (!supabase) return NextResponse.json({ error: 'Not configured' }, { status: 500 });
+
+    // Server-side plan check: Integrations require Pro plan
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('plan')
+      .eq('id', auth.userId)
+      .single();
+    const userPlan = (profile?.plan || 'free') as Plan;
+    if (!canAccessFeature(userPlan, 'integrations')) {
+      return NextResponse.json({ error: 'Integrations require a Pro plan.' }, { status: 403 });
+    }
 
     const { account_id, api_key } = await request.json();
     if (!account_id || !api_key) return NextResponse.json({ error: 'Account ID and API Key required' }, { status: 400 });

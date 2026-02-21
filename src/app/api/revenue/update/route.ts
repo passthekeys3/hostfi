@@ -17,8 +17,21 @@ export async function PUT(request: NextRequest) {
     if (!supabase) return NextResponse.json({ error: 'Not configured' }, { status: 500 });
 
     const body = await request.json();
-    const { id, ...updates } = body;
+    const { id, ...rawUpdates } = body;
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+
+    // Only allow specific fields to be updated (prevent user_id/id tampering)
+    const allowedFields = ['amount', 'platform', 'guest_name', 'description', 'notes', 'check_in', 'check_out', 'nights', 'payout_amount', 'platform_fee', 'confirmation_code', 'property_id', 'date', 'payout_date', 'status'];
+    const updates: Record<string, unknown> = {};
+    for (const key of allowedFields) {
+      if (key in rawUpdates) {
+        updates[key] = rawUpdates[key];
+      }
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
+    }
 
     // Only update rows belonging to this user
     const { error } = await supabase

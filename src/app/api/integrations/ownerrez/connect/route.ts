@@ -3,6 +3,7 @@ import { authenticateRequest } from '@/lib/auth';
 import { createClient } from '@supabase/supabase-js';
 import { verifyCredentials } from '@/lib/integrations/ownerrez';
 import { encryptCredentials } from '@/lib/crypto';
+import { canAccessFeature, type Plan } from '@/lib/feature-gates';
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -17,6 +18,17 @@ export async function POST(request: Request) {
     if (!auth.authenticated) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const supabase = getServiceClient();
     if (!supabase) return NextResponse.json({ error: 'Not configured' }, { status: 500 });
+
+    // Server-side plan check: Integrations require Pro plan
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('plan')
+      .eq('id', auth.userId)
+      .single();
+    const userPlan = (profile?.plan || 'free') as Plan;
+    if (!canAccessFeature(userPlan, 'integrations')) {
+      return NextResponse.json({ error: 'Integrations require a Pro plan.' }, { status: 403 });
+    }
 
     const { email, api_token } = await request.json();
     if (!email || !api_token) return NextResponse.json({ error: 'Email and API Token required' }, { status: 400 });
