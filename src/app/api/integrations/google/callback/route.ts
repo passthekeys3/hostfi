@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { exchangeGoogleCode, createSpreadsheet, appendRows } from '@/lib/integrations/google';
+import { encryptCredentials } from '@/lib/crypto';
 
 /**
  * GET /api/integrations/google/callback — Google OAuth callback
@@ -59,12 +60,17 @@ export async function GET(request: NextRequest) {
       const expiresAt = new Date(Date.now() + (tokens.expires_in * 1000)).toISOString();
 
       // Save both Google Sheets and Google Drive connections (same OAuth grant covers both)
+      const encryptedCreds = process.env.CREDENTIALS_ENCRYPTION_KEY
+        ? encryptCredentials({ access_token: tokens.access_token, refresh_token: tokens.refresh_token })
+        : null;
+
       await Promise.all([
         supabase.from('integration_connections').upsert({
           user_id: stateData.userId,
           provider: 'google_sheets',
           access_token: tokens.access_token,
           refresh_token: tokens.refresh_token,
+          credentials: encryptedCreds || { access_token: tokens.access_token, refresh_token: tokens.refresh_token },
           token_expires_at: expiresAt,
           metadata: {
             spreadsheet_id: spreadsheet.spreadsheetId,
@@ -77,6 +83,7 @@ export async function GET(request: NextRequest) {
           provider: 'google_drive',
           access_token: tokens.access_token,
           refresh_token: tokens.refresh_token,
+          credentials: encryptedCreds || { access_token: tokens.access_token, refresh_token: tokens.refresh_token },
           token_expires_at: expiresAt,
           metadata: {},
           active: true,

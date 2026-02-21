@@ -92,7 +92,9 @@ export async function POST(request: NextRequest) {
       const { error } = await supabase.from('integration_connections').upsert({
         user_id: auth.userId,
         provider: 'plaid',
-        access_token: access_token,
+        access_token: process.env.CREDENTIALS_ENCRYPTION_KEY
+          ? (await import('@/lib/crypto')).encryptCredentials({ token: access_token })
+          : access_token,
         metadata: {
           item_id,
           institution_id: itemData.item.institution_id,

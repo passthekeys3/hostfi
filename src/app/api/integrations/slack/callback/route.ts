@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { exchangeSlackCode } from '@/lib/integrations/slack';
+import { encryptCredentials } from '@/lib/crypto';
 
 /**
  * GET /api/integrations/slack/callback — Slack OAuth callback
@@ -46,6 +47,9 @@ export async function GET(request: NextRequest) {
         user_id: stateData.userId,
         provider: 'slack',
         access_token: slackData.access_token,
+        credentials: process.env.CREDENTIALS_ENCRYPTION_KEY
+          ? encryptCredentials({ access_token: slackData.access_token })
+          : { access_token: slackData.access_token },
         metadata: {
           team_id: slackData.team.id,
           team_name: slackData.team.name,
