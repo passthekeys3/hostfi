@@ -290,6 +290,14 @@ async function createRevenue(
 ) {
   if (!supabase || !propertyId) return;
   
+  // Deduplicate by transaction_id in notes
+  const { count } = await supabase
+    .from('revenue')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .ilike('notes', `%${txn.transaction_id}%`);
+  if ((count ?? 0) > 0) return; // Already imported
+
   const revenueResult = detectRevenue(txn);
   
   await supabase.from('revenue').insert({

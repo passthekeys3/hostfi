@@ -187,22 +187,22 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
 
     // Save to Supabase
     try {
-      const { createClient } = await import("@/lib/supabase/client");
-      const supabase = createClient();
-      if (supabase) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          await supabase.from("properties").insert({
-            user_id: user.id,
-            name: propName,
-            address_line1: propAddress || "TBD",
-            city: propCity || "TBD",
-            state: propState || "TBD",
-            zip: propZip || "00000",
-            property_type: propType,
-            status: "active",
-          });
-        }
+      // Use server-side API route for property creation (enforces plan limits)
+      const res = await fetch("/api/properties", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: propName,
+          address_line1: propAddress || "TBD",
+          city: propCity || "TBD",
+          state: propState || "TBD",
+          zip: propZip || "00000",
+          property_type: propType,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        console.error("Failed to add property:", err.error);
       }
     } catch (error) {
       console.error("Failed to add property:", error);

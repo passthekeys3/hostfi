@@ -71,23 +71,26 @@ export function AddPropertyForm() {
         return;
       }
 
-      const { error: insertError } = await supabase.from("properties").insert({
-        user_id: user.id,
-        name: form.get("name") as string,
-        property_type: form.get("property_type") as string,
-        address_line1: form.get("address_line1") as string,
-        address_line2: (form.get("address_line2") as string) || null,
-        city: form.get("city") as string,
-        state: form.get("state") as string,
-        zip: form.get("zip") as string,
-        bedrooms: parseInt(form.get("bedrooms") as string) || 1,
-        bathrooms: parseFloat(form.get("bathrooms") as string) || 1,
-        sqft: form.get("sqft") ? parseInt(form.get("sqft") as string) : null,
-        status: "active",
+      // Use server-side API route for property creation (enforces plan limits)
+      const res = await fetch("/api/properties", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.get("name") as string,
+          property_type: form.get("property_type") as string,
+          address_line1: form.get("address_line1") as string,
+          address_line2: (form.get("address_line2") as string) || null,
+          city: form.get("city") as string,
+          state: form.get("state") as string,
+          zip: form.get("zip") as string,
+          bedrooms: parseInt(form.get("bedrooms") as string) || 1,
+          bathrooms: parseFloat(form.get("bathrooms") as string) || 1,
+        }),
       });
 
-      if (insertError) {
-        setError(insertError.message);
+      const result = await res.json();
+      if (!res.ok) {
+        setError(result.error || "Failed to create property");
         setLoading(false);
         return;
       }

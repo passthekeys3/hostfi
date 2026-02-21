@@ -149,9 +149,10 @@ export async function POST(req: NextRequest) {
     // Parse the bill - try attachments first (PDFs/images are more reliable)
     let parsed = null;
 
+    const MAX_ATTACHMENT_SIZE = 10_000_000; // 10MB
     const supportedAttachments = payload.Attachments?.filter(a =>
-      a.ContentType === 'application/pdf' ||
-      a.ContentType.startsWith('image/')
+      (a.ContentType === 'application/pdf' || a.ContentType.startsWith('image/')) &&
+      a.ContentLength <= MAX_ATTACHMENT_SIZE
     ) ?? [];
 
     if (supportedAttachments.length > 0) {

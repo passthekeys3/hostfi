@@ -3,6 +3,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import { buildUserContext } from '@/lib/query-context';
 import { authenticateRequest } from '@/lib/auth';
 import { createRateLimiter, createAsyncRateLimiter } from '@/lib/rate-limit';
+import { canAccessFeature, type Plan } from '@/lib/feature-gates';
+import { createClient } from '@/lib/supabase/server';
 
 const client = new Anthropic();
 
@@ -55,6 +57,23 @@ export async function POST(request: NextRequest) {
 
     // Authentication
     const auth = await authenticateRequest();
+
+    // Plan check: Ask AI requires Pro plan
+    const supabase = await createClient();
+    if (supabase) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('plan')
+        .eq('id', auth.userId)
+        .single();
+      const userPlan = (profile?.plan || 'free') as Plan;
+      if (!canAccessFeature(userPlan, 'ask-ai')) {
+        return NextResponse.json(
+          { error: 'Ask AI requires a Pro plan. Upgrade to unlock AI-powered insights.' },
+          { status: 403 }
+        );
+      }
+    }
 
     const body = await request.json();
     const { question } = body;
