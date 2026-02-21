@@ -105,7 +105,7 @@ describe('Stripe configuration', () => {
   describe('production validation', () => {
     it('logs error in production without STRIPE_SECRET_KEY', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      process.env.NODE_ENV = 'production';
+      (process.env as Record<string, string>).NODE_ENV = 'production';
       delete process.env.STRIPE_SECRET_KEY;
 
       vi.resetModules();

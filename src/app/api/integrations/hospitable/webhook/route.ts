@@ -12,7 +12,7 @@ import {
   type HospitableProperty,
   type HospitableReservation,
 } from '@/lib/integrations/hospitable';
-import { decryptCredentials } from '@/lib/crypto';
+import { readCredentials } from '@/lib/crypto';
 import { PROPERTY_LIMITS, type Plan } from '@/lib/feature-gates';
 
 function getServiceClient() {
@@ -223,7 +223,7 @@ export async function POST(request: NextRequest) {
 
             if (conn?.credentials) {
               const creds = typeof conn.credentials === 'string'
-                ? authFromCredentials(decryptCredentials(conn.credentials))
+                ? authFromCredentials(readCredentials(conn.credentials))
                 : authFromCredentials(conn.credentials);
               const { auth: hospAuth } = await getAccessToken(creds);
               const fullRes = await fetchReservation(hospAuth, hospReservationId);

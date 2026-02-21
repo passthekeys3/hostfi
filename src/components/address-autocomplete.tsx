@@ -56,18 +56,21 @@ export function AddressAutocomplete({ onSelect, defaultValue = "", className }: 
       return () => clearInterval(check);
     }
 
+    let onloadInterval: ReturnType<typeof setInterval> | null = null;
     const script = document.createElement("script");
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async`;
     script.async = true;
     script.onload = () => {
-      const check = setInterval(() => {
+      onloadInterval = setInterval(() => {
         if (window.google?.maps?.places) {
           setScriptLoaded(true);
-          clearInterval(check);
+          if (onloadInterval) clearInterval(onloadInterval);
+          onloadInterval = null;
         }
       }, 50);
     };
     document.head.appendChild(script);
+    return () => { if (onloadInterval) clearInterval(onloadInterval); };
   }, []);
 
   // Close dropdown on outside click
