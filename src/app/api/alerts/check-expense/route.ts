@@ -27,13 +27,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { expense_id, user_id } = body as {
+    const { expense_id } = body as {
       expense_id?: string;
-      user_id?: string;
     };
 
-    // Determine which user to check for
-    const targetUserId = user_id || (auth.authenticated ? auth.userId : null);
+    // Always use the authenticated user's ID — never accept user_id from body
+    const targetUserId = auth.userId;
     if (!targetUserId) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 });
     }

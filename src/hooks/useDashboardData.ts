@@ -126,18 +126,20 @@ export function useDashboardData(): DashboardData {
   const refresh = useCallback(() => setRefreshKey(k => k + 1), []);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchData() {
       try {
         const { createClient } = await import("@/lib/supabase/client");
         const supabase = createClient();
         if (!supabase) {
-          setData(prev => ({ ...prev, loading: false, refresh }));
+          if (!cancelled) setData(prev => ({ ...prev, loading: false, refresh }));
           return;
         }
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-          setData(prev => ({ ...prev, loading: false, refresh }));
+          if (!cancelled) setData(prev => ({ ...prev, loading: false, refresh }));
           return;
         }
 
@@ -209,23 +211,27 @@ export function useDashboardData(): DashboardData {
           });
         }
 
-        setData({
-          properties,
-          expenses,
-          anomalies,
-          alerts,
-          revenue: (revenueRes.data as RevenueEntry[]) || [],
-          recurringExpenses,
-          loading: false,
-          refresh,
-        });
-      } catch (err) {
-        console.error("Dashboard data fetch error:", err);
-        setData(prev => ({ ...prev, loading: false, refresh }));
+        if (!cancelled) {
+          setData({
+            properties,
+            expenses,
+            anomalies,
+            alerts,
+            revenue: (revenueRes.data as RevenueEntry[]) || [],
+            recurringExpenses,
+            loading: false,
+            refresh,
+          });
+        }
+      } catch {
+        if (!cancelled) {
+          setData(prev => ({ ...prev, loading: false, refresh }));
+        }
       }
     }
 
     fetchData();
+    return () => { cancelled = true; };
   }, [refreshKey, refresh]);
 
   return data;

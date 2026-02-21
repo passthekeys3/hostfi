@@ -8,20 +8,22 @@ export function usePlan(): { plan: Plan; loading: boolean } {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       try {
         const { createClient } = await import("@/lib/supabase/client");
         const supabase = createClient();
-        if (!supabase) { setLoading(false); return; }
+        if (!supabase) { if (!cancelled) setLoading(false); return; }
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { setLoading(false); return; }
+        if (!user) { if (!cancelled) setLoading(false); return; }
         const { data: profile } = await supabase.from('profiles').select('plan').eq('id', user.id).single();
-        setPlan((profile?.plan as Plan) || 'free');
-      } catch (error) {
-        console.error("Failed to load user plan:", error);
+        if (!cancelled) setPlan((profile?.plan as Plan) || 'free');
+      } catch {
+        // Plan fetch failed — default to free
       }
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     })();
+    return () => { cancelled = true; };
   }, []);
 
   return { plan, loading };

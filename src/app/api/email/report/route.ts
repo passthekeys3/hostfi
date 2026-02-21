@@ -30,7 +30,8 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json().catch(() => ({}));
     const now = new Date();
-    const targetMonth = body.month ?? now.getMonth(); // 0-indexed, defaults to current month
+    // body.month is 1-indexed (1=Jan, 12=Dec). Default to current month (1-indexed).
+    const targetMonth = body.month ?? (now.getMonth() + 1);
     const targetYear = body.year ?? now.getFullYear();
 
     // Date range for the target month
