@@ -179,12 +179,11 @@ export async function POST(request: NextRequest) {
           if (!propertyId) {
             skipped++;
             skipReasons['no_matching_property'] = (skipReasons['no_matching_property'] || 0) + 1;
-            console.log(`OwnerRez sync: booking ${booking.id} skipped — property_id ${booking.property_id} not found in HostFi. Known property IDs: [${Array.from(propertyMap.keys()).join(', ')}]`);
             continue;
           }
           const mapped = mapBookingToRevenue(booking, propertyId);
           const { error } = await supabase.from('revenue').insert({ user_id: session.userId, ...mapped });
-          if (!error) { imported++; console.log('Booking imported, raw data:', JSON.stringify(booking)); }
+          if (!error) { imported++; }
           else { skipped++; skipReasons['db_error'] = (skipReasons['db_error'] || 0) + 1; skipReasons['db_detail'] = error.message as unknown as number; console.error('Booking insert error:', error.message, 'Data:', JSON.stringify(mapped)); }
         }
         results.reservations = { imported, skipped, total: allBookings.length, skipReasons, debug_raw_first_booking: debugRawBooking } as typeof results.reservations;

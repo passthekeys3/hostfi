@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       triggers?: string[];
     };
 
-    console.log(`Hospitable webhook: action=${action}`);
+    console.info(`Hospitable webhook: action=${action}`);
 
     // ========================================================================
     // Integration Disconnected
@@ -114,9 +114,6 @@ export async function POST(request: NextRequest) {
             .update({ status: 'disconnected', credentials: null, active: false })
             .eq('user_id', match.user_id)
             .eq('provider', 'hospitable');
-          console.log(`Hospitable webhook: disconnected user ${match.user_id}`);
-        } else {
-          console.log(`Hospitable webhook: integration.disconnected for unknown Hospitable user ${hospUserId}`);
         }
       }
       
@@ -155,13 +152,7 @@ export async function POST(request: NextRequest) {
               status: mapped.status,
             })
             .eq('id', prop.id);
-          
-          console.log(`Hospitable webhook: updated property ${hospPropertyId} for user ${prop.user_id}`);
         }
-      } else if (action === 'property.created') {
-        // For new properties, we need to find users with Hospitable connections
-        // and check if they want auto-import (for now, we skip auto-import)
-        console.log(`Hospitable webhook: new property ${hospPropertyId} — skipping auto-import`);
       }
 
       return NextResponse.json({ received: true });
@@ -176,8 +167,6 @@ export async function POST(request: NextRequest) {
           .from('properties')
           .update({ status: 'inactive' })
           .eq('hospitable_property_id', hospPropertyId);
-        
-        console.log(`Hospitable webhook: deactivated property ${hospPropertyId}`);
       }
 
       return NextResponse.json({ received: true });
@@ -193,8 +182,6 @@ export async function POST(request: NextRequest) {
           .from('properties')
           .update({ hospitable_property_id: newId })
           .eq('hospitable_property_id', previousId);
-        
-        console.log(`Hospitable webhook: merged property ${previousId} -> ${newId}`);
       }
 
       return NextResponse.json({ received: true });
@@ -254,7 +241,6 @@ export async function POST(request: NextRequest) {
 
       // Skip owner stays — personal use isn't revenue
       if (isOwnerStay(reservation)) {
-        console.log(`Hospitable webhook: skipping owner_stay reservation ${hospReservationId}`);
         return NextResponse.json({ received: true, note: 'Owner stay skipped' });
       }
 
@@ -265,7 +251,6 @@ export async function POST(request: NextRequest) {
         .eq('hospitable_property_id', hospPropertyId);
 
       if (!properties || properties.length === 0) {
-        console.log(`Hospitable webhook: reservation ${hospReservationId} — no matching property`);
         return NextResponse.json({ received: true, note: 'Property not tracked' });
       }
 
@@ -296,16 +281,12 @@ export async function POST(request: NextRequest) {
               confirmation_code: mapped.confirmation_code,
             })
             .eq('id', existing.id);
-          
-          console.log(`Hospitable webhook: updated reservation ${hospReservationId}`);
         } else {
           const { error } = await supabase
             .from('revenue')
             .insert({ user_id: prop.user_id, ...mapped });
           
-          if (!error) {
-            console.log(`Hospitable webhook: created reservation ${hospReservationId}`);
-          } else {
+          if (error) {
             console.error(`Hospitable webhook: failed to create reservation:`, error.message);
           }
         }
@@ -339,7 +320,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Unknown action — acknowledge anyway
-    console.log(`Hospitable webhook: unhandled action ${action}`);
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error('Hospitable webhook error:', error);

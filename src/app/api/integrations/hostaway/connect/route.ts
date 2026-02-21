@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     } catch (err) {
       const msg = String(err);
       if (msg.includes('429') || msg.includes('TOO_MANY')) {
-        console.log('[Hostaway] Rate limited on verify, saving anyway');
+        // Rate limited — credentials are likely fine, just save them
       } else {
         return NextResponse.json({ error: 'Invalid Hostaway credentials' }, { status: 400 });
       }

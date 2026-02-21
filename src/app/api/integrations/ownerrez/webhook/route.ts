@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       categories?: string[];
     };
 
-    console.log(`OwnerRez webhook: action=${action} entity_type=${entity_type} entity_id=${entity_id} user_id=${user_id}`);
+    console.info(`OwnerRez webhook: action=${action} entity_type=${entity_type} entity_id=${entity_id} user_id=${user_id}`);
 
     // Find the HostFi user by OwnerRez user_id stored in metadata
     // First try exact match via ownerrez_user_id in metadata
@@ -101,7 +101,6 @@ export async function POST(request: NextRequest) {
     // Test webhook
     // ========================================================================
     if (action === 'webhook_test') {
-      console.log('OwnerRez webhook test received successfully');
       return NextResponse.json({ received: true, test: true });
     }
 
@@ -151,15 +150,12 @@ export async function POST(request: NextRequest) {
                 description: mapped.description,
               })
               .eq('id', existing.id);
-            console.log(`OwnerRez webhook: updated booking ${orBookingId} for user ${hostfiUserId}`);
           } else {
             // Create new revenue entry
             const { error } = await supabase
               .from('revenue')
               .insert({ user_id: hostfiUserId, ...mapped });
-            if (!error) {
-              console.log(`OwnerRez webhook: created booking ${orBookingId} for user ${hostfiUserId}`);
-            } else {
+            if (error) {
               console.error(`OwnerRez webhook: failed to create booking ${orBookingId}:`, error.message);
             }
           }
@@ -170,7 +166,6 @@ export async function POST(request: NextRequest) {
             .delete()
             .eq('user_id', hostfiUserId)
             .eq('ownerrez_booking_id', orBookingId);
-          console.log(`OwnerRez webhook: deleted booking ${orBookingId} for user ${hostfiUserId}`);
         }
       }
 
@@ -205,7 +200,6 @@ export async function POST(request: NextRequest) {
             if ((count || 0) < limit) {
               const mapped = mapPropertyToHostFi(property);
               await supabase.from('properties').insert({ user_id: hostfiUserId, ...mapped });
-              console.log(`OwnerRez webhook: created property ${orPropertyId} for user ${hostfiUserId}`);
             }
           }
         } else if (action === 'entity_update') {
@@ -222,7 +216,6 @@ export async function POST(request: NextRequest) {
             })
             .eq('user_id', hostfiUserId)
             .eq('ownerrez_property_id', orPropertyId);
-          console.log(`OwnerRez webhook: updated property ${orPropertyId} for user ${hostfiUserId}`);
         } else if (action === 'entity_delete') {
           // Don't auto-delete properties — just mark inactive
           await supabase
@@ -230,7 +223,6 @@ export async function POST(request: NextRequest) {
             .update({ status: 'inactive' })
             .eq('user_id', hostfiUserId)
             .eq('ownerrez_property_id', orPropertyId);
-          console.log(`OwnerRez webhook: deactivated property ${orPropertyId} for user ${hostfiUserId}`);
         }
       }
     }

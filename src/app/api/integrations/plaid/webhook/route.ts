@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`Plaid webhook: ${webhook_type}/${webhook_code} for item ${item_id}`);
+    console.info(`Plaid webhook: ${webhook_type}/${webhook_code} for item ${item_id}`);
 
     const supabase = getAdminClient();
     if (!supabase) {
@@ -122,8 +122,6 @@ async function handleTransactionWebhook(
 
       if (item) {
         // Could trigger auto-sync here or just mark for next poll
-        console.log(`Plaid: ${code} received for item ${itemId}`);
-        
         // Optionally: trigger sync by calling internal API
         // await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/integrations/plaid/sync`, {
         //   method: 'POST',
@@ -158,12 +156,11 @@ async function handleTransactionWebhook(
 
     case 'TRANSACTIONS_REMOVED': {
       // Transactions were removed by Plaid (rare)
-      console.log(`Plaid: Transactions removed for item ${itemId}`);
       break;
     }
 
     default:
-      console.log(`Unhandled transaction webhook: ${code}`);
+      break;
   }
 }
 
@@ -193,7 +190,6 @@ async function handleItemWebhook(
             error_message: error?.error_message || 'Connection error',
           })
           .eq('id', item.id);
-        console.log(`Plaid: Item error — ${error?.error_code}`);
         break;
       }
 
@@ -202,7 +198,6 @@ async function handleItemWebhook(
           .from('plaid_items')
           .update({ status: 'pending_expiration' })
           .eq('id', item.id);
-        console.log(`Plaid: Item pending expiration — ${itemId}`);
         break;
       }
 
@@ -212,12 +207,11 @@ async function handleItemWebhook(
           .from('plaid_items')
           .update({ status: 'disconnected' })
           .eq('id', item.id);
-        console.log(`Plaid: Item disconnected — ${itemId}`);
         break;
       }
 
       default:
-        console.log(`Unhandled item webhook: ${code}`);
+        break;
     }
     return;
   }
@@ -250,7 +244,6 @@ async function handleItemWebhook(
           updated_at: new Date().toISOString(),
         })
         .eq('id', connection.id);
-      console.log(`Plaid: Item error (legacy) — ${error?.error_code}`);
       break;
     }
 
@@ -275,7 +268,7 @@ async function handleItemWebhook(
     }
 
     default:
-      console.log(`Unhandled item webhook (legacy): ${code}`);
+      break;
   }
 }
 

@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       account_id?: number;
     };
 
-    console.log(`Hostaway webhook: event=${event} account_id=${account_id}`);
+    console.info(`Hostaway webhook: event=${event} account_id=${account_id}`);
 
     // Find the HostFi user(s) with this Hostaway account connected
     const { data: connections } = await supabase
@@ -128,15 +128,12 @@ export async function POST(request: NextRequest) {
                 confirmation_code: mapped.confirmation_code,
               })
               .eq('id', existing.id);
-            console.log(`Hostaway webhook: updated reservation ${hostawayReservationId} for user ${hostfiUserId}`);
           } else {
             // Create new revenue entry
             const { error } = await supabase
               .from('revenue')
               .insert({ user_id: hostfiUserId, ...mapped });
-            if (!error) {
-              console.log(`Hostaway webhook: created reservation ${hostawayReservationId} for user ${hostfiUserId}`);
-            } else {
+            if (error) {
               console.error(`Hostaway webhook: failed to create reservation ${hostawayReservationId}:`, error.message);
             }
           }
@@ -147,7 +144,6 @@ export async function POST(request: NextRequest) {
             .delete()
             .eq('user_id', hostfiUserId)
             .eq('hostaway_reservation_id', hostawayReservationId);
-          console.log(`Hostaway webhook: deleted reservation ${hostawayReservationId} for user ${hostfiUserId}`);
         }
       }
 
@@ -182,7 +178,6 @@ export async function POST(request: NextRequest) {
             if ((count || 0) < limit) {
               const mapped = mapListingToProperty(listing);
               await supabase.from('properties').insert({ user_id: hostfiUserId, ...mapped });
-              console.log(`Hostaway webhook: created listing ${hostawayListingId} for user ${hostfiUserId}`);
             }
           }
         } else if (event === 'listing_updated') {
@@ -201,7 +196,6 @@ export async function POST(request: NextRequest) {
             })
             .eq('user_id', hostfiUserId)
             .eq('hostaway_listing_id', hostawayListingId);
-          console.log(`Hostaway webhook: updated listing ${hostawayListingId} for user ${hostfiUserId}`);
         }
       }
     }

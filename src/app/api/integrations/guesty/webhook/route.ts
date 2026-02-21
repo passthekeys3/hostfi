@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       accountId?: string;
     };
 
-    console.log(`Guesty webhook: event=${event} accountId=${accountId}`);
+    console.info(`Guesty webhook: event=${event} accountId=${accountId}`);
 
     // Find the HostFi user(s) with this Guesty account connected
     const { data: connections } = await supabase
@@ -128,15 +128,12 @@ export async function POST(request: NextRequest) {
                 confirmation_code: mapped.confirmation_code,
               })
               .eq('id', existing.id);
-            console.log(`Guesty webhook: updated reservation ${guestyReservationId} for user ${hostfiUserId}`);
           } else {
             // Create new revenue entry
             const { error } = await supabase
               .from('revenue')
               .insert({ user_id: hostfiUserId, ...mapped });
-            if (!error) {
-              console.log(`Guesty webhook: created reservation ${guestyReservationId} for user ${hostfiUserId}`);
-            } else {
+            if (error) {
               console.error(`Guesty webhook: failed to create reservation ${guestyReservationId}:`, error.message);
             }
           }
@@ -147,7 +144,6 @@ export async function POST(request: NextRequest) {
             .delete()
             .eq('user_id', hostfiUserId)
             .eq('guesty_reservation_id', guestyReservationId);
-          console.log(`Guesty webhook: deleted reservation ${guestyReservationId} for user ${hostfiUserId}`);
         }
       }
 
@@ -182,7 +178,6 @@ export async function POST(request: NextRequest) {
             if ((count || 0) < limit) {
               const mapped = mapListingToProperty(listing);
               await supabase.from('properties').insert({ user_id: hostfiUserId, ...mapped });
-              console.log(`Guesty webhook: created listing ${guestyListingId} for user ${hostfiUserId}`);
             }
           }
         } else if (event === 'listing.updated') {
@@ -201,7 +196,6 @@ export async function POST(request: NextRequest) {
             })
             .eq('user_id', hostfiUserId)
             .eq('guesty_listing_id', guestyListingId);
-          console.log(`Guesty webhook: updated listing ${guestyListingId} for user ${hostfiUserId}`);
         }
       }
     }

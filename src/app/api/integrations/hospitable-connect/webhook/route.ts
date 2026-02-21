@@ -11,8 +11,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     
-    // Log the webhook for debugging
-    console.log('Hospitable Connect webhook received:', JSON.stringify({
+    console.info('Hospitable Connect webhook received:', JSON.stringify({
       action: body.action || body.event || 'unknown',
       customerId: body.customer_id,
       timestamp: new Date().toISOString(),
