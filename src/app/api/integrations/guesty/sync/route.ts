@@ -39,7 +39,11 @@ export async function POST(request: NextRequest) {
     }
 
     const { readCredentials } = await import('@/lib/crypto');
-    const { client_id, client_secret } = readCredentials(connection.credentials) as { client_id: string; client_secret: string };
+    const rawCreds = readCredentials(connection.credentials);
+    if (!rawCreds) {
+      return NextResponse.json({ error: 'Failed to read Guesty credentials' }, { status: 500 });
+    }
+    const { client_id, client_secret } = rawCreds as { client_id: string; client_secret: string };
 
     try {
       await getGuestyToken(client_id, client_secret);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 import {
   mapPropertyToHostFi,
   mapBookingToRevenue,
@@ -22,7 +23,9 @@ function verifyAuth(request: NextRequest): boolean {
 
   const authHeader = request.headers.get('authorization');
   const expected = 'Basic ' + Buffer.from(`${expectedUser}:${expectedPass}`).toString('base64');
-  return authHeader === expected;
+  // Use constant-time comparison to prevent timing attacks
+  if (!authHeader || authHeader.length !== expected.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected));
 }
 
 /**

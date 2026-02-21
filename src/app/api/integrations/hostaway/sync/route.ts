@@ -38,7 +38,11 @@ export async function POST(request: NextRequest) {
     }
 
     const { readCredentials } = await import('@/lib/crypto');
-    const { account_id, api_key } = readCredentials(connection.credentials) as { account_id: string; api_key: string };
+    const rawCreds = readCredentials(connection.credentials);
+    if (!rawCreds) {
+      return NextResponse.json({ error: 'Failed to read Hostaway credentials' }, { status: 500 });
+    }
+    const { account_id, api_key } = rawCreds as { account_id: string; api_key: string };
     const token = await getHostawayToken(account_id, api_key);
 
     const { data: profile } = await supabase.from('profiles').select('plan').eq('id', auth.userId).single();
