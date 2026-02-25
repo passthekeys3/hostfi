@@ -1,0 +1,34 @@
+# Anomaly Detection
+
+HostFi monitors your spending patterns and alerts you when something looks unusual.
+
+## How It Works
+
+The system compares each new expense against your recent spending history for that category and property. If an expense is significantly higher than your rolling average, it's flagged as an anomaly.
+
+## Types of Anomalies
+
+- **Spending spike** — An expense that's unusually high compared to recent months
+- **New vendor** — A charge from a vendor you haven't seen before
+- **Duplicate charge** — A potential duplicate expense (same amount, same vendor, close dates)
+
+## Viewing Anomalies
+
+Anomalies appear in two places:
+
+- **Dashboard** — The Anomalies stat card shows the count of active anomalies
+- **Alerts** — The full alerts page shows details of each anomaly
+
+## Managing Anomalies
+
+For each anomaly, you can:
+
+- **Acknowledge** — Mark it as seen but keep it active
+- **Resolve** — Confirm it's legitimate and close it
+- **Dismiss** — Mark it as a false positive
+
+## Alert Notifications
+
+If you have email alerts enabled, you'll receive notifications when new anomalies are detected. Configure alert preferences in **Settings**.
+
+> **Tip:** The anomaly detection gets more accurate over time as it builds a history of your spending patterns. The first few months may have more false positives.

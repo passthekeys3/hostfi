@@ -1,0 +1,34 @@
+# CSV Import
+
+Bulk import expenses or revenue from a spreadsheet.
+
+## Importing Expenses
+
+1. Go to **Expenses** and click **Import CSV**
+2. Upload your CSV file
+3. Map columns to HostFi fields (amount, date, category, description, property)
+4. Review the imported data
+5. Confirm to create all expenses at once
+
+## Importing Revenue
+
+1. Go to **Revenue** and click **Import CSV**
+2. Follow the same mapping and review process
+
+## CSV Format
+
+Your CSV should include headers. HostFi will try to auto-detect common column names. At minimum, you need:
+
+- **Amount** — The dollar amount
+- **Date** — In a recognizable date format (MM/DD/YYYY, YYYY-MM-DD, etc.)
+
+Optional but recommended:
+- **Category** — Expense category
+- **Description** — Notes or vendor name
+- **Property** — Property name (HostFi will attempt to match to your existing properties)
+
+## Tips
+
+- Export from your bank or accounting tool as CSV
+- Clean up the data before importing — remove unrelated transactions
+- The property matching works best when the names in your CSV match your HostFi property names exactly

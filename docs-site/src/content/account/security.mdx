@@ -1,0 +1,39 @@
+# Security
+
+HostFi takes the security of your financial data seriously.
+
+## Data Encryption
+
+- All integration credentials (API keys, OAuth tokens) are encrypted with **AES-256-GCM** before storage
+- All data is transmitted over **HTTPS**
+- Database access is secured with **Row Level Security (RLS)** — each user can only access their own data
+
+## Authentication
+
+- Authentication is handled by **Supabase Auth**
+- Sign in with email/password, Google, or GitHub
+- Session tokens are stored in secure, HttpOnly cookies
+
+## OAuth Security
+
+- All OAuth flows use **CSRF state validation** with HttpOnly cookies
+- OAuth callbacks verify the authenticated user matches the flow initiator
+- Webhook endpoints verify signatures using **HMAC-SHA256**
+
+## Infrastructure
+
+- Hosted on **Vercel** (SOC 2 compliant)
+- Database on **Supabase** (SOC 2 compliant, encrypted at rest)
+- Payment processing by **Stripe** (PCI DSS Level 1)
+- Bank connections via **Plaid** (SOC 2 compliant, never stores bank credentials)
+
+## Rate Limiting
+
+Public-facing endpoints are rate-limited to prevent abuse:
+- Ask AI: 50 requests per day per account
+- Receipt parsing: rate-limited per IP
+- API endpoints: rate-limited per user
+
+## Reporting Security Issues
+
+If you discover a security vulnerability, please email **kevin@hostfi.ai**. We take all reports seriously and will respond promptly.

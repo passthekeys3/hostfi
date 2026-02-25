@@ -1,0 +1,32 @@
+# Zapier
+
+Connect HostFi to thousands of apps through Zapier webhooks.
+
+## Setting Up
+
+1. Go to **Integrations** and find Zapier
+2. Click **Connect**
+3. Copy your unique webhook URL
+4. In Zapier, create a new Zap and use **Webhooks by Zapier** as the trigger
+5. Paste your HostFi webhook URL
+
+## Available Events
+
+HostFi sends webhook events for:
+
+- **expense.created** — New expense added
+- **expense.updated** — Expense modified
+- **revenue.created** — New revenue entry
+- **anomaly.detected** — Spending anomaly flagged
+- **bill.parsed** — New bill parsed from email
+
+## Use Cases
+
+- Send expense data to Google Sheets or Airtable
+- Get Slack or Discord notifications on specific events
+- Log expenses to your accounting software
+- Create custom workflows with any Zapier-supported app
+
+## Disconnecting
+
+Click **Disconnect** to deactivate the webhook. No more events will be sent.

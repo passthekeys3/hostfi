@@ -1,0 +1,49 @@
+# Hospitable
+
+Connect your Hospitable account to automatically sync properties, reservations, and financial data.
+
+## Connecting
+
+1. Go to **Integrations** and find Hospitable
+2. Click **Connect**
+3. You'll be redirected to Hospitable to authorize HostFi
+4. Grant the requested permissions (property, reservation, and financial data access)
+5. You'll be redirected back to HostFi
+6. Select which properties you want to sync
+
+## What Syncs
+
+### Properties
+All properties from your Hospitable account are imported. You can choose which ones to track in HostFi.
+
+### Reservations & Revenue
+For each booking, HostFi imports:
+- Gross booking amount
+- Platform fees
+- Cleaning fees
+- Owner payout
+- Check-in and check-out dates
+- Platform (Airbnb, VRBO, Booking.com, etc.)
+- Confirmation code
+
+### Expenses
+Booking-related costs are automatically extracted as expenses:
+- Cleaning fees (categorized as Cleaning)
+- Platform commissions (categorized as Management)
+
+## Real-Time Sync
+
+HostFi receives webhooks from Hospitable for:
+- New reservations
+- Updated reservations
+- Property changes
+
+This means your data stays up to date automatically without manual syncing.
+
+## Manual Sync
+
+You can trigger a manual sync at any time from the integration card on the Integrations page.
+
+## Disconnecting
+
+Click **Disconnect** on the Hospitable integration card. This removes the connection but all previously synced properties, revenue, and expenses are preserved.
