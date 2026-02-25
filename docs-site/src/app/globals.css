@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --nextra-primary-hue: 171deg;
+  --nextra-primary-saturation: 77%;
+  --nextra-primary-lightness: 40%;
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+/* Light mode teal accents */
+html[class~="light"] {
+  --nextra-primary-hue: 171deg;
+  --nextra-primary-saturation: 77%;
+  --nextra-primary-lightness: 40%;
+}
+
+/* Dark mode - slightly brighter teal */
+html[class~="dark"] {
+  --nextra-primary-hue: 171deg;
+  --nextra-primary-saturation: 77%;
+  --nextra-primary-lightness: 48%;
+}
+
+/* Override body font */
+body {
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+/* Navbar logo styling */
+nav a[href="/"] {
+  font-family: 'Inter', sans-serif;
+}

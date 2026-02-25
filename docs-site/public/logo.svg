@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- House outline -->
+  <path d="M50 8L8 42V48H16V88H84V48H92V42L50 8Z" fill="#1a1a2e" />
+  <path d="M22 48V82H78V48L50 24L22 48Z" fill="white" />
+  <!-- Bar chart -->
+  <rect x="30" y="62" width="10" height="20" rx="1" fill="#14b8a6" />
+  <rect x="44" y="52" width="10" height="30" rx="1" fill="#14b8a6" />
+  <rect x="58" y="40" width="10" height="42" rx="1" fill="#14b8a6" />
+  <!-- Arrow breaking out of roof -->
+  <rect x="72" y="22" width="10" height="60" rx="1" fill="#14b8a6" />
+  <polygon points="77,10 67,26 87,26" fill="#14b8a6" />
+</svg>

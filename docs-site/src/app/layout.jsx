@@ -2,6 +2,7 @@ import { Footer, Layout, Navbar } from 'nextra-theme-docs'
 import { Head } from 'nextra/components'
 import { getPageMap } from 'nextra/page-map'
 import 'nextra-theme-docs/style.css'
+import './globals.css'
 
 export const metadata = {
   metadataBase: new URL('https://docs.hostfi.ai'),
@@ -16,9 +17,10 @@ export default async function RootLayout({ children }) {
   const navbar = (
     <Navbar
       logo={
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <b style={{ fontSize: '1.1rem' }}>HostFi</b>
-          <span style={{ opacity: '60%', fontSize: '0.9rem' }}>Docs</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <img src="/logo.svg" alt="HostFi" style={{ height: '28px', width: '28px' }} />
+          <span style={{ fontSize: '1.1rem', fontWeight: 700, letterSpacing: '-0.01em' }}>HostFi</span>
+          <span style={{ opacity: '50%', fontSize: '0.85rem', fontWeight: 500 }}>Docs</span>
         </div>
       }
       projectLink="https://hostfi.ai"
