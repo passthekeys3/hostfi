@@ -32,6 +32,10 @@ export interface HospitableProperty {
     city?: string;
     state?: string;
     postal_code?: string;
+    postcode?: string;
+    zip?: string;
+    zipcode?: string;
+    zip_code?: string;
     country?: string;
   };
   timezone?: string;
@@ -397,13 +401,17 @@ export async function verifyCredentials(auth: HospitableAuth): Promise<boolean> 
 export function mapPropertyToHostFi(property: HospitableProperty) {
   const addr = property.address || {};
   const capacity = property.capacity || {};
+  // Debug: log address keys to identify correct zip field
+  if (addr && !addr.postal_code) {
+    console.info('Hospitable address keys:', Object.keys(addr), 'values:', JSON.stringify(addr));
+  }
 
   return {
     name: property.name || property.public_name || 'Unnamed Property',
     address_line1: addr.street || 'Address pending',
     city: addr.city || 'Unknown',
     state: addr.state || 'NA',
-    zip: addr.postal_code || '00000',
+    zip: addr.postal_code || addr.postcode || addr.zip || addr.zipcode || addr.zip_code || '00000',
     property_type: 'str' as const,
     bedrooms: capacity.bedrooms || 1,
     bathrooms: capacity.bathrooms || 1,

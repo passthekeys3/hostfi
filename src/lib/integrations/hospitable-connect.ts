@@ -38,6 +38,10 @@ export interface HospitableConnectChannel {
 export interface HospitableConnectAddress {
   street?: string;
   zipcode?: string;
+  zip?: string;
+  zip_code?: string;
+  postal_code?: string;
+  postcode?: string;
   city?: string;
   state?: string;
   country_code?: string;
@@ -403,7 +407,7 @@ export function mapListingToProperty(listing: HospitableConnectListing) {
     address_line1: addr.street || 'Address pending',
     city: addr.city || 'Unknown',
     state: addr.state || 'NA',
-    zip: addr.zipcode || '00000',
+    zip: addr.zipcode || addr.zip || addr.zip_code || addr.postal_code || addr.postcode || '00000',
     property_type: 'str' as const,
     bedrooms: listing.bedrooms || 1,
     bathrooms: listing.bathrooms || 1,
