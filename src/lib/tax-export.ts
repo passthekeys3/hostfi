@@ -90,6 +90,8 @@ export function generateTXF(summaries: PropertyTaxSummary[], taxYear: string, re
 export function generateScheduleEHTML(summaries: PropertyTaxSummary[], taxYear: string, revenueByProperty: Record<string, TaxRevenueEntry[]> = {}): string {
   const fmt = (n: number) => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+  const logoSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" width="32" height="32"><path d="M50 8L8 42V48H16V88H84V48H92V42L50 8Z" fill="#1a1a2e"/><path d="M22 48V82H78V48L50 24L22 48Z" fill="white"/><rect x="30" y="62" width="10" height="20" rx="1" fill="#14b8a6"/><rect x="44" y="52" width="10" height="30" rx="1" fill="#14b8a6"/><rect x="58" y="40" width="10" height="42" rx="1" fill="#14b8a6"/><rect x="72" y="22" width="10" height="60" rx="1" fill="#14b8a6"/><polygon points="77,10 67,26 87,26" fill="#14b8a6"/></svg>`;
+
   let html = `
 <!DOCTYPE html>
 <html>
@@ -99,22 +101,23 @@ export function generateScheduleEHTML(summaries: PropertyTaxSummary[], taxYear: 
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #111827; padding: 40px; max-width: 800px; margin: 0 auto; font-size: 12px; line-height: 1.5; }
   h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
-  h2 { font-size: 14px; font-weight: 600; margin: 24px 0 12px; padding-bottom: 6px; border-bottom: 2px solid #14B8A6; }
+  h2 { font-size: 14px; font-weight: 600; margin: 24px 0 12px; padding-bottom: 6px; border-bottom: 2px solid #0f766e; }
   .subtitle { color: #6B7280; font-size: 11px; margin-bottom: 20px; }
   .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 1px solid #E5E7EB; padding-bottom: 20px; }
-  .logo { font-weight: 700; font-size: 16px; color: #14B8A6; }
+  .logo { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .logo-text { font-weight: 700; font-size: 18px; color: #111827; }
   .meta { text-align: right; color: #6B7280; font-size: 11px; }
   table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-  th { text-align: left; padding: 8px 12px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #6B7280; border-bottom: 2px solid #E5E7EB; }
+  th { text-align: left; padding: 8px 12px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #6B7280; border-bottom: 2px solid #E5E7EB; background: #F9FAFB; }
   th:last-child { text-align: right; }
   td { padding: 8px 12px; border-bottom: 1px solid #F3F4F6; }
   td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
   .line-num { color: #9CA3AF; font-size: 11px; width: 60px; }
   .total-row td { font-weight: 700; border-top: 2px solid #111827; border-bottom: none; padding-top: 10px; }
   .net-row td { font-weight: 700; font-size: 14px; border-top: 2px solid #111827; }
-  .net-positive { color: #059669; }
+  .net-positive { color: #0f766e; }
   .net-negative { color: #DC2626; }
-  .property-info { background: #F9FAFB; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; gap: 24px; }
+  .property-info { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; display: flex; gap: 24px; }
   .property-info span { color: #6B7280; }
   .property-info strong { color: #111827; }
   .cpa-note { background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; padding: 12px 16px; margin: 8px 0; font-size: 11px; color: #92400E; }
@@ -123,14 +126,24 @@ export function generateScheduleEHTML(summaries: PropertyTaxSummary[], taxYear: 
   .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
   .summary-item { text-align: center; }
   .summary-item .label { font-size: 10px; color: #6B7280; text-transform: uppercase; letter-spacing: 0.05em; }
-  .summary-item .value { font-size: 18px; font-weight: 700; margin-top: 4px; }
-  @media print { body { padding: 20px; } }
+  .summary-item .value { font-size: 18px; font-weight: 700; margin-top: 4px; color: #111827; }
+  @media print {
+    body { padding: 20px; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+    .summary-box { background: #F0FDFA !important; border: 1px solid #99F6E4 !important; }
+    .property-info { background: #F9FAFB !important; border: 1px solid #E5E7EB !important; }
+    th { background: #F9FAFB !important; }
+    .cpa-note { background: #FFFBEB !important; border: 1px solid #FDE68A !important; }
+    h2 { border-bottom-color: #0f766e !important; }
+    .net-positive { color: #0f766e !important; }
+    .net-negative { color: #DC2626 !important; }
+  }
 </style>
 </head>
 <body>
 <div class="header">
   <div>
-    <div class="logo">HostFi</div>
+    <div class="logo">${logoSvg}<span class="logo-text">HostFi</span></div>
     <h1>Schedule E — Supplemental Income and Expenses</h1>
     <div class="subtitle">Tax Year ${taxYear} | Generated ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>
   </div>
@@ -232,7 +245,7 @@ export function generateScheduleEHTML(summaries: PropertyTaxSummary[], taxYear: 
 <div class="disclaimer">
   <p><strong>Disclaimer:</strong> This report is generated by HostFi for informational purposes only. It is not tax advice. 
   Consult a qualified tax professional before filing. HostFi is not responsible for the accuracy of tax filings based on this data.</p>
-  <p style="margin-top: 8px;">Generated by HostFi | hostfi.ai</p>
+  <p style="margin-top: 8px;">Generated by HostFi | <a href="https://hostfi.ai" style="color: #0f766e;">hostfi.ai</a></p>
 </div>
 </body>
 </html>`;
