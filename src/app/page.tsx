@@ -650,6 +650,7 @@ export default function LandingPage() {
             <nav aria-label="Resources navigation">
               <p className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-4">Resources</p>
               <div className="space-y-2.5">
+                <a href="https://docs.hostfi.ai" target="_blank" rel="noopener noreferrer" className="block text-sm text-gray-600 hover:text-gray-700 transition-colors">Documentation</a>
                 <Link href="/blog" className="block text-sm text-gray-600 hover:text-gray-700 transition-colors">Blog</Link>
                 <a href="mailto:kevin@hostfi.ai" className="block text-sm text-gray-600 hover:text-gray-700 transition-colors">Contact</a>
               </div>

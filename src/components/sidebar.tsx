@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Building2, Receipt, Settings, Menu, X, Inbox, BarChart3, Bell, GitCompareArrows, FileText, Calculator, Upload, MessageSquare, DollarSign, Link2, CreditCard, LogOut, Lock, Handshake } from "lucide-react";
+import { LayoutDashboard, Building2, Receipt, Settings, Menu, X, Inbox, BarChart3, Bell, GitCompareArrows, FileText, Calculator, Upload, MessageSquare, DollarSign, Link2, CreditCard, LogOut, Lock, Handshake, BookOpen, ExternalLink } from "lucide-react";
 import { usePlan } from "@/hooks/usePlan";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { canAccessFeature } from "@/lib/feature-gates";
@@ -229,6 +229,17 @@ export function Sidebar() {
               </li>
             ))}
           </ul>
+          <div className="my-3 mx-3 border-t border-gray-100" />
+          <a
+            href="https://docs.hostfi.ai"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition-all duration-150"
+          >
+            <BookOpen className="w-[18px] h-[18px]" aria-hidden="true" />
+            Help & Docs
+            <ExternalLink className="w-3 h-3 ml-auto text-gray-300" aria-hidden="true" />
+          </a>
         </nav>
         
         <SidebarUser />
