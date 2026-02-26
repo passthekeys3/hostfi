@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useId } from "react";
 import Image from "next/image";
-import { Check, X, Shield, Landmark, CreditCard, ArrowRight, AlertCircle, Building2, Link2 } from "lucide-react";
+import { Check, X, Shield, Landmark, CreditCard, ArrowRight, AlertCircle, Building2, Link2, RefreshCw, Unlink, Loader2 } from "lucide-react";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import type { ModalProps } from "./types";
 import { PlaidLinkButton } from "./PlaidLinkButton";
@@ -14,13 +14,29 @@ interface Account {
   mask: string | null;
 }
 
+interface PlaidItem {
+  item_id: string;
+  institution_name: string | null;
+  status: string;
+  last_synced_at: string | null;
+}
+
+interface MappedAccount {
+  id: string;
+  plaid_account_id: string;
+  account_name: string | null;
+  account_mask: string | null;
+  property_id: string | null;
+  properties: { id: string; name: string } | null;
+}
+
 interface Property {
   id: string;
   name: string;
 }
 
 export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?: () => void }) {
-  const [step, setStep] = useState<"intro" | "connect" | "accounts" | "mapping" | "success">("intro");
+  const [step, setStep] = useState<"loading" | "intro" | "connect" | "accounts" | "mapping" | "connected" | "success">("loading");
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [institution, setInstitution] = useState<{ name: string } | null>(null);
   const [selectedAccounts, setSelectedAccounts] = useState<Set<string>>(new Set());
@@ -29,10 +45,41 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
   const [importing, setImporting] = useState(false);
   const [savingMappings, setSavingMappings] = useState(false);
   const [txnCount, setTxnCount] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+
+  // Connected state
+  const [existingItems, setExistingItems] = useState<PlaidItem[]>([]);
+  const [existingAccounts, setExistingAccounts] = useState<MappedAccount[]>([]);
+  const [syncing, setSyncing] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
+  const [syncResult, setSyncResult] = useState<{ added: number; modified: number; removed: number } | null>(null);
+
   const titleId = useId();
   const modalRef = useFocusTrap<HTMLDivElement>(true, { onEscape: onClose });
 
-  // Load properties on mount
+  // Check for existing connections on mount
+  useEffect(() => {
+    async function checkExisting() {
+      try {
+        const res = await fetch("/api/integrations/plaid/accounts");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.items?.length > 0 && data.items.some((i: PlaidItem) => i.status !== "disconnected")) {
+            setExistingItems(data.items.filter((i: PlaidItem) => i.status !== "disconnected"));
+            setExistingAccounts(data.accounts || []);
+            setStep("connected");
+            return;
+          }
+        }
+      } catch {
+        // Fall through to intro
+      }
+      setStep("intro");
+    }
+    checkExisting();
+  }, []);
+
+  // Load properties
   useEffect(() => {
     async function loadProperties() {
       try {
@@ -47,8 +94,8 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
           .eq("user_id", user.id)
           .order("name");
         if (data) setProperties(data);
-      } catch (error) {
-        console.error("Failed to load properties:", error);
+      } catch {
+        // silent
       }
     }
     loadProperties();
@@ -71,7 +118,6 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
   };
 
   const handleContinueToMapping = () => {
-    // Initialize mapping with empty values for selected accounts
     const initial: Record<string, string> = {};
     accounts
       .filter(a => selectedAccounts.has(a.account_id))
@@ -82,8 +128,6 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
 
   const handleFinish = async () => {
     setSavingMappings(true);
-
-    // Save property mappings
     try {
       const mappingPromises = Object.entries(accountPropertyMap)
         .filter(([accountId]) => selectedAccounts.has(accountId))
@@ -91,21 +135,15 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
           fetch("/api/integrations/plaid/accounts/map", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              plaid_account_id,
-              property_id: property_id || null,
-            }),
+            body: JSON.stringify({ plaid_account_id, property_id: property_id || null }),
           })
         );
       await Promise.all(mappingPromises);
-    } catch (err) {
-      console.error("Failed to save mappings:", err);
+    } catch {
+      // continue anyway
     }
-
     setSavingMappings(false);
     setImporting(true);
-
-    // Import transactions
     try {
       const res = await fetch("/api/integrations/plaid/transactions", {
         method: "POST",
@@ -115,13 +153,92 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
         const data = await res.json();
         setTxnCount((data.added || []).length);
       }
-    } catch (error) {
-      console.error("Failed to import transactions:", error);
+    } catch {
+      // continue anyway
     }
-
     setImporting(false);
     onConnected?.();
     setStep("success");
+  };
+
+  const handleSync = async () => {
+    setSyncing(true);
+    setError(null);
+    setSyncResult(null);
+    try {
+      const res = await fetch("/api/integrations/plaid/sync", { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        setSyncResult({
+          added: data.added?.length || 0,
+          modified: data.modified?.length || 0,
+          removed: data.removed?.length || 0,
+        });
+        // Refresh accounts list
+        const acctRes = await fetch("/api/integrations/plaid/accounts");
+        if (acctRes.ok) {
+          const acctData = await acctRes.json();
+          setExistingItems(acctData.items?.filter((i: PlaidItem) => i.status !== "disconnected") || []);
+          setExistingAccounts(acctData.accounts || []);
+        }
+      } else {
+        const data = await res.json();
+        setError(data.error || "Sync failed");
+      }
+    } catch {
+      setError("Sync failed. Please try again.");
+    }
+    setSyncing(false);
+  };
+
+  const handleDisconnect = async (itemId?: string) => {
+    setDisconnecting(true);
+    try {
+      const res = await fetch("/api/integrations/plaid/disconnect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(itemId ? { item_id: itemId } : {}),
+      });
+      if (res.ok) {
+        if (itemId) {
+          // Remove just that item
+          setExistingItems(prev => prev.filter(i => i.item_id !== itemId));
+          setExistingAccounts(prev => prev.filter(a => {
+            // Can't easily filter by item, so refresh
+            return true;
+          }));
+          // If no items left, go to intro
+          const remaining = existingItems.filter(i => i.item_id !== itemId);
+          if (remaining.length === 0) {
+            setStep("intro");
+          } else {
+            // Refresh
+            const acctRes = await fetch("/api/integrations/plaid/accounts");
+            if (acctRes.ok) {
+              const acctData = await acctRes.json();
+              setExistingItems(acctData.items?.filter((i: PlaidItem) => i.status !== "disconnected") || []);
+              setExistingAccounts(acctData.accounts || []);
+            }
+          }
+        } else {
+          setExistingItems([]);
+          setExistingAccounts([]);
+          setStep("intro");
+        }
+      }
+    } catch {
+      setError("Failed to disconnect. Please try again.");
+    }
+    setDisconnecting(false);
+  };
+
+  const handleAddAnother = () => {
+    setAccounts([]);
+    setInstitution(null);
+    setSelectedAccounts(new Set());
+    setAccountPropertyMap({});
+    setSyncResult(null);
+    setStep("connect");
   };
 
   return (
@@ -131,7 +248,9 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
           <div className="flex items-center gap-3">
             <Image src="/logos/plaid.svg" alt="Plaid" width={40} height={40} className="rounded-xl object-contain" />
             <div>
-              <h2 id={titleId} className="text-base font-semibold text-gray-900">Connect Bank Account</h2>
+              <h2 id={titleId} className="text-base font-semibold text-gray-900">
+                {step === "connected" ? "Bank Connections" : "Connect Bank Account"}
+              </h2>
               <p className="text-xs text-gray-600 mt-0.5">Powered by Plaid</p>
             </div>
           </div>
@@ -141,6 +260,143 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
         </div>
 
         <div className="px-6 py-5">
+          {/* Loading */}
+          {step === "loading" && (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            </div>
+          )}
+
+          {/* Error banner */}
+          {error && (
+            <div className="flex items-start gap-2.5 p-3 mb-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" /> {error}
+            </div>
+          )}
+
+          {/* ─── CONNECTED STATE ─── */}
+          {step === "connected" && (
+            <div className="space-y-5">
+              {/* Status banner */}
+              <div className="flex items-center gap-3 p-4 bg-teal-50 rounded-xl border border-teal-100">
+                <div className="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center shrink-0">
+                  <Check className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-teal-900">Connected</p>
+                  <p className="text-xs text-teal-700">
+                    {existingItems.length} bank{existingItems.length !== 1 ? "s" : ""} linked
+                  </p>
+                </div>
+              </div>
+
+              {/* Connected institutions */}
+              {existingItems.map((item) => (
+                <div key={item.item_id} className="p-4 rounded-xl border border-gray-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <Landmark className="w-4 h-4 text-gray-500" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{item.institution_name || "Bank Account"}</p>
+                        <p className="text-[11px] text-gray-500">
+                          {item.last_synced_at
+                            ? `Last synced ${new Date(item.last_synced_at).toLocaleDateString()} at ${new Date(item.last_synced_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
+                            : "Pending initial sync"}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`px-2 py-0.5 text-[10px] font-medium rounded-full ${
+                      item.status === "good" || item.status === "active"
+                        ? "bg-teal-50 text-teal-700"
+                        : item.status === "error"
+                        ? "bg-red-50 text-red-700"
+                        : "bg-gray-100 text-gray-600"
+                    }`}>
+                      {item.status === "good" || item.status === "active" ? "Active" : item.status}
+                    </span>
+                  </div>
+
+                  {/* Accounts under this institution */}
+                  {existingAccounts.length > 0 && (
+                    <div className="space-y-1.5 pl-6">
+                      {existingAccounts.map((acct) => (
+                        <div key={acct.id} className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="w-3 h-3 text-gray-400" />
+                            <span className="text-gray-700">
+                              {acct.account_name || "Account"}
+                              {acct.account_mask ? <span className="text-gray-400 ml-1">••{acct.account_mask}</span> : ""}
+                            </span>
+                          </div>
+                          <span className="text-gray-500 truncate max-w-[120px]">
+                            {acct.properties?.name || "All properties"}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {existingItems.length > 1 && (
+                    <button
+                      onClick={() => handleDisconnect(item.item_id)}
+                      disabled={disconnecting}
+                      className="text-xs text-red-500 hover:text-red-700 transition-colors disabled:opacity-50"
+                    >
+                      Disconnect this bank
+                    </button>
+                  )}
+                </div>
+              ))}
+
+              {/* Sync results */}
+              {syncResult && (
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                  <RefreshCw className="w-4 h-4 text-gray-500" />
+                  <p className="text-xs text-gray-700">
+                    <span className="font-medium">{syncResult.added} added</span>
+                    {syncResult.modified > 0 && <>, <span className="font-medium">{syncResult.modified} updated</span></>}
+                    {syncResult.removed > 0 && <>, <span className="font-medium">{syncResult.removed} removed</span></>}
+                  </p>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="space-y-3">
+                <button
+                  onClick={handleSync}
+                  disabled={syncing}
+                  className="w-full py-3 bg-gray-900 text-white text-sm font-medium rounded-xl hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {syncing ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Syncing...</>
+                  ) : (
+                    <><RefreshCw className="w-4 h-4" /> Sync Transactions</>
+                  )}
+                </button>
+
+                <button
+                  onClick={handleAddAnother}
+                  className="w-full py-3 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  <Landmark className="w-4 h-4" /> Connect Another Bank
+                </button>
+
+                <button
+                  onClick={() => handleDisconnect()}
+                  disabled={disconnecting}
+                  className="w-full py-3 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {disconnecting ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Disconnecting...</>
+                  ) : (
+                    <><Unlink className="w-4 h-4" /> Disconnect {existingItems.length > 1 ? "All Banks" : "Bank"}</>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ─── INTRO ─── */}
           {step === "intro" && (
             <div className="space-y-6">
               <div className="space-y-4">
@@ -185,6 +441,7 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
             </div>
           )}
 
+          {/* ─── CONNECT ─── */}
           {step === "connect" && (
             <div className="space-y-6">
               <div className="text-center py-4">
@@ -197,11 +454,11 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
 
               <PlaidLinkButton
                 onSuccess={handlePlaidSuccess}
-                onError={(err) => console.error("Plaid error:", err)}
+                onError={(err) => setError(err)}
               />
 
               <button
-                onClick={() => setStep("intro")}
+                onClick={() => setStep(existingItems.length > 0 ? "connected" : "intro")}
                 className="w-full py-3 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
               >
                 Back
@@ -213,6 +470,7 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
             </div>
           )}
 
+          {/* ─── ACCOUNTS ─── */}
           {step === "accounts" && (
             <div className="space-y-6">
               <div>
@@ -256,6 +514,7 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
             </div>
           )}
 
+          {/* ─── MAPPING ─── */}
           {step === "mapping" && (
             <div className="space-y-6">
               <div>
@@ -304,7 +563,7 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
               {properties.length === 0 && (
                 <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-lg border border-amber-100">
                   <Building2 className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
-                  <p className="text-xs text-amber-700">No properties found. Add properties first, or skip this step — you can map accounts to properties later from the integration settings.</p>
+                  <p className="text-xs text-amber-700">No properties found. Add properties first, or skip this step -- you can map accounts to properties later from the integration settings.</p>
                 </div>
               )}
 
@@ -326,6 +585,7 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
             </div>
           )}
 
+          {/* ─── SUCCESS ─── */}
           {step === "success" && (
             <div className="text-center py-8 space-y-4">
               <div className="w-16 h-16 bg-teal-50 rounded-2xl flex items-center justify-center mx-auto">
@@ -356,7 +616,7 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
                 )}
                 <div className="flex justify-between">
                   <span className="text-gray-500">Sync</span>
-                  <span className="font-medium text-teal-600">Active — Real-Time</span>
+                  <span className="font-medium text-teal-600">Active -- Real-Time</span>
                 </div>
               </div>
               <p className="text-xs text-gray-500">{txnCount > 0 ? `${txnCount} transactions imported and auto-categorized.` : "Transactions will appear in your Expenses shortly."} HostFi will match them to your properties.</p>
