@@ -1,8 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { authenticateRequest } from '@/lib/auth';
 import { getServiceClient } from '@/lib/supabase/service';
 import { removeItem } from '@/lib/integrations/plaid';
-import { readCredentials } from '@/lib/crypto';
+import { decryptPlaidToken } from '@/lib/integrations/plaid-crypto';
+import { createRateLimiter } from '@/lib/rate-limit';
+
+const rateLimiter = createRateLimiter('plaid-disconnect', 5, 60_000);
 
 /**
  * POST /api/integrations/plaid/disconnect
@@ -11,9 +14,11 @@ import { readCredentials } from '@/lib/crypto';
  * 
  * POST (no body) disconnects ALL Plaid items for the user
  */
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const auth = await authenticateRequest();
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    if (rateLimiter(ip)) return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
     const supabase = getServiceClient();
     if (!supabase) return NextResponse.json({ error: 'Not configured' }, { status: 500 });
 
@@ -38,9 +43,7 @@ export async function POST(request: Request) {
     for (const item of items) {
       // Try to remove from Plaid (best effort -- may fail if token already invalid)
       try {
-        const accessToken = typeof item.access_token === 'string'
-          ? item.access_token
-          : readCredentials(item.access_token)?.access_token;
+        const accessToken = item.access_token ? decryptPlaidToken(item.access_token) : null;
         if (accessToken) {
           await removeItem(accessToken);
         }

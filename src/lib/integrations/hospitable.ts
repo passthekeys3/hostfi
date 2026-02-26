@@ -401,10 +401,7 @@ export async function verifyCredentials(auth: HospitableAuth): Promise<boolean> 
 export function mapPropertyToHostFi(property: HospitableProperty) {
   const addr = property.address || {};
   const capacity = property.capacity || {};
-  // Debug: log address keys to identify correct zip field
-  if (addr && !addr.postal_code) {
-    console.info('Hospitable address keys:', Object.keys(addr), 'values:', JSON.stringify(addr));
-  }
+
 
   return {
     name: property.name || property.public_name || 'Unnamed Property',

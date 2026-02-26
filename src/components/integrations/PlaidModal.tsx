@@ -193,6 +193,7 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
 
   const handleDisconnect = async (itemId?: string) => {
     setDisconnecting(true);
+    setError(null);
     try {
       const res = await fetch("/api/integrations/plaid/disconnect", {
         method: "POST",
@@ -201,18 +202,13 @@ export function PlaidModal({ onClose, onConnected }: ModalProps & { onConnected?
       });
       if (res.ok) {
         if (itemId) {
-          // Remove just that item
-          setExistingItems(prev => prev.filter(i => i.item_id !== itemId));
-          setExistingAccounts(prev => prev.filter(a => {
-            // Can't easily filter by item, so refresh
-            return true;
-          }));
-          // If no items left, go to intro
           const remaining = existingItems.filter(i => i.item_id !== itemId);
           if (remaining.length === 0) {
+            setExistingItems([]);
+            setExistingAccounts([]);
             setStep("intro");
           } else {
-            // Refresh
+            // Refresh from server
             const acctRes = await fetch("/api/integrations/plaid/accounts");
             if (acctRes.ok) {
               const acctData = await acctRes.json();
