@@ -477,9 +477,13 @@ export function mapReservationToRevenue(
 }
 
 /**
- * Extract host-side fees from a reservation as HostFi expense entries.
- * Returns cleaning fees, host taxes, and adjustments as individual expense items.
- * These are costs deducted from the host payout.
+ * Extract host-side costs from a reservation as HostFi expense entries.
+ * Only includes actual costs deducted from the host payout (taxes, adjustments).
+ * 
+ * NOTE: guest_fees (cleaning fee, etc.) are NOT expenses — they are fees the host
+ * charges guests and are included in the host's revenue total. The host's actual
+ * cleaning cost (what they pay their cleaner) is a separate expense entered manually
+ * or via bank sync (Plaid).
  */
 export function extractExpensesFromReservation(
   reservation: HospitableReservation,
@@ -506,23 +510,7 @@ export function extractExpensesFromReservation(
   const checkIn = reservation.arrival_date?.split('T')[0] || new Date().toISOString().split('T')[0];
   const code = reservation.platform_id || reservation.id;
 
-  // Guest fees charged by host (cleaning fee, etc.) — these are costs the host pays for
-  for (const fee of host.guest_fees || []) {
-    const amt = Math.abs(fee.amount) / 100;
-    if (amt === 0) continue;
-    const label = fee.label || 'Guest Fee';
-    const category = label.toLowerCase().includes('clean') ? 'cleaning' : 'management';
-    expenses.push({
-      property_id: propertyId,
-      category,
-      description: `${label} — Booking ${code}`,
-      amount: amt,
-      date: checkIn,
-      source: 'pms_sync',
-    });
-  }
-
-  // Host taxes
+  // Host taxes (occupancy tax, VAT, etc. — actual costs deducted from payout)
   for (const tax of host.taxes || []) {
     const amt = Math.abs(tax.amount) / 100;
     if (amt === 0) continue;

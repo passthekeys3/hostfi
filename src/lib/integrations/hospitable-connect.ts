@@ -473,7 +473,13 @@ export function mapReservationToRevenue(
 }
 
 /**
- * Extract cleaning fees and host taxes from a reservation as expense entries
+ * Extract host-side costs from a reservation as expense entries.
+ * Only includes actual costs deducted from the host payout (taxes).
+ * 
+ * NOTE: cleaning_fee is NOT an expense — it's what the host charges guests and is
+ * included in the host's revenue total. The actual cleaning cost (what you pay your
+ * cleaner) is a separate expense entered manually or via bank sync (Plaid).
+ * 
  * Note: expenses table has CHECK constraint requiring source = 'pms_sync'
  * Note: Do NOT include hospitable_reservation_id on expenses (column doesn't exist)
  */
@@ -503,20 +509,7 @@ export function extractExpenses(
   const checkIn = reservation.arrival_date?.split('T')[0] || new Date().toISOString().split('T')[0];
   const code = reservation.platform_id || reservation.id;
 
-  // Cleaning fee (in cents, ÷100)
-  if (hostFinancials.cleaning_fee?.amount) {
-    const amt = Math.abs(hostFinancials.cleaning_fee.amount) / 100;
-    if (amt > 0) {
-      expenses.push({
-        property_id: propertyId,
-        category: 'cleaning',
-        description: `Cleaning Fee — Booking ${code}`,
-        amount: amt,
-        date: checkIn,
-        source: 'pms_sync',
-      });
-    }
-  }
+  // NOTE: cleaning_fee deliberately excluded — it's guest-facing revenue, not a host expense
 
   // Host taxes
   for (const tax of hostFinancials.taxes || []) {
@@ -532,7 +525,7 @@ export function extractExpenses(
     });
   }
 
-  // Additional host fees (pass-through fees, etc.)
+  // Additional host fees (pass-through fees, etc. — NOT cleaning or guest-facing fees)
   for (const fee of hostFinancials.fees || []) {
     // Skip negative adjustments (credits) for expense tracking
     if (fee.amount <= 0) continue;
@@ -541,11 +534,12 @@ export function extractExpenses(
     if (amt === 0) continue;
     
     const label = fee.label || 'Fee';
-    const category = label.toLowerCase().includes('clean') ? 'cleaning' : 'management';
+    // Skip cleaning fees — they're guest-facing revenue, not host expenses
+    if (label.toLowerCase().includes('clean')) continue;
     
     expenses.push({
       property_id: propertyId,
-      category,
+      category: 'management',
       description: `${label} — Booking ${code}`,
       amount: amt,
       date: checkIn,
