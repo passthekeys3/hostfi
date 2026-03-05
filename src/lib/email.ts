@@ -100,31 +100,46 @@ export async function sendWeeklySummary(to: string, name: string, summary: {
 }): Promise<boolean> {
   return sendEmail({
     to,
-    subject: `HostFi Weekly Summary — $${summary.totalExpenses.toLocaleString()} in expenses`,
+    subject: `HostFi Weekly Summary — $${summary.totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} in expenses`,
     tag: 'weekly-summary',
     html: `
       <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 520px; margin: 0 auto; padding: 40px 20px;">
+        <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;"><tr>
+          <td style="vertical-align:middle;padding-right:8px;">
+            <img src="https://hostfi.ai/logo-email.png" alt="HostFi" width="32" height="32" style="display:block;width:32px;height:32px;border-radius:8px;" />
+          </td>
+          <td style="vertical-align:middle;">
+            <span style="font-size:18px;font-weight:700;color:#111827;">HostFi</span>
+          </td>
+        </tr></table>
         <h1 style="font-size: 24px; font-weight: 700; color: #111827; margin-bottom: 16px;">Weekly Summary</h1>
         <p style="font-size: 15px; color: #6B7280; margin-bottom: 24px;">Hey ${name}, here's your week at a glance.</p>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
-          <div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 12px; padding: 16px;">
-            <p style="font-size: 12px; color: #9CA3AF; margin-bottom: 4px;">Total Expenses</p>
-            <p style="font-size: 22px; font-weight: 700; color: #111827;">$${summary.totalExpenses.toLocaleString()}</p>
-          </div>
-          <div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 12px; padding: 16px;">
-            <p style="font-size: 12px; color: #9CA3AF; margin-bottom: 4px;">New Bills Parsed</p>
-            <p style="font-size: 22px; font-weight: 700; color: #111827;">${summary.newBills}</p>
-          </div>
-          <div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 12px; padding: 16px;">
-            <p style="font-size: 12px; color: #9CA3AF; margin-bottom: 4px;">Properties</p>
-            <p style="font-size: 22px; font-weight: 700; color: #111827;">${summary.propertiesTracked}</p>
-          </div>
-          <div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 12px; padding: 16px;">
-            <p style="font-size: 12px; color: #9CA3AF; margin-bottom: 4px;">Alerts</p>
-            <p style="font-size: 22px; font-weight: 700; color: ${summary.alerts > 0 ? '#DC2626' : '#111827'};">${summary.alerts}</p>
-          </div>
-        </div>
+        <table cellpadding="0" cellspacing="0" border="0" style="width:100%;margin-bottom:24px;">
+          <tr>
+            <td style="width:48%;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:12px;padding:16px;">
+              <p style="font-size:12px;color:#9CA3AF;margin:0 0 4px;">Total Expenses</p>
+              <p style="font-size:22px;font-weight:700;color:#111827;margin:0;">$${summary.totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            </td>
+            <td style="width:4%;"></td>
+            <td style="width:48%;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:12px;padding:16px;">
+              <p style="font-size:12px;color:#9CA3AF;margin:0 0 4px;">New Bills Parsed</p>
+              <p style="font-size:22px;font-weight:700;color:#111827;margin:0;">${summary.newBills}</p>
+            </td>
+          </tr>
+          <tr><td colspan="3" style="height:12px;"></td></tr>
+          <tr>
+            <td style="width:48%;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:12px;padding:16px;">
+              <p style="font-size:12px;color:#9CA3AF;margin:0 0 4px;">Properties</p>
+              <p style="font-size:22px;font-weight:700;color:#111827;margin:0;">${summary.propertiesTracked}</p>
+            </td>
+            <td style="width:4%;"></td>
+            <td style="width:48%;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:12px;padding:16px;">
+              <p style="font-size:12px;color:#9CA3AF;margin:0 0 4px;">Alerts</p>
+              <p style="font-size:22px;font-weight:700;color:${summary.alerts > 0 ? '#DC2626' : '#111827'};margin:0;">${summary.alerts}</p>
+            </td>
+          </tr>
+        </table>
 
         <p style="font-size: 13px; color: #6B7280; margin-bottom: 24px;">Top spending category: <strong style="color: #111827;">${summary.topCategory}</strong></p>
 

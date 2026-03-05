@@ -8,12 +8,23 @@ interface EmailTemplate {
   html: string;
 }
 
+/** Format dollar amount with 2 decimal places and commas */
+function fmtUSD(n: number): string {
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 const HEADER = `
 <div style="max-width:560px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#111827;">
   <div style="padding:32px 0 24px;">
-    <a href="https://hostfi.ai" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px;">
-      <img src="https://hostfi.ai/logo.svg" alt="HostFi" width="32" height="32" style="display:inline-block;width:32px;height:32px;border-radius:8px;" />
-      <span style="font-size:18px;font-weight:700;color:#111827;">HostFi</span>
+    <a href="https://hostfi.ai" style="text-decoration:none;">
+      <table cellpadding="0" cellspacing="0" border="0"><tr>
+        <td style="vertical-align:middle;padding-right:8px;">
+          <img src="https://hostfi.ai/logo-email.png" alt="HostFi" width="32" height="32" style="display:block;width:32px;height:32px;border-radius:8px;" />
+        </td>
+        <td style="vertical-align:middle;">
+          <span style="font-size:18px;font-weight:700;color:#111827;">HostFi</span>
+        </td>
+      </tr></table>
     </a>
   </div>
 `;
@@ -46,7 +57,7 @@ export function anomalyAlertEmail(data: {
   const percentHigher = Math.round(((data.amount - data.averageAmount) / data.averageAmount) * 100);
   
   return {
-    subject: `Unusual charge detected: $${data.amount.toLocaleString()} at ${data.vendor}`,
+    subject: `Unusual charge detected: $${fmtUSD(data.amount)} at ${data.vendor}`,
     html: `${HEADER}
       <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:20px;margin:0 0 20px;">
         <p style="font-size:14px;font-weight:600;color:#991b1b;margin:0 0 4px;">⚠️ Unusual Charge Detected</p>
@@ -58,28 +69,30 @@ export function anomalyAlertEmail(data: {
       <div style="background:#f9fafb;border-radius:12px;padding:20px;margin:0 0 20px;">
         <div style="margin-bottom:12px;">
           <span style="font-size:12px;color:#6b7280;">Amount</span>
-          <p style="font-size:24px;font-weight:700;color:#111827;margin:4px 0 0;">$${data.amount.toLocaleString()}</p>
+          <p style="font-size:24px;font-weight:700;color:#111827;margin:4px 0 0;">$${fmtUSD(data.amount)}</p>
         </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-          <span style="font-size:13px;color:#6b7280;">Vendor</span>
-          <span style="font-size:13px;font-weight:600;color:#111827;">${data.vendor}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-          <span style="font-size:13px;color:#6b7280;">Property</span>
-          <span style="font-size:13px;font-weight:600;color:#111827;">${data.property}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-          <span style="font-size:13px;color:#6b7280;">Category</span>
-          <span style="font-size:13px;font-weight:600;color:#111827;">${data.category}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;">
-          <span style="font-size:13px;color:#6b7280;">Date</span>
-          <span style="font-size:13px;font-weight:600;color:#111827;">${data.date}</span>
-        </div>
+        <table cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+          <tr>
+            <td style="font-size:13px;color:#6b7280;padding-bottom:8px;">Vendor</td>
+            <td style="font-size:13px;font-weight:600;color:#111827;text-align:right;padding-bottom:8px;">${data.vendor}</td>
+          </tr>
+          <tr>
+            <td style="font-size:13px;color:#6b7280;padding-bottom:8px;">Property</td>
+            <td style="font-size:13px;font-weight:600;color:#111827;text-align:right;padding-bottom:8px;">${data.property}</td>
+          </tr>
+          <tr>
+            <td style="font-size:13px;color:#6b7280;padding-bottom:8px;">Category</td>
+            <td style="font-size:13px;font-weight:600;color:#111827;text-align:right;padding-bottom:8px;">${data.category}</td>
+          </tr>
+          <tr>
+            <td style="font-size:13px;color:#6b7280;">Date</td>
+            <td style="font-size:13px;font-weight:600;color:#111827;text-align:right;">${data.date}</td>
+          </tr>
+        </table>
       </div>
 
       <p style="font-size:14px;color:#6b7280;margin:0 0 20px;">
-        Your average ${data.category} expense is $${data.averageAmount.toLocaleString()}. This one is significantly higher.
+        Your average ${data.category} expense is $${fmtUSD(data.averageAmount)}. This one is significantly higher.
       </p>
 
       ${BUTTON('Review Expense', 'https://hostfi.ai/dashboard/expenses')}
@@ -98,7 +111,7 @@ export function billDueEmail(data: {
   daysUntilDue: number;
 }): EmailTemplate {
   return {
-    subject: `${data.vendor} bill of $${data.amount.toLocaleString()} due in ${data.daysUntilDue} days`,
+    subject: `${data.vendor} bill of $${fmtUSD(data.amount)} due in ${data.daysUntilDue} days`,
     html: `${HEADER}
       <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:20px;margin:0 0 20px;">
         <p style="font-size:14px;font-weight:600;color:#92400e;margin:0 0 4px;">📅 Bill Due Soon</p>
@@ -110,16 +123,18 @@ export function billDueEmail(data: {
       <div style="background:#f9fafb;border-radius:12px;padding:20px;margin:0 0 20px;">
         <div style="margin-bottom:12px;">
           <span style="font-size:12px;color:#6b7280;">Amount Due</span>
-          <p style="font-size:24px;font-weight:700;color:#111827;margin:4px 0 0;">$${data.amount.toLocaleString()}</p>
+          <p style="font-size:24px;font-weight:700;color:#111827;margin:4px 0 0;">$${fmtUSD(data.amount)}</p>
         </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-          <span style="font-size:13px;color:#6b7280;">Vendor</span>
-          <span style="font-size:13px;font-weight:600;color:#111827;">${data.vendor}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;">
-          <span style="font-size:13px;color:#6b7280;">Property</span>
-          <span style="font-size:13px;font-weight:600;color:#111827;">${data.property}</span>
-        </div>
+        <table cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+          <tr>
+            <td style="font-size:13px;color:#6b7280;padding-bottom:8px;">Vendor</td>
+            <td style="font-size:13px;font-weight:600;color:#111827;text-align:right;padding-bottom:8px;">${data.vendor}</td>
+          </tr>
+          <tr>
+            <td style="font-size:13px;color:#6b7280;">Property</td>
+            <td style="font-size:13px;font-weight:600;color:#111827;text-align:right;">${data.property}</td>
+          </tr>
+        </table>
       </div>
 
       ${BUTTON('View All Bills', 'https://hostfi.ai/dashboard/expenses')}
@@ -138,7 +153,7 @@ export function billOverdueEmail(data: {
   daysOverdue: number;
 }): EmailTemplate {
   return {
-    subject: `OVERDUE: ${data.vendor} bill of $${data.amount.toLocaleString()} for ${data.property}`,
+    subject: `OVERDUE: ${data.vendor} bill of $${fmtUSD(data.amount)} for ${data.property}`,
     html: `${HEADER}
       <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:20px;margin:0 0 20px;">
         <p style="font-size:14px;font-weight:600;color:#991b1b;margin:0 0 4px;">🚨 Bill Overdue</p>
@@ -150,16 +165,18 @@ export function billOverdueEmail(data: {
       <div style="background:#f9fafb;border-radius:12px;padding:20px;margin:0 0 20px;">
         <div style="margin-bottom:12px;">
           <span style="font-size:12px;color:#6b7280;">Amount Due</span>
-          <p style="font-size:24px;font-weight:700;color:#dc2626;margin:4px 0 0;">$${data.amount.toLocaleString()}</p>
+          <p style="font-size:24px;font-weight:700;color:#dc2626;margin:4px 0 0;">$${fmtUSD(data.amount)}</p>
         </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-          <span style="font-size:13px;color:#6b7280;">Vendor</span>
-          <span style="font-size:13px;font-weight:600;color:#111827;">${data.vendor}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;">
-          <span style="font-size:13px;color:#6b7280;">Property</span>
-          <span style="font-size:13px;font-weight:600;color:#111827;">${data.property}</span>
-        </div>
+        <table cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+          <tr>
+            <td style="font-size:13px;color:#6b7280;padding-bottom:8px;">Vendor</td>
+            <td style="font-size:13px;font-weight:600;color:#111827;text-align:right;padding-bottom:8px;">${data.vendor}</td>
+          </tr>
+          <tr>
+            <td style="font-size:13px;color:#6b7280;">Property</td>
+            <td style="font-size:13px;font-weight:600;color:#111827;text-align:right;">${data.property}</td>
+          </tr>
+        </table>
       </div>
 
       ${BUTTON('Pay Now', 'https://hostfi.ai/dashboard/expenses')}
@@ -181,26 +198,29 @@ export function weeklyDigestEmail(data: {
   const propertyRows = data.properties.map(p => `
     <tr>
       <td style="padding:8px 0;font-size:13px;color:#374151;border-bottom:1px solid #f3f4f6;">${p.name}</td>
-      <td style="padding:8px 0;font-size:13px;color:#111827;font-weight:600;text-align:right;border-bottom:1px solid #f3f4f6;">$${p.amount.toLocaleString()}</td>
+      <td style="padding:8px 0;font-size:13px;color:#111827;font-weight:600;text-align:right;border-bottom:1px solid #f3f4f6;">$${fmtUSD(p.amount)}</td>
     </tr>
   `).join('');
 
   return {
-    subject: `Weekly Summary: $${data.totalSpend.toLocaleString()} spent (${data.weekStart} – ${data.weekEnd})`,
+    subject: `Weekly Summary: $${fmtUSD(data.totalSpend)} spent (${data.weekStart} – ${data.weekEnd})`,
     html: `${HEADER}
       <h1 style="font-size:22px;font-weight:700;margin:0 0 8px;">Weekly Expense Summary</h1>
       <p style="font-size:13px;color:#6b7280;margin:0 0 24px;">${data.weekStart} – ${data.weekEnd}</p>
 
-      <div style="display:flex;gap:12px;margin:0 0 24px;">
-        <div style="flex:1;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
-          <p style="font-size:11px;color:#6b7280;margin:0 0 4px;text-transform:uppercase;">Total Spent</p>
-          <p style="font-size:24px;font-weight:700;color:#111827;margin:0;">$${data.totalSpend.toLocaleString()}</p>
-        </div>
-        <div style="flex:1;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
-          <p style="font-size:11px;color:#6b7280;margin:0 0 4px;text-transform:uppercase;">Expenses</p>
-          <p style="font-size:24px;font-weight:700;color:#111827;margin:0;">${data.expenseCount}</p>
-        </div>
-      </div>
+      <table cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:0 0 24px;">
+        <tr>
+          <td style="width:48%;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
+            <p style="font-size:11px;color:#6b7280;margin:0 0 4px;text-transform:uppercase;">Total Spent</p>
+            <p style="font-size:24px;font-weight:700;color:#111827;margin:0;">$${fmtUSD(data.totalSpend)}</p>
+          </td>
+          <td style="width:4%;"></td>
+          <td style="width:48%;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
+            <p style="font-size:11px;color:#6b7280;margin:0 0 4px;text-transform:uppercase;">Expenses</p>
+            <p style="font-size:24px;font-weight:700;color:#111827;margin:0;">${data.expenseCount}</p>
+          </td>
+        </tr>
+      </table>
 
       ${data.properties.length > 0 ? `
       <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;margin:0 0 20px;">
@@ -213,7 +233,7 @@ export function weeklyDigestEmail(data: {
 
       ${data.topCategory ? `
       <p style="font-size:13px;color:#6b7280;margin:0 0 20px;">
-        Top category: <strong style="color:#111827;">${data.topCategory.name}</strong> ($${data.topCategory.amount.toLocaleString()})
+        Top category: <strong style="color:#111827;">${data.topCategory.name}</strong> ($${fmtUSD(data.topCategory.amount)})
       </p>
       ` : ''}
 
@@ -243,40 +263,44 @@ export function monthlyReportEmail(data: {
   const propertyRows = data.properties.map(p => `
     <tr>
       <td style="padding:8px 0;font-size:13px;color:#374151;border-bottom:1px solid #f3f4f6;">${p.name}</td>
-      <td style="padding:8px 0;font-size:13px;color:#111827;text-align:right;border-bottom:1px solid #f3f4f6;">$${p.expenses.toLocaleString()}</td>
-      <td style="padding:8px 0;font-size:13px;color:#111827;text-align:right;border-bottom:1px solid #f3f4f6;">$${p.revenue.toLocaleString()}</td>
-      <td style="padding:8px 0;font-size:13px;font-weight:600;text-align:right;border-bottom:1px solid #f3f4f6;color:${p.net >= 0 ? '#059669' : '#dc2626'};">$${p.net.toLocaleString()}</td>
+      <td style="padding:8px 0;font-size:13px;color:#111827;text-align:right;border-bottom:1px solid #f3f4f6;">$${fmtUSD(p.expenses)}</td>
+      <td style="padding:8px 0;font-size:13px;color:#111827;text-align:right;border-bottom:1px solid #f3f4f6;">$${fmtUSD(p.revenue)}</td>
+      <td style="padding:8px 0;font-size:13px;font-weight:600;text-align:right;border-bottom:1px solid #f3f4f6;color:${p.net >= 0 ? '#059669' : '#dc2626'};">$${fmtUSD(p.net)}</td>
     </tr>
   `).join('');
 
   const categoryRows = data.categories.slice(0, 6).map(c => `
     <tr>
       <td style="padding:8px 0;font-size:13px;color:#374151;border-bottom:1px solid #f3f4f6;">${c.name}</td>
-      <td style="padding:8px 0;font-size:13px;color:#111827;font-weight:600;text-align:right;border-bottom:1px solid #f3f4f6;">$${c.amount.toLocaleString()}</td>
+      <td style="padding:8px 0;font-size:13px;color:#111827;font-weight:600;text-align:right;border-bottom:1px solid #f3f4f6;">$${fmtUSD(c.amount)}</td>
       <td style="padding:8px 0;font-size:12px;color:#6b7280;text-align:right;border-bottom:1px solid #f3f4f6;">${c.percent.toFixed(0)}%</td>
     </tr>
   `).join('');
 
   return {
-    subject: `${data.month} Report: $${data.netIncome >= 0 ? '+' : ''}${data.netIncome.toLocaleString()} net income`,
+    subject: `${data.month} Report: $${data.netIncome >= 0 ? '+' : ''}${fmtUSD(data.netIncome)} net income`,
     html: `${HEADER}
       <h1 style="font-size:22px;font-weight:700;margin:0 0 8px;">${data.month} P&L Report</h1>
       ${momText ? `<p style="font-size:13px;color:#6b7280;margin:0 0 24px;">${momText}</p>` : '<div style="margin-bottom:24px;"></div>'}
 
-      <div style="display:flex;gap:12px;margin:0 0 24px;">
-        <div style="flex:1;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
-          <p style="font-size:11px;color:#6b7280;margin:0 0 4px;text-transform:uppercase;">Expenses</p>
-          <p style="font-size:20px;font-weight:700;color:#111827;margin:0;">$${data.totalExpenses.toLocaleString()}</p>
-        </div>
-        <div style="flex:1;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
-          <p style="font-size:11px;color:#6b7280;margin:0 0 4px;text-transform:uppercase;">Revenue</p>
-          <p style="font-size:20px;font-weight:700;color:#111827;margin:0;">$${data.totalRevenue.toLocaleString()}</p>
-        </div>
-        <div style="flex:1;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
-          <p style="font-size:11px;color:#6b7280;margin:0 0 4px;text-transform:uppercase;">Net Income</p>
-          <p style="font-size:20px;font-weight:700;margin:0;color:${netColor};">$${data.netIncome.toLocaleString()}</p>
-        </div>
-      </div>
+      <table cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:0 0 24px;">
+        <tr>
+          <td style="width:32%;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
+            <p style="font-size:11px;color:#6b7280;margin:0 0 4px;text-transform:uppercase;">Expenses</p>
+            <p style="font-size:20px;font-weight:700;color:#111827;margin:0;">$${fmtUSD(data.totalExpenses)}</p>
+          </td>
+          <td style="width:2%;"></td>
+          <td style="width:32%;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
+            <p style="font-size:11px;color:#6b7280;margin:0 0 4px;text-transform:uppercase;">Revenue</p>
+            <p style="font-size:20px;font-weight:700;color:#111827;margin:0;">$${fmtUSD(data.totalRevenue)}</p>
+          </td>
+          <td style="width:2%;"></td>
+          <td style="width:32%;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
+            <p style="font-size:11px;color:#6b7280;margin:0 0 4px;text-transform:uppercase;">Net Income</p>
+            <p style="font-size:20px;font-weight:700;margin:0;color:${netColor};">$${fmtUSD(data.netIncome)}</p>
+          </td>
+        </tr>
+      </table>
 
       ${data.categories.length > 0 ? `
       <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;margin:0 0 20px;">

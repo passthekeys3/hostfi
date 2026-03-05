@@ -9,12 +9,23 @@ interface EmailTemplate {
   textBody: string;
 }
 
+/** Format dollar amount with 2 decimal places and commas */
+function fmtUSD(n: number): string {
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 const HEADER = `
 <div style="max-width:560px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#111827;">
   <div style="padding:32px 0 24px;">
-    <a href="https://hostfi.ai" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px;">
-      <img src="https://hostfi.ai/logo.svg" alt="HostFi" width="32" height="32" style="display:inline-block;width:32px;height:32px;border-radius:8px;" />
-      <span style="font-size:18px;font-weight:700;color:#111827;">HostFi</span>
+    <a href="https://hostfi.ai" style="text-decoration:none;">
+      <table cellpadding="0" cellspacing="0" border="0"><tr>
+        <td style="vertical-align:middle;padding-right:8px;">
+          <img src="https://hostfi.ai/logo-email.png" alt="HostFi" width="32" height="32" style="display:block;width:32px;height:32px;border-radius:8px;" />
+        </td>
+        <td style="vertical-align:middle;">
+          <span style="font-size:18px;font-weight:700;color:#111827;">HostFi</span>
+        </td>
+      </tr></table>
     </a>
   </div>
 `;
@@ -145,16 +156,19 @@ export function checkInEmail(name: string, propertyCount: number, expenseCount: 
         You've been on HostFi for a few days now. Quick snapshot of where you're at:
       </p>
       
-      <div style="display:flex;gap:16px;margin:0 0 24px;">
-        <div style="flex:1;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
-          <p style="font-size:28px;font-weight:700;color:#111827;margin:0;">${propertyCount}</p>
-          <p style="font-size:12px;color:#6b7280;margin:4px 0 0;">Properties</p>
-        </div>
-        <div style="flex:1;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
-          <p style="font-size:28px;font-weight:700;color:#111827;margin:0;">${expenseCount}</p>
-          <p style="font-size:12px;color:#6b7280;margin:4px 0 0;">Expenses</p>
-        </div>
-      </div>
+      <table cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:0 0 24px;">
+        <tr>
+          <td style="width:48%;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
+            <p style="font-size:28px;font-weight:700;color:#111827;margin:0;">${propertyCount}</p>
+            <p style="font-size:12px;color:#6b7280;margin:4px 0 0;">Properties</p>
+          </td>
+          <td style="width:4%;"></td>
+          <td style="width:48%;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
+            <p style="font-size:28px;font-weight:700;color:#111827;margin:0;">${expenseCount}</p>
+            <p style="font-size:12px;color:#6b7280;margin:4px 0 0;">Expenses</p>
+          </td>
+        </tr>
+      </table>
       
       ${propertyCount === 0 ? `
         <p style="font-size:15px;line-height:1.6;color:#374151;margin:0 0 16px;">
@@ -209,7 +223,7 @@ export function weeklyDigestEmail(
 ): EmailTemplate {
   const firstName = name?.split(' ')[0] || 'there';
   return {
-    subject: `Your weekly expense summary: $${data.totalSpend.toLocaleString()}`,
+    subject: `Your weekly expense summary: $${fmtUSD(data.totalSpend)}`,
     htmlBody: `${HEADER}
       <h1 style="font-size:22px;font-weight:700;margin:0 0 16px;">Weekly Summary</h1>
       <p style="font-size:15px;line-height:1.6;color:#374151;margin:0 0 20px;">
@@ -217,18 +231,20 @@ export function weeklyDigestEmail(
       </p>
       
       <div style="background:#f9fafb;border-radius:12px;padding:20px;margin:0 0 20px;">
-        <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
-          <span style="font-size:14px;color:#6b7280;">Total Spend</span>
-          <span style="font-size:14px;font-weight:600;color:#111827;">$${data.totalSpend.toLocaleString()}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:12px;">
-          <span style="font-size:14px;color:#6b7280;">Expenses Logged</span>
-          <span style="font-size:14px;font-weight:600;color:#111827;">${data.expenseCount}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;">
-          <span style="font-size:14px;color:#6b7280;">Top Category</span>
-          <span style="font-size:14px;font-weight:600;color:#111827;">${data.topCategory} ($${data.topCategoryAmount.toLocaleString()})</span>
-        </div>
+        <table cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+          <tr>
+            <td style="font-size:14px;color:#6b7280;padding-bottom:12px;">Total Spend</td>
+            <td style="font-size:14px;font-weight:600;color:#111827;text-align:right;padding-bottom:12px;">$${fmtUSD(data.totalSpend)}</td>
+          </tr>
+          <tr>
+            <td style="font-size:14px;color:#6b7280;padding-bottom:12px;">Expenses Logged</td>
+            <td style="font-size:14px;font-weight:600;color:#111827;text-align:right;padding-bottom:12px;">${data.expenseCount}</td>
+          </tr>
+          <tr>
+            <td style="font-size:14px;color:#6b7280;">Top Category</td>
+            <td style="font-size:14px;font-weight:600;color:#111827;text-align:right;">${data.topCategory} ($${fmtUSD(data.topCategoryAmount)})</td>
+          </tr>
+        </table>
       </div>
       
       ${data.anomalies.length > 0 ? `
@@ -242,9 +258,9 @@ export function weeklyDigestEmail(
     ${FOOTER}`,
     textBody: `Weekly Summary for ${firstName}
 
-Total Spend: $${data.totalSpend.toLocaleString()}
+Total Spend: $${fmtUSD(data.totalSpend)}
 Expenses Logged: ${data.expenseCount}
-Top Category: ${data.topCategory} ($${data.topCategoryAmount.toLocaleString()})
+Top Category: ${data.topCategory} ($${fmtUSD(data.topCategoryAmount)})
 ${data.anomalies.length > 0 ? `\nAnomalies:\n${data.anomalies.map(a => `- ${a}`).join('\n')}` : ''}
 
 View dashboard: https://hostfi.ai/dashboard`,
@@ -276,7 +292,7 @@ export function monthlyReportEmail(
   const categoryRows = data.categoryBreakdown.slice(0, 6).map(c => `
     <tr>
       <td style="padding:8px 0;font-size:13px;color:#374151;border-bottom:1px solid #f3f4f6;">${c.category}</td>
-      <td style="padding:8px 0;font-size:13px;color:#111827;font-weight:600;text-align:right;border-bottom:1px solid #f3f4f6;">$${c.amount.toLocaleString()}</td>
+      <td style="padding:8px 0;font-size:13px;color:#111827;font-weight:600;text-align:right;border-bottom:1px solid #f3f4f6;">$${fmtUSD(c.amount)}</td>
       <td style="padding:8px 0;font-size:12px;color:#6b7280;text-align:right;border-bottom:1px solid #f3f4f6;">${c.percent.toFixed(0)}%</td>
     </tr>
   `).join('');
@@ -284,33 +300,37 @@ export function monthlyReportEmail(
   const propertyRows = data.propertyBreakdown.map(p => `
     <tr>
       <td style="padding:8px 0;font-size:13px;color:#374151;border-bottom:1px solid #f3f4f6;">${p.name}</td>
-      <td style="padding:8px 0;font-size:13px;color:#111827;text-align:right;border-bottom:1px solid #f3f4f6;">$${p.expenses.toLocaleString()}</td>
-      <td style="padding:8px 0;font-size:13px;color:#111827;text-align:right;border-bottom:1px solid #f3f4f6;">$${p.revenue.toLocaleString()}</td>
-      <td style="padding:8px 0;font-size:13px;font-weight:600;text-align:right;border-bottom:1px solid #f3f4f6;color:${p.net >= 0 ? '#059669' : '#dc2626'};">$${p.net.toLocaleString()}</td>
+      <td style="padding:8px 0;font-size:13px;color:#111827;text-align:right;border-bottom:1px solid #f3f4f6;">$${fmtUSD(p.expenses)}</td>
+      <td style="padding:8px 0;font-size:13px;color:#111827;text-align:right;border-bottom:1px solid #f3f4f6;">$${fmtUSD(p.revenue)}</td>
+      <td style="padding:8px 0;font-size:13px;font-weight:600;text-align:right;border-bottom:1px solid #f3f4f6;color:${p.net >= 0 ? '#059669' : '#dc2626'};">$${fmtUSD(p.net)}</td>
     </tr>
   `).join('');
 
   return {
-    subject: `${data.month} Property Report: $${data.totalSpend.toLocaleString()} spent across ${data.propertyCount} ${data.propertyCount === 1 ? 'property' : 'properties'}`,
+    subject: `${data.month} Property Report: $${fmtUSD(data.totalSpend)} spent across ${data.propertyCount} ${data.propertyCount === 1 ? 'property' : 'properties'}`,
     htmlBody: `${HEADER}
       <h1 style="font-size:22px;font-weight:700;margin:0 0 8px;">${data.month} Report</h1>
       <p style="font-size:13px;color:#6b7280;margin:0 0 24px;">${momText}</p>
 
       <!-- Summary Cards -->
-      <div style="display:flex;gap:12px;margin:0 0 24px;">
-        <div style="flex:1;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
-          <p style="font-size:11px;color:#6b7280;margin:0 0 4px;text-transform:uppercase;letter-spacing:0.5px;">Total Expenses</p>
-          <p style="font-size:24px;font-weight:700;color:#111827;margin:0;">$${data.totalSpend.toLocaleString()}</p>
-        </div>
-        <div style="flex:1;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
-          <p style="font-size:11px;color:#6b7280;margin:0 0 4px;text-transform:uppercase;letter-spacing:0.5px;">Total Revenue</p>
-          <p style="font-size:24px;font-weight:700;color:#111827;margin:0;">$${data.totalRevenue.toLocaleString()}</p>
-        </div>
-        <div style="flex:1;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
-          <p style="font-size:11px;color:#6b7280;margin:0 0 4px;text-transform:uppercase;letter-spacing:0.5px;">Net Income</p>
-          <p style="font-size:24px;font-weight:700;margin:0;color:${netColor};">$${data.netIncome.toLocaleString()}</p>
-        </div>
-      </div>
+      <table cellpadding="0" cellspacing="0" border="0" style="width:100%;margin:0 0 24px;">
+        <tr>
+          <td style="width:33%;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
+            <p style="font-size:11px;color:#6b7280;margin:0 0 4px;text-transform:uppercase;letter-spacing:0.5px;">Total Expenses</p>
+            <p style="font-size:24px;font-weight:700;color:#111827;margin:0;">$${fmtUSD(data.totalSpend)}</p>
+          </td>
+          <td style="width:4px;"></td>
+          <td style="width:33%;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
+            <p style="font-size:11px;color:#6b7280;margin:0 0 4px;text-transform:uppercase;letter-spacing:0.5px;">Total Revenue</p>
+            <p style="font-size:24px;font-weight:700;color:#111827;margin:0;">$${fmtUSD(data.totalRevenue)}</p>
+          </td>
+          <td style="width:4px;"></td>
+          <td style="width:33%;background:#f9fafb;border-radius:12px;padding:16px;text-align:center;">
+            <p style="font-size:11px;color:#6b7280;margin:0 0 4px;text-transform:uppercase;letter-spacing:0.5px;">Net Income</p>
+            <p style="font-size:24px;font-weight:700;margin:0;color:${netColor};">$${fmtUSD(data.netIncome)}</p>
+          </td>
+        </tr>
+      </table>
 
       <!-- Expense Breakdown -->
       <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;margin:0 0 20px;">
@@ -355,7 +375,7 @@ export function monthlyReportEmail(
       ${data.topExpense ? `
       <div style="background:#f0fdfa;border:1px solid #ccfbf1;border-radius:12px;padding:16px;margin:0 0 20px;">
         <p style="font-size:14px;font-weight:600;color:#0f766e;margin:0 0 4px;">Largest Expense</p>
-        <p style="font-size:13px;color:#115e59;margin:0;">${data.topExpense.description} — $${data.topExpense.amount.toLocaleString()} (${data.topExpense.property})</p>
+        <p style="font-size:13px;color:#115e59;margin:0;">${data.topExpense.description} -- $${fmtUSD(data.topExpense.amount)} (${data.topExpense.property})</p>
       </div>
       ` : ''}
 
@@ -364,15 +384,15 @@ export function monthlyReportEmail(
     ${FOOTER}`,
     textBody: `${data.month} Property Report
 
-Total Expenses: $${data.totalSpend.toLocaleString()}
-Total Revenue: $${data.totalRevenue.toLocaleString()}
-Net Income: $${data.netIncome.toLocaleString()}
+Total Expenses: $${fmtUSD(data.totalSpend)}
+Total Revenue: $${fmtUSD(data.totalRevenue)}
+Net Income: $${fmtUSD(data.netIncome)}
 ${momText}
 
 Expense Breakdown:
-${data.categoryBreakdown.map(c => `- ${c.category}: $${c.amount.toLocaleString()} (${c.percent.toFixed(0)}%)`).join('\n')}
+${data.categoryBreakdown.map(c => `- ${c.category}: $${fmtUSD(c.amount)} (${c.percent.toFixed(0)}%)`).join('\n')}
 
-${data.propertyBreakdown.length > 0 ? `By Property:\n${data.propertyBreakdown.map(p => `- ${p.name}: Expenses $${p.expenses.toLocaleString()} | Revenue $${p.revenue.toLocaleString()} | Net $${p.net.toLocaleString()}`).join('\n')}` : ''}
+${data.propertyBreakdown.length > 0 ? `By Property:\n${data.propertyBreakdown.map(p => `- ${p.name}: Expenses $${fmtUSD(p.expenses)} | Revenue $${fmtUSD(p.revenue)} | Net $${fmtUSD(p.net)}`).join('\n')}` : ''}
 
 ${data.anomalies.length > 0 ? `Anomalies:\n${data.anomalies.map(a => `- ${a}`).join('\n')}` : ''}
 
