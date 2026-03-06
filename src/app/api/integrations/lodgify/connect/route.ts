@@ -34,8 +34,8 @@ export async function POST(request: Request) {
     const { api_key } = await request.json();
     if (!api_key) return NextResponse.json({ error: 'API Key required' }, { status: 400 });
 
-    // Verify credentials
-    const valid = await verifyApiKey(api_key);
+    // Verify credentials (rate limit = likely valid, just save)
+    const { valid } = await verifyApiKey(api_key);
     if (!valid) {
       return NextResponse.json({ error: 'Invalid Lodgify API key' }, { status: 400 });
     }

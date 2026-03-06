@@ -32,14 +32,19 @@ async function lodgifyFetch(path: string, apiKey: string, params?: Record<string
 }
 
 /**
- * Verify API key is valid by making a lightweight call
+ * Verify API key is valid by making a lightweight call.
+ * Returns { valid, rateLimited } so callers can distinguish bad key from rate limit.
  */
-export async function verifyApiKey(apiKey: string): Promise<boolean> {
+export async function verifyApiKey(apiKey: string): Promise<{ valid: boolean; rateLimited?: boolean }> {
   try {
     await lodgifyFetch('/properties', apiKey, { page: '1', size: '1' });
-    return true;
-  } catch {
-    return false;
+    return { valid: true };
+  } catch (err) {
+    const msg = String(err);
+    if (msg.includes('429') || msg.includes('rate limit')) {
+      return { valid: true, rateLimited: true };
+    }
+    return { valid: false };
   }
 }
 

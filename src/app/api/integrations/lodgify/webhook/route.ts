@@ -34,19 +34,21 @@ export async function POST(request: NextRequest) {
     const secret = process.env.LODGIFY_WEBHOOK_SECRET;
     if (secret) {
       const signature = request.headers.get('x-lodgify-signature') || request.headers.get('x-webhook-signature');
-      if (signature) {
-        const { createHmac } = await import('crypto');
-        const expected = createHmac('sha256', secret).update(rawBody).digest('hex');
-        if (expected.length !== signature.length) {
-          return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
-        }
-        let mismatch = 0;
-        for (let i = 0; i < expected.length; i++) {
-          mismatch |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
-        }
-        if (mismatch !== 0) {
-          return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
-        }
+      if (!signature) {
+        console.error('Lodgify webhook: missing signature header');
+        return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
+      }
+      const { createHmac } = await import('crypto');
+      const expected = createHmac('sha256', secret).update(rawBody).digest('hex');
+      if (expected.length !== signature.length) {
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+      }
+      let mismatch = 0;
+      for (let i = 0; i < expected.length; i++) {
+        mismatch |= expected.charCodeAt(i) ^ signature.charCodeAt(i);
+      }
+      if (mismatch !== 0) {
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
       }
     }
 

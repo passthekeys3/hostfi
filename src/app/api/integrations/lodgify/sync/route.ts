@@ -77,8 +77,9 @@ export async function POST(request: NextRequest) {
       let allProperties: LodgifyProperty[] = [];
       let page = 1;
       const size = 50;
+      const maxPages = 100; // Safety cap: 5000 properties max
 
-      while (true) {
+      while (page <= maxPages) {
         const { properties } = await getProperties(api_key, { page, size });
         allProperties = allProperties.concat(properties);
         if (properties.length < size) break;
@@ -153,8 +154,9 @@ export async function POST(request: NextRequest) {
         let allReservations: LodgifyReservation[] = [];
         let page = 1;
         const size = 50;
+        const maxPages = 200; // Safety cap: 10000 reservations max
 
-        while (true) {
+        while (page <= maxPages) {
           const { reservations } = await getReservations(api_key, { page, size });
           allReservations = allReservations.concat(reservations);
           if (reservations.length < size) break;
