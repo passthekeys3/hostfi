@@ -389,7 +389,7 @@ export default function LandingPage() {
                   { name: "OwnerRez", logo: "/logos/ownerrez.png", status: "live" },
                   { name: "Hostaway", logo: "/logos/hostaway.png", status: "soon" },
                   { name: "Guesty", logo: "/logos/guesty.png", status: "soon" },
-                  { name: "Lodgify", logo: "/logos/lodgify.svg", status: "soon" },
+                  { name: "Lodgify", logo: "/logos/lodgify.svg", status: "live" },
                 ].map((pms, i) => (
                   <div key={i} className="flex flex-col items-center gap-3 p-5 rounded-xl border border-gray-100 bg-gray-50 hover:border-teal-200 hover:bg-teal-50/30 transition-colors">
                     <div className="w-10 h-10 relative">

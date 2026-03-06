@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     const { data: connections, error } = await supabase
       .from('integration_connections')
       .select('id, user_id, provider, credentials, metadata')
-      .in('provider', ['hostaway', 'guesty', 'hospitable', 'hospitable_connect'])
+      .in('provider', ['hostaway', 'guesty', 'hospitable', 'hospitable_connect', 'lodgify'])
       .eq('status', 'connected')
       .eq('active', true);
 

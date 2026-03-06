@@ -34,6 +34,7 @@ const INTEGRATIONS: Integration[] = [
   { id: "ownerrez", name: "OwnerRez", description: "Import reservations and financial data", category: "Property Management", status: "available", logo: "OR", logoColor: "bg-[#4CAF50]", logoUrl: "/logos/ownerrez.png", tier: "pro" },
   { id: "hospitable", name: "Hospitable", description: "Sync properties and reservations", category: "Property Management", status: "available", logo: "H", logoColor: "bg-[#E84670]", logoUrl: "/logos/hospitable.svg", tier: "pro" },
   { id: "hospitable_connect", name: "Hospitable Connect", description: "Connect Airbnb & VRBO directly (no PMS needed)", category: "Property Management", status: "available", logo: "HC", logoColor: "bg-[#10B981]", logoUrl: "/logos/hospitable-connect.svg", tier: "pro" },
+  { id: "lodgify", name: "Lodgify", description: "Import properties, bookings, and revenue", category: "Property Management", status: "available", logo: "L", logoColor: "bg-[#3B82F6]", logoUrl: "/logos/lodgify.svg", tier: "pro" },
   { id: "google_sheets", name: "Google Sheets", description: "Live sync expenses and P&L to Sheets", category: "Productivity", status: "disconnected", logo: "GS", logoColor: "bg-[#0F9D58]", logoUrl: "/logos/googlesheets.svg", tier: "pro" },
   { id: "google_drive", name: "Google Drive", description: "Auto-backup receipts and reports", category: "Productivity", status: "disconnected", logo: "GD", logoColor: "bg-[#4285F4]", logoUrl: "/logos/googledrive.svg", tier: "pro" },
   { id: "dropbox", name: "Dropbox", description: "Sync receipts and reports by property", category: "Productivity", status: "coming_soon", logo: "DB", logoColor: "bg-[#0061FF]", logoUrl: "/logos/dropbox.svg", tier: "pro" },
@@ -233,7 +234,7 @@ export default function IntegrationsPage() {
   const [openModal, setOpenModal] = useState<string | null>(null);
 
   const handleConnect = (id: string) => {
-    const hasModal = ["xero", "slack", "google_sheets", "zapier", "teams", "google_drive", "dropbox", "make", "email_smtp", "plaid", "guesty", "hostaway", "ownerrez", "hospitable", "hospitable_connect"].includes(id);
+    const hasModal = ["xero", "slack", "google_sheets", "zapier", "teams", "google_drive", "dropbox", "make", "email_smtp", "plaid", "guesty", "hostaway", "ownerrez", "hospitable", "hospitable_connect", "lodgify"].includes(id);
     if (hasModal) { setOpenModal(id); return; }
     // Toggle for Melio
     setConnectedIds(prev => {
@@ -367,6 +368,7 @@ export default function IntegrationsPage() {
       {openModal === "ownerrez" && <PMSModal provider="ownerrez" open={true} onClose={() => setOpenModal(null)} />}
       {openModal === "hospitable" && <PMSModal provider="hospitable" open={true} onClose={() => setOpenModal(null)} />}
       {openModal === "hospitable_connect" && <PMSModal provider="hospitable_connect" open={true} onClose={() => setOpenModal(null)} />}
+      {openModal === "lodgify" && <PMSModal provider="lodgify" open={true} onClose={() => setOpenModal(null)} />}
       {/* Note: modals call onClose() without didConnect=true, so closing a modal
           does NOT mark the integration as connected. In production, the OAuth
           callback or API verification will call onClose with didConnect=true. */}

@@ -74,6 +74,17 @@ export const PMS_CONFIGS: Record<string, PMSConfig> = {
     fields: [], // No manual fields
     helpText: "Connect your Airbnb or VRBO account directly — no PMS subscription needed.",
   },
+  lodgify: {
+    id: "lodgify",
+    name: "Lodgify",
+    logoText: "L",
+    logoColor: "bg-blue-50 text-blue-600",
+    logoUrl: "/logos/lodgify.svg",
+    fields: [
+      { key: "api_key", label: "API Key", placeholder: "Your Lodgify API key", type: "password" },
+    ],
+    helpText: "Find your API key in Lodgify → Settings → API Keys.",
+  },
 };
 
 interface RemoteProperty {
