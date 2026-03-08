@@ -3,18 +3,6 @@
     {
       "path": "/api/integrations/pms-sync",
       "schedule": "0 12 * * *"
-    },
-    {
-      "path": "/api/email/cron?type=weekly-digest",
-      "schedule": "0 14 * * 1"
-    },
-    {
-      "path": "/api/email/cron?type=tips",
-      "schedule": "0 15 * * 3"
-    },
-    {
-      "path": "/api/email/cron?type=check-in",
-      "schedule": "0 15 1,15 * *"
     }
   ]
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { Zap, ExternalLink, RefreshCw, Check } from "lucide-react";
@@ -54,6 +54,14 @@ const grouped = INTEGRATIONS.reduce<{ category: string; items: Integration[] }[]
 }, []);
 
 export default function IntegrationsPage() {
+  return (
+    <Suspense>
+      <IntegrationsPageContent />
+    </Suspense>
+  );
+}
+
+function IntegrationsPageContent() {
   const [connectedIds, setConnectedIds] = useState<Set<string>>(new Set());
   const [googleSheetsUrl, setGoogleSheetsUrl] = useState<string | null>(null);
   const [googleDriveFolderUrl, setGoogleDriveFolderUrl] = useState<string | null>(null);
