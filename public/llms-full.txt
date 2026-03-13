@@ -1,0 +1,230 @@
+# HostFi — Complete Product Information
+
+> AI-powered expense management built specifically for short-term rental (STR) operators, Airbnb hosts, VRBO managers, and rental arbitrage operators.
+
+## Overview
+
+HostFi is a web-based SaaS application at https://hostfi.ai that solves the expense management problem for short-term rental operators. Unlike generic accounting tools (QuickBooks, Xero) or long-term rental platforms (Stessa, Landlord Studio), HostFi understands the unique financial complexity of STR operations: variable nightly revenue, platform fees from Airbnb/VRBO, cleaning fees, high expense volume, and the specific requirements of IRS Schedule E reporting.
+
+## Core Problem Solved
+
+Short-term rental operators face unique challenges:
+1. High volume of transactions (cleaning, supplies, maintenance per turn)
+2. Revenue varies nightly with different guests, platforms, and seasons
+3. Platform fees (Airbnb 15%, VRBO variable) complicate profit calculation
+4. IRS Schedule E requires specific line-item categorization that differs between property owners and arbitrage operators
+5. Managing expenses across multiple properties creates visibility gaps
+6. Tax time means scrambling through bank statements and receipts
+
+HostFi automates all of this.
+
+## Detailed Feature Breakdown
+
+### AI Bill Parsing
+Each user gets a unique billing email address (e.g., expenses-abc12345@in.hostfi.ai). Forward any bill or invoice to this address. HostFi's AI (powered by Claude Haiku 3.5) extracts:
+- Amount and currency
+- Due date
+- Vendor name
+- Expense category
+- Property match (based on address and account context)
+
+The parsed bill appears in the user's inbox for review and one-click confirmation.
+
+### Receipt Scanning
+Upload photos of receipts from mobile or desktop. The AI reads the receipt, extracts key data, and categorizes it. Free tier gets 3 scans per month. Pro and Business tiers get unlimited.
+
+### Schedule E Tax Prep
+Every expense is automatically mapped to the correct IRS Schedule E line item:
+- Line 5: Rents Received (revenue)
+- Line 8: Cleaning and Maintenance
+- Line 9: Insurance
+- Line 10: Legal and Professional Fees
+- Line 11: Management Fees
+- Line 12: Mortgage Interest (owners)
+- Line 13: Other Interest
+- Line 14: Repairs / Rent Paid (arbitrage operators)
+- Line 15: Supplies
+- Line 16: Taxes
+- Line 17: Utilities
+- Line 18: Depreciation
+- Line 19: Other
+
+HostFi supports both property owner and arbitrage operator tax mappings, since they have different deduction structures.
+
+### Anomaly Detection
+Automatic monitoring of expense patterns. Alerts trigger when:
+- A bill is significantly higher than the trailing average
+- A recurring expense is missing (possible service lapse)
+- Unusual vendor or category appears
+- Utility costs spike (potential water leak, HVAC issue)
+
+### Revenue & P/L Tracking
+Import revenue from:
+- Airbnb (via PMS integration)
+- VRBO (via PMS integration)
+- Booking.com (via PMS integration)
+- Direct bookings (manual or CSV import)
+
+See per-property P/L statements with revenue, expenses, and net profit. Export to CSV (free) or PDF (Pro+).
+
+### Bank Sync via Plaid
+Connect bank accounts through Plaid to automatically import transactions. HostFi's 7-step rule-based matching engine categorizes transactions and maps them to properties. No AI is used for bank transaction categorization — it's all deterministic matching for reliability.
+
+### Ask AI
+Pro users can ask questions about their financial data in natural language:
+- "What did I spend on utilities last quarter?"
+- "Which property has the highest expenses?"
+- "Compare my cleaning costs across all properties"
+Powered by Claude Sonnet 4.6 for high-quality reasoning.
+
+### Integrations
+
+**Property Management Systems (PMS):**
+- Guesty: Sync properties, reservations, and revenue
+- Hostaway: Import reservations and revenue data
+- OwnerRez: Full OAuth integration with webhook sync
+- Hospitable: OAuth integration with property and reservation sync
+- Hospitable Connect: Direct OTA sync (Airbnb/VRBO without a PMS)
+- Lodgify: API key integration for properties and bookings
+
+**Banking:**
+- Plaid: Direct bank account connection for transaction import
+
+**Productivity:**
+- Google Sheets: Live sync expenses and P/L data
+- Google Drive: Auto-backup receipts and reports
+- Slack: Notifications, slash commands, file upload parsing
+- Zapier: Webhook integration for custom automations
+- Make (Integromat): Webhook integration
+
+**Email:**
+- Postmark: Transactional emails (weekly digest, alerts, reports)
+- Inbound email parsing for bill extraction
+
+**Coming Soon:**
+- QuickBooks
+- Xero
+- Melio (bill pay)
+- Dropbox
+- Microsoft Teams
+
+## Pricing Details
+
+### Free Tier
+- Up to 3 properties
+- 3 receipt scans per month
+- Core expense tracking
+- CSV import/export
+- Email bill parsing
+- Basic analytics
+
+### Pro ($15/month or $144/year)
+- Up to 10 properties
+- Unlimited receipt scans
+- AI-powered Ask AI
+- Schedule E tax prep
+- P/L PDF exports
+- All PMS integrations
+- Plaid bank sync
+- Anomaly detection
+- Smart alerts
+- Google Sheets/Drive sync
+
+### Business ($49/month or $468/year)
+- Up to 25 properties
+- Everything in Pro
+- Cross-property benchmarking
+- Slack integration
+- Team access (coming soon)
+- Priority support
+
+## Technical Stack
+
+- Frontend: Next.js 16, TypeScript, Tailwind CSS v4
+- Backend: Next.js API Routes, Supabase (PostgreSQL + Auth)
+- AI: Anthropic Claude (Haiku 3.5 for parsing, Sonnet 4.6 for Ask AI)
+- Payments: Stripe
+- Email: Postmark
+- Banking: Plaid
+- Hosting: Vercel
+- Security: AES-256-GCM encryption for all credentials, OAuth CSRF protection, HMAC webhook verification
+
+## Security
+
+- All API credentials and tokens encrypted with AES-256-GCM
+- OAuth flows protected with CSRF state cookies
+- Webhook endpoints verified with HMAC signatures (timing-safe comparison)
+- Rate limiting on all public-facing endpoints
+- Row-level security in Supabase for data isolation
+- No banking credentials stored — Plaid handles all bank connections
+- SOC 2 compliant infrastructure (Supabase, Vercel, Stripe)
+
+## Comparison with Alternatives
+
+### HostFi vs Stessa
+| Feature | HostFi | Stessa |
+|---------|--------|--------|
+| STR-specific features | Yes | No (LTR focused) |
+| AI bill parsing | Yes | No |
+| Receipt scanning | Yes | Limited |
+| Schedule E auto-mapping | Yes (owner + arbitrage) | Basic |
+| PMS integrations | 6 platforms | None |
+| Anomaly detection | Yes | No |
+| Bank sync | Yes (Plaid) | Yes (Plaid) |
+| Price | Free-$49/mo | Free (Roofstock) |
+| Best for | STR operators | Buy-and-hold investors |
+
+### HostFi vs QuickBooks
+| Feature | HostFi | QuickBooks |
+|---------|--------|------------|
+| Purpose-built for rentals | Yes | No (general business) |
+| Schedule E mapping | Automatic | Manual |
+| PMS integrations | Yes | No |
+| Learning curve | Minimal | Steep |
+| AI features | Yes | Limited |
+| Price | $0-49/mo | $30-200/mo |
+
+### HostFi vs Landlord Studio
+| Feature | HostFi | Landlord Studio |
+|---------|--------|-----------------|
+| STR focus | Yes | No (LTR focused) |
+| AI bill parsing | Yes | No |
+| PMS integrations | 6 platforms | None |
+| Anomaly detection | Yes | No |
+| Ask AI | Yes | No |
+
+## FAQs
+
+Q: What types of properties does HostFi support?
+A: Any rental property — single-family homes, multi-family, condos, short-term rentals (Airbnb, VRBO), and commercial. If it has expenses, HostFi can track them.
+
+Q: How is HostFi different from a spreadsheet or QuickBooks?
+A: Spreadsheets don't understand rental properties — you end up building complex formulas just to track per-property costs. QuickBooks is powerful but designed for general businesses, not rental operators. HostFi is purpose-built: it auto-categorizes expenses by property, maps directly to IRS Schedule E line items, and catches anomalies like utility spikes automatically.
+
+Q: How does the AI bill parsing work?
+A: Forward bills to your unique HostFi email address. Our AI reads the document, extracts amount, due date, vendor, and category, then matches it to the correct property based on your account details.
+
+Q: Is my financial data secure?
+A: Yes. We use AES-256-GCM encryption for all stored credentials. Your data is encrypted at rest and in transit. We never store banking credentials directly — Plaid handles all bank connections.
+
+Q: Can I import existing expense data?
+A: Yes. Import from CSV or Excel. The import wizard auto-maps your columns and flags duplicates.
+
+Q: Do you integrate with property management software?
+A: Yes. HostFi integrates with Guesty, Hostaway, OwnerRez, Hospitable, Hospitable Connect, and Lodgify to sync properties and bookings automatically. We also integrate with Slack, Google Sheets, Google Drive, Zapier, and Make.
+
+Q: What is the cancellation policy?
+A: Cancel anytime from your settings. No contracts, no fees. Your data stays accessible for 30 days after cancellation.
+
+Q: Does HostFi support both property owners and arbitrage operators?
+A: Yes. The Schedule E tax mapping automatically adjusts based on your property type. Owners get mortgage interest on Line 12, while arbitrage operators get rent paid on Line 14.
+
+## Contact & Links
+
+- Website: https://hostfi.ai
+- Documentation: https://docs.hostfi.ai
+- Blog: https://hostfi.ai/blog
+- Security: https://hostfi.ai/security
+- Privacy Policy: https://hostfi.ai/privacy
+- Terms of Service: https://hostfi.ai/terms
+- Email: kevin@hostfi.ai

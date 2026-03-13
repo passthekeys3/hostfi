@@ -16,6 +16,21 @@ export const metadata: Metadata = {
 export default function CompareStessaPage() {
   return (
     <div className="min-h-screen bg-white">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "HostFi vs Stessa: Best STR Expense Tracker 2026",
+        "description": "Compare HostFi and Stessa for rental property expense tracking. See why STR hosts choose HostFi for AI bill parsing, Schedule E auto-mapping, and short-term rental features.",
+        "url": "https://hostfi.ai/compare/stessa",
+        "breadcrumb": {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://hostfi.ai" },
+            { "@type": "ListItem", "position": 2, "name": "Compare", "item": "https://hostfi.ai/compare" },
+            { "@type": "ListItem", "position": 3, "name": "HostFi vs Stessa" }
+          ]
+        }
+      }) }} />
       {/* Nav */}
       <nav className="border-b border-gray-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">

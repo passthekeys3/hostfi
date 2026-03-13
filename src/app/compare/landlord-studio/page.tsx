@@ -16,6 +16,16 @@ export const metadata: Metadata = {
 export default function CompareLandlordStudioPage() {
   return (
     <div className="min-h-screen bg-white">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org", "@type": "WebPage",
+        "name": "HostFi vs Landlord Studio: Best STR Expense Tracker 2026",
+        "url": "https://hostfi.ai/compare/landlord-studio",
+        "breadcrumb": { "@type": "BreadcrumbList", "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://hostfi.ai" },
+          { "@type": "ListItem", "position": 2, "name": "Compare", "item": "https://hostfi.ai/compare" },
+          { "@type": "ListItem", "position": 3, "name": "HostFi vs Landlord Studio" }
+        ]}
+      }) }} />
       {/* Nav */}
       <nav className="border-b border-gray-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">

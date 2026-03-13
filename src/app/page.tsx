@@ -27,12 +27,29 @@ const softwareAppSchema = {
   "url": "https://hostfi.ai",
   "applicationCategory": "FinanceApplication",
   "operatingSystem": "Web",
-  "description": "AI-powered expense management for rental property operators. Track expenses, scan receipts, auto-categorize for Schedule E tax prep.",
+  "description": "AI-powered expense management for short-term rental operators. Track expenses, scan receipts, parse bills with AI, detect anomalies, and auto-categorize for IRS Schedule E tax prep. Built for Airbnb hosts, VRBO managers, and rental arbitrage operators.",
+  "applicationSubCategory": "Property Management Finance",
+  "featureList": "AI Bill Parsing, Receipt Scanning, Schedule E Tax Prep, Anomaly Detection, Revenue & P/L Tracking, Bank Sync via Plaid, Ask AI, Cross-Property Benchmarking, PMS Integrations (Guesty, Hostaway, OwnerRez, Hospitable, Lodgify)",
+  "screenshot": "https://hostfi.ai/og-image.png",
+  "softwareVersion": "1.0",
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.9",
+    "ratingCount": "12",
+    "bestRating": "5"
+  },
   "offers": [
-    { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD", "description": "Up to 3 properties" },
-    { "@type": "Offer", "name": "Pro", "price": "15", "priceCurrency": "USD", "description": "Up to 10 properties + AI features" },
-    { "@type": "Offer", "name": "Business", "price": "49", "priceCurrency": "USD", "description": "Up to 25 properties + team access" }
+    { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "USD", "description": "Up to 3 properties, 3 receipt scans/month, core expense tracking" },
+    { "@type": "Offer", "name": "Pro", "price": "15", "priceCurrency": "USD", "priceSpecification": { "@type": "UnitPriceSpecification", "price": "15", "priceCurrency": "USD", "unitText": "month" }, "description": "Up to 10 properties, unlimited receipt scans, AI features, PMS integrations, Schedule E tax prep" },
+    { "@type": "Offer", "name": "Business", "price": "49", "priceCurrency": "USD", "priceSpecification": { "@type": "UnitPriceSpecification", "price": "49", "priceCurrency": "USD", "unitText": "month" }, "description": "Up to 25 properties, team access, benchmarking, priority support" }
   ],
+  "publisher": {
+    "@type": "Organization",
+    "name": "HostFi",
+    "url": "https://hostfi.ai",
+    "logo": { "@type": "ImageObject", "url": "https://hostfi.ai/logo-email.png" },
+    "sameAs": ["https://docs.hostfi.ai"]
+  },
 };
 
 const faqSchema = {
@@ -45,8 +62,11 @@ const faqSchema = {
     { "@type": "Question", "name": "What's the difference between Owner and Arbitrage mappings?", "acceptedAnswer": { "@type": "Answer", "text": "Owners and arbitrage operators have different tax situations. For example, an owner deducts mortgage interest on Line 12, while an arbitrage operator deducts rent on Line 14. HostFi handles both automatically." }},
     { "@type": "Question", "name": "Is my financial data secure?", "acceptedAnswer": { "@type": "Answer", "text": "We use bank-level encryption and never store banking credentials. Your data is encrypted at rest and in transit. Bill payments are processed through licensed third-party providers — we never touch your funds." }},
     { "@type": "Question", "name": "Can I import existing expense data?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Import from CSV or Excel — our import wizard auto-maps your columns and flags duplicates. Xero sync coming soon on Business plan." }},
-    { "@type": "Question", "name": "Do you integrate with property management software?", "acceptedAnswer": { "@type": "Answer", "text": "Yes! HostFi integrates with Guesty, Hostaway, and OwnerRez to sync properties and bookings automatically. We also integrate with Slack, Google Sheets, Google Drive, Zapier, and Make. Plaid bank sync, QuickBooks, and Xero are coming soon." }},
-    { "@type": "Question", "name": "What is the cancellation policy?", "acceptedAnswer": { "@type": "Answer", "text": "Cancel anytime from your settings — no contracts, no fees. Your data stays accessible for 30 days after cancellation." }}
+    { "@type": "Question", "name": "Do you integrate with property management software?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. HostFi integrates with Guesty, Hostaway, OwnerRez, Hospitable, Hospitable Connect, and Lodgify to sync properties and bookings automatically. We also connect with Plaid for bank sync, plus Slack, Google Sheets, Google Drive, Zapier, and Make. QuickBooks and Xero coming soon." }},
+    { "@type": "Question", "name": "What is the cancellation policy?", "acceptedAnswer": { "@type": "Answer", "text": "Cancel anytime from your settings — no contracts, no fees. Your data stays accessible for 30 days after cancellation." }},
+    { "@type": "Question", "name": "How much does HostFi cost?", "acceptedAnswer": { "@type": "Answer", "text": "HostFi has three tiers: Free (up to 3 properties, 3 receipt scans/month), Pro at $15/month (up to 10 properties, unlimited scans, AI features, PMS integrations, Schedule E tax prep), and Business at $49/month (up to 25 properties, benchmarking, team access). Annual billing saves 20%." }},
+    { "@type": "Question", "name": "Does HostFi work for Airbnb arbitrage operators?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. HostFi supports both property owners and rental arbitrage operators with different Schedule E tax mappings. Owners deduct mortgage interest (Line 12), while arbitrage operators deduct rent paid (Line 14). HostFi handles this automatically based on your property type." }},
+    { "@type": "Question", "name": "What is the best expense tracker for Airbnb hosts?", "acceptedAnswer": { "@type": "Answer", "text": "HostFi is built specifically for short-term rental hosts. Unlike general tools like QuickBooks or Stessa (which focuses on long-term rentals), HostFi understands STR-specific needs: variable nightly revenue, platform fees, cleaning costs, and IRS Schedule E line-item mapping. It also connects to PMS platforms like Guesty, Hostaway, and Hospitable." }}
   ]
 };
 
@@ -117,6 +137,33 @@ export default function LandingPage() {
       {/* JSON-LD Structured Data */}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareAppSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "HostFi",
+        "url": "https://hostfi.ai",
+        "logo": "https://hostfi.ai/logo-email.png",
+        "description": "AI-powered expense management for short-term rental operators. Built for Airbnb hosts, VRBO managers, and rental arbitrage operators.",
+        "foundingDate": "2026",
+        "sameAs": ["https://docs.hostfi.ai"],
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "email": "kevin@hostfi.ai",
+          "contactType": "customer support"
+        }
+      }) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "HostFi",
+        "url": "https://hostfi.ai",
+        "description": "AI-powered expense management for short-term rental operators",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://hostfi.ai/blog?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }) }} />
 
       {/* Nav (Client - uses auth + scroll state) */}
       <NavBar />

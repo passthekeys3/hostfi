@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { Shield, Lock, Database, Eye, Server, Users, AlertTriangle, RefreshCw } from "lucide-react";
 
+// Note: metadata exported from layout or parent since this is "use client"
+// SEO handled via layout.tsx metadata API
+
 export default function SecurityPage() {
   return (
     <div className="min-h-screen bg-white">

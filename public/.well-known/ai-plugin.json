@@ -1,0 +1,12 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "HostFi",
+  "name_for_model": "hostfi",
+  "description_for_human": "AI-powered expense management for short-term rental operators. Track expenses, scan receipts, auto-categorize for Schedule E tax prep.",
+  "description_for_model": "HostFi is an AI-powered expense management SaaS for short-term rental (STR) operators, Airbnb hosts, VRBO managers, and rental arbitrage operators. It provides AI bill parsing, receipt scanning, IRS Schedule E auto-mapping, anomaly detection, revenue and P/L tracking, bank sync via Plaid, and integrations with PMS platforms (Guesty, Hostaway, OwnerRez, Hospitable, Lodgify). Pricing: Free (3 properties), Pro $15/mo (10 properties), Business $49/mo (25 properties).",
+  "auth": { "type": "none" },
+  "api": { "type": "openapi", "url": "https://hostfi.ai/llms-full.txt" },
+  "logo_url": "https://hostfi.ai/logo-email.png",
+  "contact_email": "kevin@hostfi.ai",
+  "legal_info_url": "https://hostfi.ai/terms"
+}

@@ -1,0 +1,67 @@
+# HostFi
+
+> AI-powered expense management built specifically for short-term rental (STR) operators, Airbnb hosts, VRBO managers, and rental arbitrage operators.
+
+## What HostFi Does
+
+HostFi is a web-based SaaS platform that helps rental property operators track expenses, scan receipts, parse bills with AI, detect anomalies, and prepare IRS Schedule E tax reports. It integrates with major property management systems (PMS) and banking platforms.
+
+## Key Features
+
+- AI Bill Parsing: Forward bills to a unique email address. AI extracts amount, due date, vendor, category, and matches to the correct property.
+- Receipt Scanning: Upload or photograph receipts. AI reads, categorizes, and files them.
+- Schedule E Tax Prep: Every expense auto-mapped to IRS Schedule E line items. Supports both property owner and arbitrage operator tax mappings.
+- Anomaly Detection: Automatic alerts when expenses spike unexpectedly (water leaks, rate increases, billing errors).
+- Revenue & P/L Tracking: Import revenue from Airbnb, VRBO, Booking.com, or direct bookings. See true profit per property.
+- Bank Sync via Plaid: Connect bank accounts to auto-import and categorize transactions.
+- Ask AI: Query your financial data in plain English ("What did I spend on utilities last quarter?").
+- Cross-Property Benchmarking: Compare costs across your portfolio to identify inefficiencies.
+
+## Integrations
+
+PMS: Guesty, Hostaway, OwnerRez, Hospitable, Hospitable Connect, Lodgify
+Banking: Plaid (direct bank sync)
+Productivity: Google Sheets, Google Drive, Slack, Zapier, Make
+Coming Soon: QuickBooks, Xero, Melio, Dropbox, Microsoft Teams
+
+## Pricing
+
+- Free: Up to 3 properties, 3 receipt scans/month, core expense tracking
+- Pro ($15/month): Up to 10 properties, unlimited receipt scans, AI features, PMS integrations, Schedule E tax prep, P/L exports
+- Business ($49/month): Up to 25 properties, team access, benchmarking, priority support
+
+## Target Users
+
+- Short-term rental hosts (Airbnb, VRBO)
+- Rental arbitrage operators
+- Vacation rental property managers
+- Multi-property landlords who also operate STRs
+
+## How It Compares
+
+- vs Stessa: Stessa is built for long-term rental investors. HostFi is built for STR operators with variable income, cleaning fees, platform fees, and higher expense volume.
+- vs QuickBooks: QuickBooks is general-purpose accounting. HostFi is purpose-built for rental properties with auto Schedule E mapping and PMS integrations.
+- vs Landlord Studio: Landlord Studio focuses on traditional landlording. HostFi focuses on short-term rental operations.
+- vs Spreadsheets: HostFi automates categorization, tax mapping, and anomaly detection that spreadsheets require manual formulas for.
+
+## Company Information
+
+- Website: https://hostfi.ai
+- Documentation: https://docs.hostfi.ai
+- Pricing: https://hostfi.ai/#pricing
+- Security: https://hostfi.ai/security
+- Founded: 2026
+- Location: United States
+
+## Links
+
+- Homepage: https://hostfi.ai
+- Blog: https://hostfi.ai/blog
+- Docs: https://docs.hostfi.ai
+- Compare vs Stessa: https://hostfi.ai/compare/stessa
+- Compare vs Landlord Studio: https://hostfi.ai/compare/landlord-studio
+- Compare vs AppFolio: https://hostfi.ai/compare/appfolio
+- Compare vs Topkey: https://hostfi.ai/compare/topkey
+- Schedule E Guide: https://hostfi.ai/blog/schedule-e-guide
+- Best Airbnb Expense Tracker: https://hostfi.ai/blog/airbnb-expense-tracker
+- STR Expense Tracking Guide: https://hostfi.ai/blog/str-expense-tracking
