@@ -40,6 +40,9 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: "https://hostfi.ai",
+    types: {
+      "application/rss+xml": "https://hostfi.ai/blog/feed.xml",
+    },
   },
   appleWebApp: {
     capable: true,

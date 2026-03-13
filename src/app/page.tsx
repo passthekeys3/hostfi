@@ -681,7 +681,7 @@ export default function LandingPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-10 mb-12">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <Image src="/logo.svg" alt="" width={28} height={28} className="rounded-lg" />
+                <Image src="/logo.svg" alt="HostFi logo" width={28} height={28} className="rounded-lg" />
                 <span className="text-base font-semibold">HostFi</span>
               </div>
               <p className="text-sm text-gray-600 leading-relaxed">AI-powered expense management for rental property operators.</p>

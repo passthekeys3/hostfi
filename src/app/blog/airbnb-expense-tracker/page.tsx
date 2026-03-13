@@ -184,6 +184,18 @@ export default function AirbnbExpenseTrackerPage() {
                 Schedule E for Rental Properties: The Complete 2026 Guide →
               </Link>
             </div>
+            <p className="text-sm font-semibold text-gray-900 mb-3 mt-6">Compare Tools</p>
+            <div className="space-y-2">
+              <Link href="/compare/stessa" className="block text-sm text-teal-600 hover:text-teal-700 font-medium">
+                HostFi vs Stessa →
+              </Link>
+              <Link href="/compare/landlord-studio" className="block text-sm text-teal-600 hover:text-teal-700 font-medium">
+                HostFi vs Landlord Studio →
+              </Link>
+              <Link href="/compare" className="block text-sm text-teal-600 hover:text-teal-700 font-medium">
+                See All Comparisons →
+              </Link>
+            </div>
           </div>
         </div>
       </article>

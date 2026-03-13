@@ -62,6 +62,10 @@ Coming Soon: QuickBooks, Xero, Melio, Dropbox, Microsoft Teams
 - Compare vs Landlord Studio: https://hostfi.ai/compare/landlord-studio
 - Compare vs AppFolio: https://hostfi.ai/compare/appfolio
 - Compare vs Topkey: https://hostfi.ai/compare/topkey
+- Compare vs Baselane: https://hostfi.ai/compare/baselane
+- Compare vs Buildium: https://hostfi.ai/compare/buildium
+- Compare vs TurboTenant: https://hostfi.ai/compare/turbotenant
+- All Comparisons: https://hostfi.ai/compare
 - Schedule E Guide: https://hostfi.ai/blog/schedule-e-guide
 - Best Airbnb Expense Tracker: https://hostfi.ai/blog/airbnb-expense-tracker
 - STR Expense Tracking Guide: https://hostfi.ai/blog/str-expense-tracking

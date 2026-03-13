@@ -197,9 +197,26 @@ export default function ScheduleEGuidePage() {
 
           <div className="mt-10 pt-8 border-t border-gray-200">
             <p className="text-sm font-semibold text-gray-900 mb-3">Related Reading</p>
-            <Link href="/blog/str-expense-tracking" className="text-sm text-teal-600 hover:text-teal-700 font-medium">
-              How to Track STR Expenses for Schedule E →
-            </Link>
+            <div className="space-y-2">
+              <Link href="/blog/str-expense-tracking" className="block text-sm text-teal-600 hover:text-teal-700 font-medium">
+                How to Track STR Expenses for Schedule E →
+              </Link>
+              <Link href="/blog/airbnb-expense-tracker" className="block text-sm text-teal-600 hover:text-teal-700 font-medium">
+                Best Airbnb Expense Tracker for Hosts in 2026 →
+              </Link>
+            </div>
+            <p className="text-sm font-semibold text-gray-900 mb-3 mt-6">Compare Tools</p>
+            <div className="space-y-2">
+              <Link href="/compare/stessa" className="block text-sm text-teal-600 hover:text-teal-700 font-medium">
+                HostFi vs Stessa →
+              </Link>
+              <Link href="/compare/buildium" className="block text-sm text-teal-600 hover:text-teal-700 font-medium">
+                HostFi vs Buildium →
+              </Link>
+              <Link href="/compare" className="block text-sm text-teal-600 hover:text-teal-700 font-medium">
+                See All Comparisons →
+              </Link>
+            </div>
           </div>
         </div>
       </article>

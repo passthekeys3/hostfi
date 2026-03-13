@@ -166,9 +166,26 @@ export default function STRExpenseTrackingPage() {
 
           <div className="mt-10 pt-8 border-t border-gray-200">
             <p className="text-sm font-semibold text-gray-900 mb-3">Related Reading</p>
-            <Link href="/blog/schedule-e-guide" className="text-sm text-teal-600 hover:text-teal-700 font-medium">
-              Schedule E for Rental Properties: The Complete 2026 Guide →
-            </Link>
+            <div className="space-y-2">
+              <Link href="/blog/schedule-e-guide" className="block text-sm text-teal-600 hover:text-teal-700 font-medium">
+                Schedule E for Rental Properties: The Complete 2026 Guide →
+              </Link>
+              <Link href="/blog/airbnb-expense-tracker" className="block text-sm text-teal-600 hover:text-teal-700 font-medium">
+                Best Airbnb Expense Tracker for Hosts in 2026 →
+              </Link>
+            </div>
+            <p className="text-sm font-semibold text-gray-900 mb-3 mt-6">Compare Tools</p>
+            <div className="space-y-2">
+              <Link href="/compare/stessa" className="block text-sm text-teal-600 hover:text-teal-700 font-medium">
+                HostFi vs Stessa →
+              </Link>
+              <Link href="/compare/baselane" className="block text-sm text-teal-600 hover:text-teal-700 font-medium">
+                HostFi vs Baselane →
+              </Link>
+              <Link href="/compare" className="block text-sm text-teal-600 hover:text-teal-700 font-medium">
+                See All Comparisons →
+              </Link>
+            </div>
           </div>
         </div>
       </article>

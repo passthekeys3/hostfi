@@ -19,9 +19,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/blog/str-expense-tracking`, lastModified: '2026-02-17', changeFrequency: 'monthly', priority: 0.9 },
 
     // Comparison pages (high GEO value)
+    { url: `${baseUrl}/compare`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${baseUrl}/compare/stessa`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
     { url: `${baseUrl}/compare/landlord-studio`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
     { url: `${baseUrl}/compare/appfolio`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
     { url: `${baseUrl}/compare/topkey`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${baseUrl}/compare/baselane`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${baseUrl}/compare/buildium`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${baseUrl}/compare/turbotenant`, lastModified: now, changeFrequency: 'monthly', priority: 0.9 },
   ];
 }
