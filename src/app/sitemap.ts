@@ -17,6 +17,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/blog/airbnb-expense-tracker`, lastModified: '2026-02-17', changeFrequency: 'monthly', priority: 0.9 },
     { url: `${baseUrl}/blog/schedule-e-guide`, lastModified: '2026-02-17', changeFrequency: 'monthly', priority: 0.9 },
     { url: `${baseUrl}/blog/str-expense-tracking`, lastModified: '2026-02-17', changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${baseUrl}/blog/airbnb-tax-deductions`, lastModified: '2026-03-13', changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${baseUrl}/blog/rental-arbitrage-expenses`, lastModified: '2026-03-13', changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${baseUrl}/blog/automate-str-bookkeeping`, lastModified: '2026-03-13', changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${baseUrl}/blog/str-profit-per-property`, lastModified: '2026-03-13', changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${baseUrl}/blog/best-pms-for-airbnb`, lastModified: '2026-03-13', changeFrequency: 'monthly', priority: 0.9 },
 
     // Comparison pages (high GEO value)
     { url: `${baseUrl}/compare`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },

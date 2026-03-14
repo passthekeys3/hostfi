@@ -34,6 +34,41 @@ const posts = [
     readTime: "8 min read",
     date: "February 2026",
   },
+  {
+    slug: "airbnb-tax-deductions",
+    title: "Airbnb Tax Deductions: Complete List for Hosts in 2026",
+    description: "Every tax deduction Airbnb hosts can claim. Cleaning, supplies, platform fees, depreciation, home office, and more. Organized by Schedule E line item.",
+    readTime: "14 min read",
+    date: "March 2026",
+  },
+  {
+    slug: "rental-arbitrage-expenses",
+    title: "Rental Arbitrage Expense Guide: What to Track and How to Deduct",
+    description: "Complete guide to tracking expenses for Airbnb rental arbitrage. Which costs are deductible, how rent maps to Schedule E, and common mistakes.",
+    readTime: "11 min read",
+    date: "March 2026",
+  },
+  {
+    slug: "automate-str-bookkeeping",
+    title: "How to Automate Airbnb Bookkeeping in 2026",
+    description: "Stop doing STR bookkeeping manually. Step-by-step guide to automating expense tracking, receipt capture, tax categorization, and reporting.",
+    readTime: "9 min read",
+    date: "March 2026",
+  },
+  {
+    slug: "str-profit-per-property",
+    title: "How to Calculate True Profit Per STR Property",
+    description: "Most Airbnb hosts don't know their real profit per property. Here's how to calculate it correctly, including hidden costs most operators miss.",
+    readTime: "10 min read",
+    date: "March 2026",
+  },
+  {
+    slug: "best-pms-for-airbnb",
+    title: "Best Property Management Software for Airbnb Hosts in 2026",
+    description: "Compare Guesty, Hostaway, OwnerRez, Hospitable, and Lodgify. Features, pricing, and who each PMS is best for.",
+    readTime: "12 min read",
+    date: "March 2026",
+  },
 ];
 
 export default function BlogPage() {

@@ -20,6 +20,36 @@ export async function GET() {
       description: "Everything rental property owners and STR operators need to know about IRS Schedule E. Line-by-line breakdown, common deductions, and how to avoid audit triggers.",
       pubDate: "Sun, 16 Feb 2026 08:00:00 GMT",
     },
+    {
+      title: "Airbnb Tax Deductions: Complete List for Hosts in 2026",
+      slug: "airbnb-tax-deductions",
+      description: "Every tax deduction Airbnb hosts can claim. Cleaning, supplies, platform fees, depreciation, home office, and more. Organized by Schedule E line item.",
+      pubDate: "Thu, 13 Mar 2026 12:00:00 GMT",
+    },
+    {
+      title: "Rental Arbitrage Expense Guide: What to Track and How to Deduct",
+      slug: "rental-arbitrage-expenses",
+      description: "Complete guide to tracking expenses for Airbnb rental arbitrage. Which costs are deductible, how rent maps to Schedule E, and common mistakes.",
+      pubDate: "Thu, 13 Mar 2026 11:00:00 GMT",
+    },
+    {
+      title: "How to Automate Airbnb Bookkeeping in 2026",
+      slug: "automate-str-bookkeeping",
+      description: "Stop doing STR bookkeeping manually. Step-by-step guide to automating expense tracking, receipt capture, tax categorization, and reporting.",
+      pubDate: "Thu, 13 Mar 2026 10:00:00 GMT",
+    },
+    {
+      title: "How to Calculate True Profit Per STR Property",
+      slug: "str-profit-per-property",
+      description: "Most Airbnb hosts don't know their real profit per property. Here's how to calculate it correctly, including hidden costs most operators miss.",
+      pubDate: "Thu, 13 Mar 2026 09:00:00 GMT",
+    },
+    {
+      title: "Best Property Management Software for Airbnb Hosts in 2026",
+      slug: "best-pms-for-airbnb",
+      description: "Compare Guesty, Hostaway, OwnerRez, Hospitable, and Lodgify. Features, pricing, and who each PMS is best for.",
+      pubDate: "Thu, 13 Mar 2026 08:00:00 GMT",
+    },
   ];
 
   const rssItems = posts
