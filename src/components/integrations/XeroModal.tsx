@@ -66,8 +66,8 @@ export function XeroConnectModal({ onClose }: ModalProps) {
           <div className="flex items-center gap-3">
             <Image src="/logos/xero.svg" alt="Xero" width={40} height={40} className="rounded-xl object-contain" />
             <div>
-              <h2 id={titleId} className="text-base font-semibold text-gray-900">Xero Export</h2>
-              <p className="text-xs text-gray-500 mt-0.5">Export expenses in Xero format</p>
+              <h2 id={titleId} className="text-base font-semibold text-gray-900">Connect Xero</h2>
+              <p className="text-xs text-gray-500 mt-0.5">Export expenses to Xero</p>
             </div>
           </div>
           <button onClick={onClose} aria-label="Close modal" className="p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500/40">
@@ -104,7 +104,7 @@ export function XeroConnectModal({ onClose }: ModalProps) {
                 ].map((opt) => (
                   <label key={opt.value} className={cn(
                     "flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
-                    format === opt.value ? "border-teal-400 bg-teal-50/50" : "border-gray-200 hover:bg-gray-50"
+                    format === opt.value ? "border-[#13B5EA] bg-[#13B5EA]/5" : "border-gray-200 hover:bg-gray-50"
                   )}>
                     <input
                       type="radio"
@@ -112,13 +112,13 @@ export function XeroConnectModal({ onClose }: ModalProps) {
                       value={opt.value}
                       checked={format === opt.value}
                       onChange={() => setFormat(opt.value)}
-                      className="mt-0.5 accent-teal-500"
+                      className="mt-0.5 accent-[#13B5EA]"
                     />
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <p className="text-xs font-medium text-gray-900">{opt.label}</p>
                         {opt.recommended && (
-                          <span className="text-[10px] font-medium text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded">Recommended</span>
+                          <span className="text-[10px] font-medium text-[#13B5EA] bg-[#13B5EA]/10 px-1.5 py-0.5 rounded">Recommended</span>
                         )}
                       </div>
                       <p className="text-[11px] text-gray-500 mt-0.5">{opt.desc}</p>
@@ -127,7 +127,7 @@ export function XeroConnectModal({ onClose }: ModalProps) {
                 ))}
               </div>
 
-              <button onClick={() => setStep("export")} className="w-full py-3 text-sm font-semibold text-white bg-gray-900 hover:bg-gray-800 rounded-xl transition-colors flex items-center justify-center gap-2">
+              <button onClick={() => setStep("export")} className="w-full py-3 text-sm font-semibold text-white bg-[#13B5EA] hover:bg-[#0FA2D4] rounded-xl transition-colors flex items-center justify-center gap-2">
                 Next: Select Date Range <ChevronRight className="w-4 h-4" />
               </button>
 
@@ -152,7 +152,7 @@ export function XeroConnectModal({ onClose }: ModalProps) {
                     type="date"
                     value={dateFrom}
                     onChange={e => setDateFrom(e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
+                    className="w-full px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#13B5EA]/20 focus:outline-none"
                   />
                 </div>
                 <div>
@@ -161,7 +161,7 @@ export function XeroConnectModal({ onClose }: ModalProps) {
                     type="date"
                     value={dateTo}
                     onChange={e => setDateTo(e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
+                    className="w-full px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#13B5EA]/20 focus:outline-none"
                   />
                 </div>
               </div>
@@ -190,7 +190,7 @@ export function XeroConnectModal({ onClose }: ModalProps) {
                 <button onClick={() => setStep("intro")} className="flex-1 py-3 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
                   Back
                 </button>
-                <button onClick={handleExport} disabled={exporting} className="flex-1 py-3 text-sm font-semibold text-white bg-gray-900 hover:bg-gray-800 disabled:bg-gray-200 disabled:text-gray-400 rounded-xl transition-colors flex items-center justify-center gap-2">
+                <button onClick={handleExport} disabled={exporting} className="flex-1 py-3 text-sm font-semibold text-white bg-[#13B5EA] hover:bg-[#0FA2D4] disabled:bg-gray-200 disabled:text-gray-400 rounded-xl transition-colors flex items-center justify-center gap-2">
                   {exporting ? "Exporting..." : <><Download className="w-4 h-4" /> Export CSV</>}
                 </button>
               </div>
