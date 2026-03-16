@@ -436,7 +436,7 @@ export default function LandingPage() {
                   { name: "OwnerRez", logo: "/logos/ownerrez.png", status: "live" },
                   { name: "Hostaway", logo: "/logos/hostaway.png", status: "soon" },
                   { name: "Guesty", logo: "/logos/guesty.png", status: "soon" },
-                  { name: "Lodgify", logo: "/logos/lodgify.svg", status: "soon" },
+                  { name: "Lodgify", logo: "/logos/lodgify.svg", status: "live" },
                 ].map((pms, i) => (
                   <div key={i} className="flex flex-col items-center gap-3 p-5 rounded-xl border border-gray-100 bg-gray-50 hover:border-teal-200 hover:bg-teal-50/30 transition-colors">
                     <div className="w-10 h-10 relative">
@@ -451,39 +451,17 @@ export default function LandingPage() {
               </div>
             </FadeIn>
 
-            {/* Operations */}
-            <FadeIn delay={120}>
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-widest mb-6 text-center">Operations</h3>
-              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-3 gap-4 max-w-lg mx-auto mb-14">
-                {[
-                  { name: "Turno", logo: "/logos/turno.svg", desc: "Coming soon" },
-                  { name: "Breezeway", logo: "/logos/breezeway.svg", desc: "Coming soon" },
-                  { name: "PriceLabs", logo: "/logos/pricelabs.svg", desc: "Coming soon" },
-                ].map((integration, i) => (
-                  <div key={i} className="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 bg-gray-50 text-center">
-                    <div className="w-8 h-8 relative">
-                      <Image src={integration.logo} alt={integration.name} width={32} height={32} className="rounded-md" />
-                    </div>
-                    <span className="text-xs font-medium text-gray-900">{integration.name}</span>
-                    <span className="text-[10px] text-gray-500">{integration.desc}</span>
-                  </div>
-                ))}
-              </div>
-            </FadeIn>
-
             {/* Financial, Productivity & Automation */}
-            <FadeIn delay={200}>
+            <FadeIn delay={160}>
               <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-widest mb-6 text-center">Financial &amp; Productivity</h3>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-4">
                 {[
                   { name: "Plaid", logo: "/logos/plaid.svg", desc: "Bank sync" },
-                  { name: "Stripe", logo: "/logos/stripe.svg", desc: "Coming soon" },
                   { name: "Google Sheets", logo: "/logos/googlesheets.svg", desc: "Export data" },
                   { name: "Google Drive", logo: "/logos/googledrive.svg", desc: "Receipt backup" },
                   { name: "Slack", logo: "/logos/slack.svg", desc: "Notifications" },
                   { name: "Zapier", logo: "/logos/zapier.svg", desc: "Automations" },
                   { name: "QuickBooks", logo: "/logos/quickbooks.svg", desc: "Coming soon" },
-                  { name: "Xero", logo: "/logos/xero.svg", desc: "Coming soon" },
                 ].map((integration, i) => (
                   <div key={i} className="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 bg-gray-50 text-center">
                     <div className="w-8 h-8 relative">
