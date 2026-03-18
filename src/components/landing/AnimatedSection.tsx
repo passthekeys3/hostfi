@@ -1,31 +1,35 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 function useInView(threshold = 0.1) {
   const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-  // Track if IntersectionObserver is supported and has initialized
-  const [ready, setReady] = useState(false);
+  const [visible, setVisible] = useState(true); // Start visible (SSR-safe)
+  const hydrated = useRef(false);
   
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     
-    // Check for reduced motion preference
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    // Skip animations for reduced motion or missing IntersectionObserver
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) {
       setVisible(true);
-      setReady(true);
       return;
     }
     
-    if (!("IntersectionObserver" in window)) {
+    // Check if element is already in viewport (above the fold)
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) {
+      // Already visible, keep it visible
       setVisible(true);
-      setReady(true);
+      hydrated.current = true;
       return;
     }
     
-    setReady(true);
+    // Element is below the fold -- animate it in when scrolled to
+    hydrated.current = true;
+    setVisible(false);
+    
     const obs = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) { 
         setVisible(true); 
@@ -36,7 +40,7 @@ function useInView(threshold = 0.1) {
     return () => obs.disconnect();
   }, [threshold]);
   
-  return { ref, visible, ready };
+  return { ref, visible };
 }
 
 export function FadeIn({ 
@@ -50,19 +54,17 @@ export function FadeIn({
   delay?: number; 
   withScale?: boolean;
 }) {
-  const { ref, visible, ready } = useInView();
+  const { ref, visible } = useInView();
   
-  // Before JS hydration, render fully visible (no opacity-0 flash)
-  // After hydration, animate only if IntersectionObserver is ready
   return (
     <div
       ref={ref}
-      className={`${className} ${ready ? 'transition-all duration-700 ease-out' : ''} ${
-        !ready || visible 
+      className={`${className} transition-all duration-700 ease-out ${
+        visible 
           ? `opacity-100 translate-y-0 ${withScale ? "scale-100" : ""}` 
           : `opacity-0 translate-y-8 ${withScale ? "scale-95" : ""}`
       }`}
-      style={ready && !visible ? { transitionDelay: `${delay}ms` } : undefined}
+      style={!visible ? { transitionDelay: `${delay}ms` } : undefined}
     >
       {children}
     </div>
