@@ -41,7 +41,7 @@ const faqData = [
   { q: "What's the difference between Owner and Arbitrage mappings?", a: "Owners and arbitrage operators have different tax situations. For example, an owner deducts mortgage interest on Line 12, while an arbitrage operator deducts rent on Line 19 (Other). HostFi handles both automatically." },
   { q: "Is my financial data secure?", a: "We use bank-level encryption and never store banking credentials. Your data is encrypted at rest and in transit. Bill payments are processed through licensed third-party providers — we never touch your funds." },
   { q: "Can I import existing expense data?", a: "Yes. Import from CSV or Excel — our import wizard auto-maps your columns and flags duplicates. Xero sync coming soon on Business plan." },
-  { q: "Do you integrate with property management software?", a: "Yes! HostFi integrates with Guesty, Hostaway, and OwnerRez to sync properties and bookings automatically. We also connect with Slack, Google Sheets, Google Drive, Zapier, and Make. Plaid bank sync, QuickBooks, and Xero coming soon." },
+  { q: "Do you integrate with property management software?", a: "Yes. HostFi integrates with Hospitable, OwnerRez, Hostaway, Guesty, and Lodgify to sync properties and bookings automatically. You can also connect Airbnb and VRBO directly without a PMS. We also connect with Plaid for bank sync, plus Slack, Google Sheets, Google Drive, Zapier, and Make. QuickBooks and Xero exports available too." },
   { q: "What's the cancellation policy?", a: "Cancel anytime from your settings — no contracts, no fees. Your data stays accessible for 30 days after cancellation." },
 ];
 

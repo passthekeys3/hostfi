@@ -35,6 +35,8 @@ export default async function RootLayout({ children }) {
           navbar={navbar}
           footer={<Footer>© {new Date().getFullYear()} HostFi. All rights reserved. <a href="https://hostfi.ai" style={{ color: '#14b8a6' }}>hostfi.ai</a></Footer>}
           sidebar={{ defaultMenuCollapseLevel: 1 }}
+          editLink={null}
+          feedback={{ content: null }}
           pageMap={pageMap}
         >
           {children}

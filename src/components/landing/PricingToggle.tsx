@@ -53,14 +53,14 @@ export function PricingToggle() {
       <div className="flex items-center justify-center gap-3 mb-10">
         <button 
           onClick={() => setAnnual(false)} 
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${!annual ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-700"}`}
+          className={`px-5 py-2.5 text-sm font-medium rounded-lg transition-colors ${!annual ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-700"}`}
           aria-pressed={!annual}
         >
           Monthly
         </button>
         <button 
           onClick={() => setAnnual(true)} 
-          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center gap-2 ${annual ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-700"}`}
+          className={`px-5 py-2.5 text-sm font-medium rounded-lg transition-colors flex items-center gap-2 ${annual ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-700"}`}
           aria-pressed={annual}
         >
           Annual

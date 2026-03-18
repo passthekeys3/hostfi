@@ -9,6 +9,12 @@ function useInView(threshold = 0.1) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) {
+      setVisible(true);
+      return;
+    }
+    
     const obs = new IntersectionObserver(([e]) => {
       if (e.isIntersecting) { 
         setVisible(true); 
