@@ -76,9 +76,9 @@ export default function RentalArbitrageExpensesPage() {
           </p>
           <ul className="list-disc pl-6 space-y-2">
             <li><strong>No mortgage interest deduction</strong> (Line 12) -- you don't have a mortgage</li>
-            <li><strong>No property tax deduction</strong> (Line 17) -- your landlord pays those</li>
-            <li><strong>No depreciation on the building</strong> (Line 19) -- you don't own it</li>
-            <li><strong>Rent paid IS deductible</strong> (Line 14) -- this is your biggest expense and it goes here</li>
+            <li><strong>No property tax deduction</strong> (Line 16) -- your landlord pays those</li>
+            <li><strong>No depreciation on the building</strong> (Line 18) -- you don't own it</li>
+            <li><strong>Rent paid IS deductible</strong> (Line 19, Other) -- this is your biggest expense and it goes here. Line 14 is repairs.</li>
             <li><strong>Furniture depreciation</strong> -- you bought the furniture, so you CAN depreciate it (5-7 years)</li>
           </ul>
           <p>
@@ -108,7 +108,7 @@ export default function RentalArbitrageExpensesPage() {
 
           <h3 className="text-lg font-semibold text-gray-900 mt-8 mb-3">Monthly Fixed Costs</h3>
           <ul className="list-disc pl-6 space-y-2">
-            <li><strong>Rent</strong> -- your largest expense, typically 40-60% of gross revenue. Deducted on Schedule E Line 14</li>
+            <li><strong>Rent</strong> -- your largest expense, typically 40-60% of gross revenue. Deducted on Schedule E Line 19 (Other)</li>
             <li><strong>Utilities</strong> -- electricity, gas, water, internet. Some leases include utilities, some don't</li>
             <li><strong>Insurance</strong> -- STR-specific liability insurance ($50-150/month per unit)</li>
             <li><strong>Software subscriptions</strong> -- PMS, channel manager, pricing tool, expense tracker</li>
@@ -164,7 +164,7 @@ export default function RentalArbitrageExpensesPage() {
 
           <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Common Arbitrage Tax Mistakes</h2>
           <ol className="list-decimal pl-6 space-y-3">
-            <li><strong>Putting rent on Line 12</strong> -- Line 12 is mortgage interest. Rent goes on Line 14. Using the wrong line tells the IRS you own the property when you don't.</li>
+            <li><strong>Putting rent on Line 12 or Line 14</strong> -- Line 12 is mortgage interest. Line 14 is repairs. Rent goes on Line 19 (Other).</li>
             <li><strong>Deducting the security deposit</strong> -- A refundable security deposit is not an expense. It's an asset you'll get back (hopefully). Don't deduct it.</li>
             <li><strong>Missing furniture depreciation</strong> -- You can't deduct building depreciation (you don't own it), but you CAN depreciate the furniture you bought. Many arbitrage operators forget this.</li>
             <li><strong>Not tracking per-unit P&L</strong> -- If one unit is bleeding money, you need to know immediately. Aggregate numbers hide underperformers.</li>
@@ -181,14 +181,14 @@ export default function RentalArbitrageExpensesPage() {
           <ul className="list-disc pl-6 space-y-2">
             <li>Automatic categorization (so you're not manually sorting 200+ transactions monthly)</li>
             <li>Per-property P&L (to spot underperforming units)</li>
-            <li>Arbitrage-specific tax mapping (Line 14 for rent, not Line 12)</li>
+            <li>Arbitrage-specific tax mapping (Line 19 for rent, not Line 12)</li>
             <li>Receipt capture (for cleaning, supplies, and maintenance receipts)</li>
             <li>PMS integration (to pull revenue data automatically)</li>
           </ul>
 
           <div className="mt-12 p-8 bg-gray-50 rounded-2xl border border-gray-100 text-center">
             <h3 className="text-xl font-bold text-gray-900 mb-2">Built for Arbitrage Operators</h3>
-            <p className="text-gray-500 text-sm mb-6">HostFi auto-maps rent to Line 14 and handles arbitrage tax treatment correctly. Free for up to 3 properties.</p>
+            <p className="text-gray-500 text-sm mb-6">HostFi auto-maps rent to Line 19 (Other) and handles arbitrage tax treatment correctly. Free for up to 3 properties.</p>
             <Link href="/login" className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-medium rounded-xl text-sm hover:bg-gray-800 transition-colors">
               Get Started Free <ArrowRight className="w-4 h-4" />
             </Link>

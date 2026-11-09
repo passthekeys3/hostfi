@@ -152,20 +152,10 @@ export default function AirbnbTaxDeductionsPage() {
             <li>Points paid on the rental property mortgage</li>
           </ul>
           <p>
-            This is for property owners only. If you do rental arbitrage (lease the unit and sublet on Airbnb), your rent goes on Line 14 instead.
+            This is for property owners only. If you do rental arbitrage (lease the unit and sublet on Airbnb), your rent goes on Line 19 (Other). Line 14 is repairs.
           </p>
 
-          <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Line 14: Other Interest / Rent Paid (Arbitrage Operators)</h2>
-          <ul className="list-disc pl-6 space-y-2">
-            <li>Monthly rent paid to the landlord (arbitrage operators)</li>
-            <li>Interest on business loans used for the rental operation</li>
-            <li>Interest on business credit cards used for rental expenses</li>
-          </ul>
-          <p>
-            For arbitrage operators, your monthly lease payment is your biggest single expense and it's fully deductible. This is the line that makes the arbitrage tax math work.
-          </p>
-
-          <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Line 15: Repairs</h2>
+          <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Line 14: Repairs</h2>
           <ul className="list-disc pl-6 space-y-2">
             <li>Plumbing fixes (leaky faucet, running toilet)</li>
             <li>Electrical repairs</li>
@@ -179,7 +169,7 @@ export default function AirbnbTaxDeductionsPage() {
             The IRS distinguishes between repairs (restoring something to working condition) and improvements (making it better than before). Repairs are deducted immediately. Improvements must be depreciated over time. A new faucet replacing a broken one = repair. Upgrading all plumbing fixtures for aesthetics = improvement.
           </p>
 
-          <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Line 16: Supplies</h2>
+          <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Line 15: Supplies</h2>
           <ul className="list-disc pl-6 space-y-2">
             <li>Guest toiletries (shampoo, conditioner, soap, lotion)</li>
             <li>Paper goods (toilet paper, paper towels, tissues)</li>
@@ -192,7 +182,7 @@ export default function AirbnbTaxDeductionsPage() {
             <li>Guidebook printing</li>
           </ul>
 
-          <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Line 17: Taxes</h2>
+          <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Line 16: Taxes</h2>
           <ul className="list-disc pl-6 space-y-2">
             <li>Property taxes (owners)</li>
             <li>Local transient occupancy tax (TOT)</li>
@@ -204,7 +194,7 @@ export default function AirbnbTaxDeductionsPage() {
             Many cities charge a transient occupancy tax (hotel tax) on short-term rentals. Airbnb collects and remits this in some jurisdictions but not all. If you're paying it yourself, it's deductible.
           </p>
 
-          <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Line 18: Utilities</h2>
+          <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Line 17: Utilities</h2>
           <ul className="list-disc pl-6 space-y-2">
             <li>Electricity</li>
             <li>Gas / heating</li>
@@ -218,7 +208,7 @@ export default function AirbnbTaxDeductionsPage() {
             For STR operators, utilities are typically higher than long-term rentals because guests use more electricity, water, and heating/cooling. This makes them a significant deduction.
           </p>
 
-          <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Line 19: Depreciation</h2>
+          <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Line 18: Depreciation</h2>
           <ul className="list-disc pl-6 space-y-2">
             <li>Building depreciation (27.5 years for residential rental property)</li>
             <li>Furniture and fixtures (5-7 year depreciation)</li>
@@ -233,8 +223,9 @@ export default function AirbnbTaxDeductionsPage() {
             A cost segregation study can accelerate depreciation on certain components (carpeting, fixtures, landscaping) from 27.5 years to 5-15 years, creating significantly larger deductions in the early years. Worth it for properties valued over $500K.
           </p>
 
-          <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Line 20: Other Expenses</h2>
+          <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Line 19: Other</h2>
           <ul className="list-disc pl-6 space-y-2">
+            <li>Rent paid to a landlord (arbitrage operators). This is usually the largest deduction, and it does not go on Line 12 or Line 14.</li>
             <li>Travel to your rental property (mileage or actual expenses)</li>
             <li>Home office deduction (if you manage rentals from home)</li>
             <li>Smart home devices (smart locks, thermostats, security cameras)</li>

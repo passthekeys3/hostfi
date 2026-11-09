@@ -87,11 +87,12 @@ export default function STRExpenseTrackingPage() {
             <li><strong>Line 9:</strong> Insurance</li>
             <li><strong>Line 10:</strong> Legal and professional fees</li>
             <li><strong>Line 12:</strong> Mortgage interest paid (owners)</li>
-            <li><strong>Line 13:</strong> Repairs</li>
-            <li><strong>Line 14:</strong> Rent paid to landlord (arbitrage operators)</li>
+            <li><strong>Line 13:</strong> Other interest</li>
+            <li><strong>Line 14:</strong> Repairs</li>
+            <li><strong>Line 15:</strong> Supplies</li>
             <li><strong>Line 16:</strong> Taxes (property taxes)</li>
             <li><strong>Line 17:</strong> Utilities</li>
-            <li><strong>Line 19:</strong> Other (supplies, subscriptions, software)</li>
+            <li><strong>Line 19:</strong> Other, including rent paid by an arbitrage operator, plus subscriptions and software</li>
           </ul>
           <p>
             If you have more than 3 properties, you'll need additional Schedule E forms. And every dollar needs to be assigned to the correct property and the correct line. This is where most operators slip up.
@@ -133,7 +134,7 @@ export default function STRExpenseTrackingPage() {
 
           <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Owners vs. Arbitrage Operators</h2>
           <p>
-            One critical distinction that trips people up: if you <strong>own</strong> the property, your mortgage payment splits into interest (Line 12, deductible) and principal (not deductible). If you're doing <strong>rental arbitrage</strong> (renting a property long-term and subletting on Airbnb), your lease payment goes on Line 14 as rent paid.
+            One critical distinction that trips people up: if you <strong>own</strong> the property, your mortgage payment splits into interest (Line 12, deductible) and principal (not deductible). If you're doing <strong>rental arbitrage</strong> (renting a property long-term and subletting on Airbnb), your lease payment goes on Line 19 (Other) as rent paid. Line 14 is repairs.
           </p>
           <p>
             This is a meaningful difference for tax purposes, and your tracking system needs to handle both scenarios correctly.
