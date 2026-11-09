@@ -1,4 +1,5 @@
 import type { ExpenseCategory } from "@/lib/expense-categories";
+import { anthropicText, HAIKU_MODEL } from "@/lib/ai-models";
 
 export interface ParsedBill {
   vendor_name: string;
@@ -58,7 +59,7 @@ export async function parseBillFromText(emailBody: string): Promise<ParsedBill> 
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-haiku-3-5-20241022",
+      model: HAIKU_MODEL,
       max_tokens: 1024,
       system: BILL_SYSTEM_PROMPT,
       messages: [
@@ -76,7 +77,7 @@ export async function parseBillFromText(emailBody: string): Promise<ParsedBill> 
   }
 
   const data = await response.json();
-  const text = data.content?.[0]?.type === "text" ? data.content[0].text : "";
+  const text = anthropicText(data);
 
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
@@ -117,7 +118,7 @@ export async function parseBillFromAttachment(
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-haiku-3-5-20241022",
+        model: HAIKU_MODEL,
         max_tokens: 1024,
         system: BILL_SYSTEM_PROMPT,
         messages: [
@@ -148,7 +149,7 @@ export async function parseBillFromAttachment(
     }
 
     const data = await response.json();
-    const text = data.content?.[0]?.type === "text" ? data.content[0].text : "";
+    const text = anthropicText(data);
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error("Failed to extract JSON from AI response");
     const parsed = JSON.parse(jsonMatch[0]);
@@ -174,7 +175,7 @@ export async function parseBillFromAttachment(
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-haiku-3-5-20241022",
+      model: HAIKU_MODEL,
       max_tokens: 1024,
       system: BILL_SYSTEM_PROMPT,
       messages: [
@@ -205,7 +206,7 @@ export async function parseBillFromAttachment(
   }
 
   const data = await response.json();
-  const text = data.content?.[0]?.type === "text" ? data.content[0].text : "";
+  const text = anthropicText(data);
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error("Failed to extract JSON from AI response");
   const parsed = JSON.parse(jsonMatch[0]);

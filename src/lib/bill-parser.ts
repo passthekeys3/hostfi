@@ -1,4 +1,5 @@
 import type { ParsedBill } from "@/lib/types";
+import { anthropicText, SONNET_MODEL } from "@/lib/ai-models";
 
 const SYSTEM_PROMPT = `You are a utility bill parser. Extract structured data from bill emails.
 
@@ -55,7 +56,7 @@ export async function parseBillEmail(
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
+      model: SONNET_MODEL,
       max_tokens: 1024,
       system: SYSTEM_PROMPT,
       messages: [{ role: "user", content: userMessage }],
@@ -68,8 +69,7 @@ export async function parseBillEmail(
   }
 
   const data = await response.json();
-  const text =
-    data.content?.[0]?.type === "text" ? data.content[0].text : "";
+  const text = anthropicText(data);
 
   // Extract JSON from response
   const jsonMatch = text.match(/\{[\s\S]*\}/);
