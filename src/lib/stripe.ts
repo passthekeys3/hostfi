@@ -27,7 +27,6 @@ export const PLANS = {
       'Ask AI (10 queries/mo)',
       'Revenue tracking (CSV)',
       'Basic analytics',
-      'Bill pay — CC only',
     ],
   },
   pro: {
@@ -49,8 +48,8 @@ export const PLANS = {
       'AI monthly summaries',
       'Anomaly detection',
       'Schedule E tax export',
-      'Free ACH bill pay',
       'Receipt scanning',
+      'Email bill parsing',
     ],
   },
   business: {
@@ -70,9 +69,7 @@ export const PLANS = {
       '+$2/property beyond 25',
       'Everything in Pro',
       'Cross-property benchmarking',
-      'Team access (up to 5)',
-      'QuickBooks / Xero sync',
-      'Accountant portal',
+      'Slack integration',
       'Priority support',
     ],
   },
@@ -112,13 +109,13 @@ export function getValidPriceId(plan: 'pro' | 'business', annual: boolean): stri
 export function isFeatureAvailable(plan: PlanId, feature: string): boolean {
   const planConfig = PLANS[plan];
   switch (feature) {
-    case 'ach_payments': return plan !== 'free';
+    case 'ach_payments': return false;
     case 'tax_export': return plan !== 'free';
     case 'ai_summaries': return plan !== 'free';
     case 'anomaly_detection': return plan !== 'free';
     case 'benchmarking': return plan === 'business';
-    case 'team_access': return plan === 'business';
-    case 'quickbooks': return plan === 'business';
+    case 'team_access': return false;
+    case 'quickbooks': return false;
     case 'xero': return plan === 'business';
     case 'api_access': return plan === 'business';
     default: return true;

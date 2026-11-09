@@ -85,12 +85,19 @@ export interface MonthlyReportData {
   anomalies: Array<{ title: string; description: string; severity: string }>;
 }
 
-// Available months for reports
-export const AVAILABLE_MONTHS = [
-  { key: '2026-01', label: 'January 2026' },
-  { key: '2025-12', label: 'December 2025' },
-  { key: '2025-11', label: 'November 2025' },
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
 ];
+
+/** Recent calendar months for an empty report picker. Computed at call time. */
+export function recentReportMonths(count = 3, now = new Date()) {
+  return Array.from({ length: count }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    return { key, label: `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}` };
+  });
+}
 
 // ============================================================================
 // Configuration Check
@@ -287,7 +294,7 @@ export async function getMonthlyReportData(monthKey: string): Promise<MonthlyRep
 }
 
 export function getAvailableReportMonths() {
-  return AVAILABLE_MONTHS;
+  return recentReportMonths();
 }
 
 // ============================================================================

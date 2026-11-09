@@ -19,7 +19,7 @@ function getServiceClient() {
 function verifyAuth(request: NextRequest): boolean {
   const expectedUser = process.env.OWNERREZ_WEBHOOK_USER;
   const expectedPass = process.env.OWNERREZ_WEBHOOK_PASSWORD;
-  if (!expectedUser || !expectedPass) return true; // No auth configured, allow all
+  if (!expectedUser || !expectedPass) return false;
 
   const authHeader = request.headers.get('authorization');
   const expected = 'Basic ' + Buffer.from(`${expectedUser}:${expectedPass}`).toString('base64');

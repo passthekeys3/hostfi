@@ -30,9 +30,8 @@ function getServiceClient() {
 function verifySignature(rawBody: string, signature: string | null): boolean {
   const secret = process.env.HOSPITABLE_WEBHOOK_SECRET;
   if (!secret) {
-    // No secret configured — skip verification (log warning)
-    console.warn('Hospitable webhook: HOSPITABLE_WEBHOOK_SECRET not set, skipping signature verification');
-    return true;
+    console.error('Hospitable webhook: HOSPITABLE_WEBHOOK_SECRET not set');
+    return false;
   }
   if (!signature) {
     console.error('Hospitable webhook: missing Signature header');

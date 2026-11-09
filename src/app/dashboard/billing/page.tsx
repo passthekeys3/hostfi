@@ -23,8 +23,6 @@ const PLANS = [
     icon: Building2,
     description: "Everything you need to get started",
     properties: "3 properties",
-    ccFee: "2.9% + 0.5%",
-    achFee: "Not available",
     features: [
       "Up to 3 properties",
       "AI categorization (50/mo)",
@@ -32,14 +30,12 @@ const PLANS = [
       "Revenue tracking (CSV)",
       "Basic analytics",
       "Receipt scanning (10/mo)",
-      "Bill pay — CC only",
     ],
     notIncluded: [
-      "Free ACH bill pay",
-      "AI monthly summaries",
       "Schedule E tax export",
       "Anomaly detection",
-      "Team access",
+      "Unlimited receipt scanning",
+      "PMS integrations",
     ],
   },
   {
@@ -52,8 +48,6 @@ const PLANS = [
     badge: "Most Popular",
     properties: "10 properties included",
     extraPropertyRate: "$2.50/property beyond 10",
-    ccFee: "2.9% + 0.25%",
-    achFee: "Free",
     features: [
       "Up to 10 properties",
       "+$2.50/property beyond 10",
@@ -61,14 +55,12 @@ const PLANS = [
       "AI monthly summaries",
       "Full anomaly detection",
       "Schedule E tax export",
-      "Free ACH bill pay",
       "Unlimited receipt scanning",
       "Unlimited email parsing",
     ],
     notIncluded: [
       "Cross-property benchmarking",
-      "QuickBooks / Xero sync",
-      "Accountant portal",
+      "Slack integration",
       "Priority support",
     ],
   },
@@ -81,16 +73,12 @@ const PLANS = [
     description: "For teams and property managers",
     properties: "25 properties included",
     extraPropertyRate: "$2/property beyond 25",
-    ccFee: "2.9% + 0.25%",
-    achFee: "Free",
     features: [
       "Up to 25 properties",
       "+$2/property beyond 25",
       "Everything in Pro",
       "Cross-property benchmarking",
-      "Team access (up to 5)",
-      "QuickBooks / Xero sync",
-      "Accountant portal",
+      "Slack integration",
       "Priority support",
     ],
     notIncluded: [],
@@ -264,7 +252,7 @@ export default function BillingPage() {
               {currentPlanConfig?.name} Plan
             </p>
             <p className="text-sm text-gray-500">
-              {currentPlanConfig?.properties}, {currentPlan === "free" ? "CC bill pay only" : "Free ACH + reduced CC fees"}
+              {currentPlanConfig?.properties}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -395,21 +383,6 @@ export default function BillingPage() {
                   </p>
                 )}
                 {price === 0 && <p className="text-[11px] text-gray-400 mt-1">Free forever</p>}
-              </div>
-
-              {/* Payment fees */}
-              <div className="bg-gray-50 rounded-lg p-3 mb-5 space-y-1.5">
-                <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Payment Fees</p>
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">Credit card</span>
-                  <span className="font-medium text-gray-700">{plan.ccFee}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-gray-500">ACH</span>
-                  <span className={cn("font-medium", plan.achFee === "Free" ? "text-teal-600" : "text-gray-400")}>
-                    {plan.achFee}
-                  </span>
-                </div>
               </div>
 
               {/* Features */}

@@ -23,8 +23,8 @@ function getServiceClient() {
 function verifyWebhook(rawBody: string, signature: string | null): boolean {
   const secret = process.env.HOSTAWAY_WEBHOOK_SECRET;
   if (!secret) {
-    console.warn('Hostaway webhook: HOSTAWAY_WEBHOOK_SECRET not set, skipping signature verification');
-    return true;
+    console.error('Hostaway webhook: HOSTAWAY_WEBHOOK_SECRET not set');
+    return false;
   }
   if (!signature) {
     console.error('Hostaway webhook: missing X-Hostaway-Signature header');
