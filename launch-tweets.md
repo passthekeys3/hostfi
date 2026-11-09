@@ -64,7 +64,7 @@ Built a tool that handles this automatically. Free for up to 3 properties.
 https://hostfi.ai
 
 ### Tweet: Arbitrage
-If you're doing rental arbitrage, your rent payment goes on Schedule E Line 14.
+If you're doing rental arbitrage, your rent payment goes on Schedule E Line 19 (Other). Line 14 is repairs.
 
 If you own the property, your mortgage interest goes on Line 12.
 

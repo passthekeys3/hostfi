@@ -110,7 +110,7 @@ export default function CompareStessaPage() {
             />
             <DifferenceCard
               title="Arbitrage Operator Support"
-              description="If you're doing rental arbitrage (leasing a property and subletting on Airbnb), HostFi handles your tax situation correctly — rent paid goes to Line 14, not Line 12. Stessa doesn't distinguish between owners and operators."
+              description="If you're doing rental arbitrage (leasing a property and subletting on Airbnb), HostFi handles your tax situation correctly — rent paid goes to Line 19 (Other), not Line 12. Line 14 is repairs. Stessa doesn't distinguish between owners and operators."
             />
           </div>
         </div>

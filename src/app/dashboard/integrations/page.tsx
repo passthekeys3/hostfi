@@ -15,10 +15,8 @@ import {
 const PMSModal = dynamic(() => import("@/components/integrations/PMSModal").then(m => ({ default: m.PMSModal })));
 const XeroModal = dynamic(() => import("@/components/integrations/XeroModal").then(m => ({ default: m.XeroConnectModal })));
 const SlackModal = dynamic(() => import("@/components/integrations/SlackModal").then(m => ({ default: m.SlackConnectModal })));
-const DropboxModal = dynamic(() => import("@/components/integrations/DropboxModal").then(m => ({ default: m.DropboxModal })));
 const MakeModal = dynamic(() => import("@/components/integrations/MakeModal").then(m => ({ default: m.MakeModal })));
 const GoogleSheetsModal = dynamic(() => import("@/components/integrations/GoogleSheetsModal").then(m => ({ default: m.GoogleSheetsModal })));
-const TeamsModal = dynamic(() => import("@/components/integrations/TeamsModal").then(m => ({ default: m.TeamsModal })));
 const GoogleDriveModal = dynamic(() => import("@/components/integrations/GoogleDriveModal").then(m => ({ default: m.GoogleDriveModal })));
 const ZapierModal = dynamic(() => import("@/components/integrations/ZapierModal").then(m => ({ default: m.ZapierModal })));
 const EmailAlertsModal = dynamic(() => import("@/components/integrations/EmailAlertsModal").then(m => ({ default: m.EmailAlertsModal })));
@@ -245,14 +243,8 @@ function IntegrationsPageContent() {
   const [openModal, setOpenModal] = useState<string | null>(null);
 
   const handleConnect = (id: string) => {
-    const hasModal = ["xero", "slack", "google_sheets", "zapier", "teams", "google_drive", "dropbox", "make", "email_smtp", "plaid", "guesty", "hostaway", "ownerrez", "hospitable", "hospitable_connect", "lodgify"].includes(id);
-    if (hasModal) { setOpenModal(id); return; }
-    // Toggle for Melio
-    setConnectedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
+    const hasModal = ["xero", "slack", "google_sheets", "zapier", "google_drive", "make", "email_smtp", "plaid", "guesty", "hostaway", "ownerrez", "hospitable", "hospitable_connect", "lodgify"].includes(id);
+    if (hasModal) setOpenModal(id);
   };
 
   const handleModalClose = (id: string, didConnect?: boolean) => () => {
@@ -368,9 +360,7 @@ function IntegrationsPageContent() {
       {openModal === "slack" && <SlackModal onClose={handleModalClose("slack")} isConnected={connectedIds.has("slack")} onDisconnect={() => handleDisconnect("slack")} />}
       {openModal === "google_sheets" && <GoogleSheetsModal onClose={handleModalClose("google_sheets")} isConnected={connectedIds.has("google_sheets")} onDisconnect={() => handleDisconnect("google_sheets")} />}
       {openModal === "zapier" && <ZapierModal onClose={handleModalClose("zapier")} />}
-      {openModal === "teams" && <TeamsModal onClose={handleModalClose("teams")} />}
       {openModal === "google_drive" && <GoogleDriveModal onClose={handleModalClose("google_drive")} isConnected={connectedIds.has("google_drive")} onDisconnect={() => handleDisconnect("google_drive")} />}
-      {openModal === "dropbox" && <DropboxModal onClose={handleModalClose("dropbox")} />}
       {openModal === "make" && <MakeModal onClose={handleModalClose("make")} />}
       {openModal === "email_smtp" && <EmailAlertsModal onClose={handleModalClose("email_smtp")} />}
       {openModal === "plaid" && <PlaidModal onClose={handleModalClose("plaid")} onConnected={() => setConnectedIds(prev => new Set(prev).add("plaid"))} />}

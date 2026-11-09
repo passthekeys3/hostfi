@@ -2,23 +2,13 @@
 
 import { useState, useId, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { Check, X, ArrowRight, RefreshCw, ChevronRight, ExternalLink, Shield, Unlink, FileSpreadsheet, Loader2 } from "lucide-react";
+import { Check, X, ArrowRight, RefreshCw, ExternalLink, Shield, Unlink, FileSpreadsheet } from "lucide-react";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import type { GoogleSheetsModalProps } from "./types";
-import { cn } from "@/lib/utils";
 import { GooglePicker, type GooglePickerFile } from "@/components/google-picker";
 
 export function GoogleSheetsModal({ onClose, isConnected: initialConnected, onDisconnect }: GoogleSheetsModalProps) {
-  const [step, setStep] = useState<"connect" | "spreadsheet" | "mapping" | "success" | "connected">(initialConnected ? "connected" : "connect");
-  const [syncing, setSyncing] = useState(false);
-  const [selectedSpreadsheet, setSelectedSpreadsheet] = useState("create_new");
-  const [columnMappings, setColumnMappings] = useState({
-    date: "A",
-    property: "B",
-    category: "C",
-    amount: "D",
-    vendor: "E",
-  });
+  const [step] = useState<"connect" | "connected">(initialConnected ? "connected" : "connect");
   const [connectionInfo, setConnectionInfo] = useState<{
     spreadsheetUrl: string | null;
     spreadsheetName: string | null;
@@ -196,14 +186,6 @@ export function GoogleSheetsModal({ onClose, isConnected: initialConnected, onDi
     return date.toLocaleDateString();
   };
 
-  const handleFinish = () => {
-    setSyncing(true);
-    setTimeout(() => { setSyncing(false); setStep("success"); }, 2000);
-  };
-
-  const stepLabels = ["Connect", "Spreadsheet", "Map Columns", "Enable"];
-  const stepKeys = ["connect", "spreadsheet", "mapping", "success"];
-
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
       <div ref={modalRef} role="dialog" aria-modal="true" aria-labelledby={titleId} className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[90vh] safe-area-bottom overflow-y-auto" onClick={e => e.stopPropagation()}>
@@ -217,33 +199,6 @@ export function GoogleSheetsModal({ onClose, isConnected: initialConnected, onDi
           </div>
           <button onClick={onClose} aria-label="Close modal" className="p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500/40"><X className="w-4 h-4 text-gray-400" aria-hidden="true" /></button>
         </div>
-
-        {/* Step indicator - only show for non-connected states */}
-        {step !== "connected" && (
-          <div className="px-6 pt-4">
-            <div className="flex items-center justify-between mb-2">
-              {stepLabels.map((label, i) => {
-                const stepIndex = stepKeys.indexOf(step);
-                const isActive = i <= stepIndex;
-                const isCurrent = i === stepIndex;
-                return (
-                  <div key={label} className="flex-1 flex items-center">
-                    <div className={cn(
-                      "w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0",
-                      isCurrent ? "bg-[#0F9D58] text-white" : isActive ? "bg-teal-500 text-white" : "bg-gray-100 text-gray-400"
-                    )}>
-                      {isActive && i < stepIndex ? <Check className="w-3 h-3" /> : i + 1}
-                    </div>
-                    {i < 3 && <div className={cn("flex-1 h-0.5 mx-2", isActive && i < stepIndex ? "bg-teal-500" : "bg-gray-100")} />}
-                  </div>
-                );
-              })}
-            </div>
-            <div className="flex justify-between text-[10px] text-gray-400 px-1">
-              {stepLabels.map(l => <span key={l}>{l}</span>)}
-            </div>
-          </div>
-        )}
 
         <div className="px-6 py-5">
           {step === "connect" && (
@@ -275,134 +230,6 @@ export function GoogleSheetsModal({ onClose, isConnected: initialConnected, onDi
                 Connect Google Account <ExternalLink className="w-4 h-4" />
               </a>
               <p className="text-center text-[10px] text-gray-400">You&apos;ll be redirected to Google to authorize access.</p>
-            </div>
-          )}
-
-          {step === "spreadsheet" && (
-            <div className="space-y-6">
-              <div>
-                <h4 className="text-sm font-semibold text-gray-900 mb-1">Select spreadsheet</h4>
-                <p className="text-xs text-gray-500">Choose an existing spreadsheet or create a new one</p>
-              </div>
-              <div className="space-y-2">
-                {[
-                  { id: "create_new", name: "Create new spreadsheet", desc: "HostFi will create a new spreadsheet for you" },
-                  { id: "existing_1", name: "STR Expense Tracker 2026", desc: "Last modified: Feb 5, 2026" },
-                  { id: "existing_2", name: "Property Finances Master", desc: "Last modified: Jan 28, 2026" },
-                  { id: "existing_3", name: "Tax Prep - Schedule E", desc: "Last modified: Jan 15, 2026" },
-                ].map((sheet) => (
-                  <label key={sheet.id} className={cn(
-                    "flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors",
-                    selectedSpreadsheet === sheet.id ? "border-[#0F9D58] bg-[#0F9D58]/5" : "border-gray-200 hover:bg-gray-50"
-                  )}>
-                    <input
-                      type="radio"
-                      name="spreadsheet"
-                      value={sheet.id}
-                      checked={selectedSpreadsheet === sheet.id}
-                      onChange={() => setSelectedSpreadsheet(sheet.id)}
-                      className="accent-[#0F9D58]"
-                    />
-                    <div>
-                      <p className="text-xs font-medium text-gray-900">{sheet.name}</p>
-                      <p className="text-[11px] text-gray-500">{sheet.desc}</p>
-                    </div>
-                  </label>
-                ))}
-              </div>
-              {selectedSpreadsheet === "create_new" && (
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1.5">Spreadsheet name</label>
-                  <input type="text" defaultValue="HostFi Expenses" className="w-full px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0F9D58]/20 focus:outline-none" />
-                </div>
-              )}
-              <div className="flex gap-3">
-                <button onClick={() => setStep("connect")} className="flex-1 py-3 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
-                  Back
-                </button>
-                <button onClick={() => setStep("mapping")} className="flex-1 py-3 text-sm font-semibold text-white bg-[#0F9D58] hover:bg-[#0D8C4D] rounded-xl transition-colors">
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
-
-          {step === "mapping" && (
-            <div className="space-y-6">
-              <div>
-                <h4 className="text-sm font-semibold text-gray-900 mb-1">Map columns</h4>
-                <p className="text-xs text-gray-500">Tell HostFi where each field should go</p>
-              </div>
-              <div className="space-y-3">
-                {[
-                  { key: "date", label: "Expense Date", default: "A" },
-                  { key: "property", label: "Property", default: "B" },
-                  { key: "category", label: "Category", default: "C" },
-                  { key: "amount", label: "Amount", default: "D" },
-                  { key: "vendor", label: "Vendor", default: "E" },
-                ].map((field) => (
-                  <div key={field.key} className="flex items-center gap-3">
-                    <span className="text-xs text-gray-700 font-medium w-28 shrink-0">{field.label}</span>
-                    <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
-                    <select
-                      value={columnMappings[field.key as keyof typeof columnMappings]}
-                      onChange={(e) => setColumnMappings(prev => ({ ...prev, [field.key]: e.target.value }))}
-                      className="flex-1 px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0F9D58]/20 focus:outline-none"
-                    >
-                      {["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"].map(col => (
-                        <option key={col} value={col}>Column {col}</option>
-                      ))}
-                    </select>
-                  </div>
-                ))}
-              </div>
-              <div className="bg-gray-50 rounded-xl p-4">
-                <p className="text-xs font-medium text-gray-700 mb-2">Preview</p>
-                <div className="flex gap-1 text-[10px] font-mono">
-                  {Object.entries(columnMappings).map(([key, col]) => (
-                    <div key={key} className="flex-1 bg-white border border-gray-200 rounded px-2 py-1.5 text-center">
-                      <div className="text-gray-400">{col}</div>
-                      <div className="text-gray-700 capitalize">{key}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1.5">Sync frequency</label>
-                <select className="w-full px-3 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#0F9D58]/20 focus:outline-none">
-                  <option>Real-time (on every change)</option>
-                  <option>Every hour</option>
-                  <option>Every 6 hours</option>
-                  <option>Daily</option>
-                </select>
-              </div>
-              <div className="flex gap-3">
-                <button onClick={() => setStep("spreadsheet")} className="flex-1 py-3 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors">
-                  Back
-                </button>
-                <button onClick={handleFinish} disabled={syncing} className="flex-1 py-3 text-sm font-semibold text-white bg-teal-500 hover:bg-teal-600 disabled:bg-gray-200 disabled:text-gray-400 rounded-xl transition-colors flex items-center justify-center gap-2">
-                  {syncing ? <><RefreshCw className="w-4 h-4 animate-spin" /> Enabling sync...</> : <>Enable Sync</>}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {step === "success" && (
-            <div className="text-center py-8 space-y-4">
-              <div className="w-16 h-16 bg-teal-50 rounded-2xl flex items-center justify-center mx-auto"><Check className="w-8 h-8 text-teal-500" /></div>
-              <div>
-                <h4 className="text-lg font-semibold text-gray-900">Google Sheets Connected</h4>
-                <p className="text-sm text-gray-500 mt-1">Syncing 24 expenses. Updates in real-time.</p>
-              </div>
-              <div className="bg-gray-50 rounded-xl p-4 text-left space-y-1.5 text-xs">
-                <div className="flex justify-between"><span className="text-gray-500">Spreadsheet</span><span className="font-medium text-gray-700">{selectedSpreadsheet === "create_new" ? "HostFi Expenses" : "STR Expense Tracker 2026"}</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Columns mapped</span><span className="font-medium text-gray-700">5 fields</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Sync frequency</span><span className="font-medium text-gray-700">Real-time</span></div>
-              </div>
-              <a href="#" className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-medium text-[#0F9D58] bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors">
-                <ExternalLink className="w-3.5 h-3.5" /> Open in Google Sheets
-              </a>
-              <button onClick={onClose} className="w-full py-3 text-sm font-semibold text-white bg-teal-500 hover:bg-teal-600 rounded-xl transition-colors">Done</button>
             </div>
           )}
 

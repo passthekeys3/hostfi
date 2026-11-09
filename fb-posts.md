@@ -32,7 +32,7 @@ Curious if anyone else finds the expense tracking side as painful as I did.
 
 Question for arbitrage operators: how are you separating your lease payments from other expenses for tax purposes?
 
-I learned the hard way that rent paid to your landlord goes on Schedule E Line 14, not Line 12 (that's for mortgage interest if you own it). My CPA caught it but it cost me an extra hour of their time.
+I learned the hard way that rent paid to your landlord goes on Schedule E Line 19 (Other), not Line 12 (mortgage interest) or Line 14 (repairs). My CPA caught it but it cost me an extra hour of their time.
 
 Built a tool called HostFi that handles this automatically — you mark each property as "owner" or "arbitrage" and it routes expenses to the correct tax lines.
 

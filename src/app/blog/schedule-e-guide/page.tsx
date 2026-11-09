@@ -126,13 +126,13 @@ export default function ScheduleEGuidePage() {
                 <tr><td className="py-2.5 pr-4 text-gray-500">10</td><td className="py-2.5 pr-4">Legal and Professional</td><td className="py-2.5 text-gray-600">CPA fees, attorney, LLC formation, permit applications</td></tr>
                 <tr><td className="py-2.5 pr-4 text-gray-500">11</td><td className="py-2.5 pr-4">Management Fees</td><td className="py-2.5 text-gray-600">PMS software (Guesty, Hospitable), channel manager fees</td></tr>
                 <tr><td className="py-2.5 pr-4 text-gray-500">12</td><td className="py-2.5 pr-4">Mortgage Interest</td><td className="py-2.5 text-gray-600">Interest portion of mortgage payment (owners only, from Form 1098)</td></tr>
-                <tr><td className="py-2.5 pr-4 text-gray-500">13</td><td className="py-2.5 pr-4">Repairs</td><td className="py-2.5 text-gray-600">Plumbing fix, appliance repair, drywall patch, lock replacement</td></tr>
-                <tr><td className="py-2.5 pr-4 text-gray-500">14</td><td className="py-2.5 pr-4">Rent Paid</td><td className="py-2.5 text-gray-600">Monthly lease payment (arbitrage operators only)</td></tr>
+                <tr><td className="py-2.5 pr-4 text-gray-500">13</td><td className="py-2.5 pr-4">Other interest</td><td className="py-2.5 text-gray-600">Interest that is not mortgage interest paid to a bank</td></tr>
+                <tr><td className="py-2.5 pr-4 text-gray-500">14</td><td className="py-2.5 pr-4">Repairs</td><td className="py-2.5 text-gray-600">Plumbing fix, appliance repair, drywall patch, lock replacement</td></tr>
                 <tr><td className="py-2.5 pr-4 text-gray-500">15</td><td className="py-2.5 pr-4">Supplies</td><td className="py-2.5 text-gray-600">Linens, toiletries, coffee, kitchen supplies, welcome gifts</td></tr>
                 <tr><td className="py-2.5 pr-4 text-gray-500">16</td><td className="py-2.5 pr-4">Taxes</td><td className="py-2.5 text-gray-600">Property tax, occupancy/hotel tax, business license fee</td></tr>
                 <tr><td className="py-2.5 pr-4 text-gray-500">17</td><td className="py-2.5 pr-4">Utilities</td><td className="py-2.5 text-gray-600">Electric, gas, water, sewer, trash, internet, cable</td></tr>
                 <tr><td className="py-2.5 pr-4 text-gray-500">18</td><td className="py-2.5 pr-4">Depreciation</td><td className="py-2.5 text-gray-600">Building value / 27.5 years (owners), furniture / 5-7 years</td></tr>
-                <tr><td className="py-2.5 pr-4 text-gray-500">19</td><td className="py-2.5 pr-4">Other</td><td className="py-2.5 text-gray-600">Platform fees (Airbnb 3%), smart locks, security cameras, HostFi subscription</td></tr>
+                <tr><td className="py-2.5 pr-4 text-gray-500">19</td><td className="py-2.5 pr-4">Other</td><td className="py-2.5 text-gray-600">Rent paid by an arbitrage operator, platform fees, software, smart locks</td></tr>
               </tbody>
             </table>
           </div>
@@ -142,7 +142,7 @@ export default function ScheduleEGuidePage() {
             This is the single biggest area where rental operators get it wrong. The distinction matters because:
           </p>
           <ul className="list-disc pl-6 space-y-2">
-            <li><strong>Repairs</strong> are fully deductible in the year they happen (Line 13)</li>
+            <li><strong>Repairs</strong> are fully deductible in the year they happen (Line 14)</li>
             <li><strong>Improvements</strong> must be depreciated over 27.5 years (Line 18)</li>
           </ul>
           <p>
@@ -183,7 +183,7 @@ export default function ScheduleEGuidePage() {
             HostFi does this automatically. Every expense you enter or scan is categorized into the correct Schedule E line item. At tax time, you export a summary report and hand it to your CPA. Done.
           </p>
           <p>
-            We handle the owner vs. arbitrage distinction (Line 12 vs. Line 14), separate all 15 expense categories, and flag anything that looks unusual before you file.
+            We handle the owner vs. arbitrage distinction (mortgage interest on Line 12, rent paid on Line 19), and flag anything that looks unusual before you file.
           </p>
 
           {/* CTA */}
