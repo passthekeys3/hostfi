@@ -58,8 +58,8 @@ const PLANS: {
     name: "Pro",
     price: 15,
     icon: Zap,
-    description: "Up to 25 properties",
-    features: ["Unlimited AI features", "Free ACH bill pay", "Schedule E export"],
+    description: "Up to 10 properties",
+    features: ["Unlimited AI features", "Schedule E export", "PMS integrations"],
     highlight: true,
   },
   {
@@ -67,8 +67,8 @@ const PLANS: {
     name: "Business",
     price: 49,
     icon: Crown,
-    description: "Unlimited properties",
-    features: ["Everything in Pro", "Team access (5 users)", "QuickBooks sync"],
+    description: "Up to 25 properties",
+    features: ["Everything in Pro", "Cross-property benchmarking", "Slack integration"],
   },
 ];
 

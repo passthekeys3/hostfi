@@ -16,7 +16,7 @@ import {
   Calendar,
   ChevronDown,
 } from "lucide-react";
-import { AVAILABLE_MONTHS } from "@/lib/data";
+import { recentReportMonths } from "@/lib/data";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { getCategoryConfig, EXPENSE_CATEGORY_CONFIG } from "@/lib/expense-categories";
 import type { MonthlyReportData, PropertySummary, ReportInsight, ReportAnomaly, Expense, Property } from "@/lib/types";
@@ -155,7 +155,7 @@ export default function ReportsPage() {
   
   // Generate available months from actual expense data
   const months = useMemo(() => {
-    if (expenses.length === 0) return AVAILABLE_MONTHS;
+    if (expenses.length === 0) return recentReportMonths();
     const monthSet = new Set<string>();
     expenses.forEach(e => {
       const date = new Date(e.date);

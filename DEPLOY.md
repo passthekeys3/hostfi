@@ -1,8 +1,8 @@
 # HostFi — Deployment Guide
 
-## Quick Start (Demo Mode)
+## Quick start
 
-The app works out of the box in demo mode — no env vars needed. Just deploy to Vercel and go.
+The app does not run in demo mode. Production needs a Supabase project and the environment variables in `.env.example`. Vercel deploys `main` to hostfi.ai.
 
 ---
 
@@ -63,9 +63,9 @@ Go to your Vercel project → **Settings → Environment Variables** and add:
 |----------|----------|-------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | From Supabase Settings → API |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | From Supabase Settings → API |
-| `ANTHROPIC_API_KEY` | For AI features | Falls back to demo mode without it |
+| `ANTHROPIC_API_KEY` | For AI features | Bill parsing, receipts, and Ask AI fail without it |
 | `WEBHOOK_SECRET` | For email parsing | Required when `NODE_ENV=production` |
-| `STRIPE_SECRET_KEY` | For billing | Falls back to demo mode without it |
+| `STRIPE_SECRET_KEY` | For billing | Checkout returns 503 without it |
 | `STRIPE_WEBHOOK_SECRET` | For billing | Required for webhook verification |
 | `STRIPE_PRO_MONTHLY_PRICE_ID` | For billing | Stripe price ID |
 | `STRIPE_PRO_ANNUAL_PRICE_ID` | For billing | Stripe price ID |
@@ -83,10 +83,10 @@ Go to your Vercel project → **Settings → Environment Variables** and add:
 
 ## Architecture Notes
 
-- **Demo mode**: When `NEXT_PUBLIC_SUPABASE_URL` is not set, the app uses `src/lib/data/demo-data.ts`
-- **Auth**: All API routes use `src/lib/auth.ts` → `authenticateRequest()`. Returns demo user when Supabase is not configured
-- **Rate limiting**: In-memory (`src/lib/rate-limit.ts`). Swap to Upstash Redis for production scale
-- **Email parsing**: Needs SendGrid Inbound Parse or Postmark webhook pointing to `/api/parse-email`
+- **Auth**: API routes use `src/lib/auth.ts` → `authenticateRequest()`. Without Supabase configured, they return 503.
+- **Rate limiting**: Supabase table `rate_limits` when the service role key is set, otherwise in-memory.
+- **Email parsing**: Postmark inbound webhook pointing at `/api/email/inbound`.
+- **PMS webhooks**: Hostaway, Guesty, Hospitable, OwnerRez, and Lodgify reject requests when their webhook secret is unset.
 
 ---
 
@@ -95,6 +95,6 @@ Go to your Vercel project → **Settings → Environment Variables** and add:
 ```bash
 npm run dev          # Local dev server
 npm run build        # Production build
-npm run test         # Run test suite (42 tests)
+npm run test         # Unit tests
 npm run test:watch   # Watch mode
 ```

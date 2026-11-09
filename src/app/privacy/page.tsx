@@ -37,7 +37,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-3">3. Data Storage and Security</h2>
             <p className="text-gray-600 leading-relaxed">
-              Your data is stored securely using Supabase (built on PostgreSQL) with encryption at rest and in transit. We implement row-level security to ensure you can only access your own data. All API endpoints require authentication. We never store banking credentials — bill payments are processed through licensed third-party providers.
+              Your data is stored securely using Supabase (built on PostgreSQL) with encryption at rest and in transit. We implement row-level security to ensure you can only access your own data. All API endpoints require authentication. We do not store bank passwords. Bank connections use Plaid. HostFi does not process bill payments.
             </p>
           </section>
 

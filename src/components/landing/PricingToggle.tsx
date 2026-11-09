@@ -33,13 +33,13 @@ const tiers = [
   {
     name: "Pro", monthly: 15, yearly: 12, period: "/mo",
     desc: "For growing portfolios",
-    features: ["Up to 10 properties", "+$2.50/property beyond 10", "Unlimited AI features", "Anomaly detection", "Schedule E tax export", "Free ACH bill pay", "Receipt scanning"],
+    features: ["Up to 10 properties", "+$2.50/property beyond 10", "Unlimited AI features", "Anomaly detection", "Schedule E tax export", "Receipt scanning", "Email bill parsing"],
     highlighted: true,
   },
   {
     name: "Business", monthly: 49, yearly: 39, period: "/mo",
     desc: "For teams and PMs",
-    features: ["Up to 25 properties", "+$2/property beyond 25", "Everything in Pro", "Cross-property benchmarking", "Team access (up to 5)", "Accountant portal", "Priority support"],
+    features: ["Up to 25 properties", "+$2/property beyond 25", "Everything in Pro", "Cross-property benchmarking", "Slack integration", "Priority support"],
     highlighted: false,
   },
 ];

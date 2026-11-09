@@ -70,7 +70,7 @@ describe('Stripe configuration', () => {
 
     it('allows premium features on pro plan', async () => {
       const { isFeatureAvailable } = await import('../stripe');
-      expect(isFeatureAvailable('pro', 'ach_payments')).toBe(true);
+      expect(isFeatureAvailable('pro', 'ach_payments')).toBe(false);
       expect(isFeatureAvailable('pro', 'tax_export')).toBe(true);
       expect(isFeatureAvailable('pro', 'ai_summaries')).toBe(true);
     });
@@ -84,10 +84,10 @@ describe('Stripe configuration', () => {
 
     it('allows all features on business plan', async () => {
       const { isFeatureAvailable } = await import('../stripe');
-      expect(isFeatureAvailable('business', 'ach_payments')).toBe(true);
+      expect(isFeatureAvailable('business', 'ach_payments')).toBe(false);
       expect(isFeatureAvailable('business', 'benchmarking')).toBe(true);
-      expect(isFeatureAvailable('business', 'team_access')).toBe(true);
-      expect(isFeatureAvailable('business', 'quickbooks')).toBe(true);
+      expect(isFeatureAvailable('business', 'team_access')).toBe(false);
+      expect(isFeatureAvailable('business', 'quickbooks')).toBe(false);
       expect(isFeatureAvailable('business', 'api_access')).toBe(true);
     });
   });

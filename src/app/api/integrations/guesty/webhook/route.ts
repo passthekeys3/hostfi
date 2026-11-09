@@ -23,8 +23,8 @@ function getServiceClient() {
 function verifyWebhook(rawBody: string, signature: string | null): boolean {
   const secret = process.env.GUESTY_WEBHOOK_SECRET;
   if (!secret) {
-    console.warn('Guesty webhook: GUESTY_WEBHOOK_SECRET not set, skipping signature verification');
-    return true;
+    console.error('Guesty webhook: GUESTY_WEBHOOK_SECRET not set');
+    return false;
   }
   if (!signature) {
     console.error('Guesty webhook: missing X-Guesty-Signature header');

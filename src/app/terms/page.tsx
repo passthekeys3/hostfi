@@ -49,9 +49,9 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">5. Bill Pay and Financial Transactions</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">5. Payments</h2>
             <p className="text-gray-600 leading-relaxed">
-              HostFi facilitates bill payments through licensed third-party payment providers. HostFi never holds, transmits, or has access to your funds. All payment transactions are subject to the terms and conditions of the respective payment provider. HostFi is not responsible for failed or delayed payments processed by third-party providers.
+              Paid subscriptions are billed by Stripe. HostFi does not hold your funds and does not process bill payments. Bank connections, when you turn them on, are provided by Plaid.
             </p>
           </section>
 

@@ -30,10 +30,12 @@ export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.text();
     
-    // Verify webhook signature if secret is configured
     const secret = process.env.LODGIFY_WEBHOOK_SECRET;
-    if (secret) {
-      const signature = request.headers.get('x-lodgify-signature') || request.headers.get('x-webhook-signature');
+    if (!secret) {
+      console.error('Lodgify webhook: LODGIFY_WEBHOOK_SECRET not set');
+      return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 401 });
+    }
+    const signature = request.headers.get('x-lodgify-signature') || request.headers.get('x-webhook-signature');
       if (!signature) {
         console.error('Lodgify webhook: missing signature header');
         return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
@@ -50,7 +52,6 @@ export async function POST(request: NextRequest) {
       if (mismatch !== 0) {
         return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
       }
-    }
 
     const body = JSON.parse(rawBody);
     const supabase = getServiceClient();
