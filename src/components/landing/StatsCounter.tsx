@@ -58,9 +58,9 @@ function AnimatedNumber({ value, prefix = "", suffix = "", visible }: { value: n
 }
 
 const stats = [
-  { type: "animated", value: 15, suffix: "+", label: "IRS Schedule E line items mapped", prefix: "" },
-  { type: "static", display: "< 30s", label: "Average bill parse time" },
-  { type: "animated", value: 11, suffix: "", label: "Integrations supported", prefix: "" },
+  { type: "animated", value: 14, suffix: "", label: "Schedule E lines mapped", prefix: "" },
+  { type: "static", display: "2", label: "Tax setups: owner and arbitrage" },
+  { type: "static", display: "3", label: "Properties on the free plan" },
   { type: "static", display: "$0", label: "To start tracking" },
 ] as const;
 

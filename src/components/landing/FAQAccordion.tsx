@@ -24,7 +24,7 @@ function FAQItem({ q, a, id }: { q: string; a: string; id: string }) {
       </button>
       <div 
         id={answerId}
-        className={`overflow-hidden transition-all duration-300 ${open ? "max-h-48 pb-5" : "max-h-0"}`}
+        className={`overflow-hidden transition-all duration-300 ${open ? "max-h-[40rem] pb-5" : "max-h-0"}`}
         role="region"
         aria-labelledby={`faq-question-${id}`}
       >
