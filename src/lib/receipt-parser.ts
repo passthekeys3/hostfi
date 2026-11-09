@@ -1,4 +1,5 @@
 import type { ExpenseCategory } from "@/lib/expense-categories";
+import { anthropicText, HAIKU_MODEL } from "@/lib/ai-models";
 
 export interface ParsedReceipt {
   vendor_name: string;
@@ -70,7 +71,7 @@ export async function parseReceipt(
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-haiku-3-5-20241022",
+      model: HAIKU_MODEL,
       max_tokens: 2048,
       system: RECEIPT_SYSTEM_PROMPT,
       messages: [
@@ -101,8 +102,7 @@ export async function parseReceipt(
   }
 
   const data = await response.json();
-  const text =
-    data.content?.[0]?.type === "text" ? data.content[0].text : "";
+  const text = anthropicText(data);
 
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {

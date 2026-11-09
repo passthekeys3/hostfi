@@ -5,6 +5,7 @@ import { authenticateRequest } from '@/lib/auth';
 import { createRateLimiter, createAsyncRateLimiter } from '@/lib/rate-limit';
 import { canAccessFeature, type Plan } from '@/lib/feature-gates';
 import { createClient } from '@/lib/supabase/server';
+import { SONNET_MODEL } from '@/lib/ai-models';
 
 const client = new Anthropic();
 
@@ -100,7 +101,7 @@ export async function POST(request: NextRequest) {
     const context = await buildUserContext(auth.userId);
 
     const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: SONNET_MODEL,
       max_tokens: MAX_RESPONSE_TOKENS,
       system: `You are HostFi AI, a financial analyst for short-term rental portfolios. You ONLY answer questions about THIS user's property finances.
 
