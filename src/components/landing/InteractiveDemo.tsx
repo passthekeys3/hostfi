@@ -7,7 +7,15 @@ import {
   ArrowUpRight, ArrowDownRight, X
 } from "lucide-react";
 
-/* ─── Demo Data ─── */
+function daysFromNow(days: number, withYear = false) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toLocaleDateString("en-US", withYear
+    ? { month: "short", day: "numeric", year: "numeric" }
+    : { month: "short", day: "numeric" });
+}
+
+/* ─── Sample portfolio. Dates stay near today so the demo does not look frozen. ─── */
 const PROPERTIES = [
   { id: "all", name: "All Properties" },
   { id: "4b", name: "Unit 4B — Venice Beach" },
@@ -24,26 +32,26 @@ const STATS: Record<string, { revenue: number; spend: number; properties: number
 
 const EXPENSES: Record<string, { desc: string; vendor: string; amount: number; cat: string; catColor: string; date: string; prop: string }[]> = {
   all: [
-    { desc: "Electric Bill", vendor: "SoCalEdison", amount: 187.40, cat: "Utility", catColor: "bg-yellow-50 text-yellow-700 border-yellow-200", date: "Mar 15", prop: "Unit 4B" },
-    { desc: "Water Bill", vendor: "LADWP", amount: 94.20, cat: "Utility", catColor: "bg-blue-50 text-blue-700 border-blue-200", date: "Mar 12", prop: "Unit 2A" },
-    { desc: "Deep Clean", vendor: "CleanPro LLC", amount: 150.00, cat: "Cleaning", catColor: "bg-teal-50 text-teal-700 border-teal-200", date: "Mar 10", prop: "Unit 1A" },
-    { desc: "Plumbing Repair", vendor: "Mike's Plumbing", amount: 325.00, cat: "Repairs", catColor: "bg-orange-50 text-orange-700 border-orange-200", date: "Mar 8", prop: "Unit 2A" },
-    { desc: "Insurance", vendor: "Allstate", amount: 800.00, cat: "Insurance", catColor: "bg-purple-50 text-purple-700 border-purple-200", date: "Mar 1", prop: "All units" },
+    { desc: "Electric Bill", vendor: "SoCalEdison", amount: 187.40, cat: "Utility", catColor: "bg-yellow-50 text-yellow-700 border-yellow-200", date: daysFromNow(-4), prop: "Unit 4B" },
+    { desc: "Water Bill", vendor: "LADWP", amount: 94.20, cat: "Utility", catColor: "bg-blue-50 text-blue-700 border-blue-200", date: daysFromNow(-7), prop: "Unit 2A" },
+    { desc: "Deep Clean", vendor: "CleanPro LLC", amount: 150.00, cat: "Cleaning", catColor: "bg-teal-50 text-teal-700 border-teal-200", date: daysFromNow(-9), prop: "Unit 1A" },
+    { desc: "Plumbing Repair", vendor: "Mike's Plumbing", amount: 325.00, cat: "Repairs", catColor: "bg-orange-50 text-orange-700 border-orange-200", date: daysFromNow(-12), prop: "Unit 2A" },
+    { desc: "Insurance", vendor: "Allstate", amount: 800.00, cat: "Insurance", catColor: "bg-purple-50 text-purple-700 border-purple-200", date: daysFromNow(-18), prop: "All units" },
   ],
   "4b": [
-    { desc: "Electric Bill", vendor: "SoCalEdison", amount: 187.40, cat: "Utility", catColor: "bg-yellow-50 text-yellow-700 border-yellow-200", date: "Mar 15", prop: "Unit 4B" },
-    { desc: "WiFi", vendor: "Spectrum", amount: 59.99, cat: "Utility", catColor: "bg-blue-50 text-blue-700 border-blue-200", date: "Mar 5", prop: "Unit 4B" },
-    { desc: "Supplies", vendor: "Amazon", amount: 42.18, cat: "Supplies", catColor: "bg-green-50 text-green-700 border-green-200", date: "Mar 3", prop: "Unit 4B" },
+    { desc: "Electric Bill", vendor: "SoCalEdison", amount: 187.40, cat: "Utility", catColor: "bg-yellow-50 text-yellow-700 border-yellow-200", date: daysFromNow(-4), prop: "Unit 4B" },
+    { desc: "WiFi", vendor: "Spectrum", amount: 59.99, cat: "Utility", catColor: "bg-blue-50 text-blue-700 border-blue-200", date: daysFromNow(-14), prop: "Unit 4B" },
+    { desc: "Supplies", vendor: "Amazon", amount: 42.18, cat: "Supplies", catColor: "bg-green-50 text-green-700 border-green-200", date: daysFromNow(-16), prop: "Unit 4B" },
   ],
   "2a": [
-    { desc: "Water Bill", vendor: "LADWP", amount: 94.20, cat: "Utility", catColor: "bg-blue-50 text-blue-700 border-blue-200", date: "Mar 12", prop: "Unit 2A" },
-    { desc: "Plumbing Repair", vendor: "Mike's Plumbing", amount: 325.00, cat: "Repairs", catColor: "bg-orange-50 text-orange-700 border-orange-200", date: "Mar 8", prop: "Unit 2A" },
-    { desc: "Cleaning Fee", vendor: "TurnoverBnB", amount: 85.00, cat: "Cleaning", catColor: "bg-teal-50 text-teal-700 border-teal-200", date: "Mar 2", prop: "Unit 2A" },
+    { desc: "Water Bill", vendor: "LADWP", amount: 94.20, cat: "Utility", catColor: "bg-blue-50 text-blue-700 border-blue-200", date: daysFromNow(-7), prop: "Unit 2A" },
+    { desc: "Plumbing Repair", vendor: "Mike's Plumbing", amount: 325.00, cat: "Repairs", catColor: "bg-orange-50 text-orange-700 border-orange-200", date: daysFromNow(-12), prop: "Unit 2A" },
+    { desc: "Cleaning Fee", vendor: "TurnoverBnB", amount: 85.00, cat: "Cleaning", catColor: "bg-teal-50 text-teal-700 border-teal-200", date: daysFromNow(-20), prop: "Unit 2A" },
   ],
   "1a": [
-    { desc: "Deep Clean", vendor: "CleanPro LLC", amount: 150.00, cat: "Cleaning", catColor: "bg-teal-50 text-teal-700 border-teal-200", date: "Mar 10", prop: "Unit 1A" },
-    { desc: "Gas Bill", vendor: "SoCalGas", amount: 67.30, cat: "Utility", catColor: "bg-orange-50 text-orange-700 border-orange-200", date: "Mar 6", prop: "Unit 1A" },
-    { desc: "New Linens", vendor: "Target", amount: 128.50, cat: "Supplies", catColor: "bg-green-50 text-green-700 border-green-200", date: "Mar 1", prop: "Unit 1A" },
+    { desc: "Deep Clean", vendor: "CleanPro LLC", amount: 150.00, cat: "Cleaning", catColor: "bg-teal-50 text-teal-700 border-teal-200", date: daysFromNow(-9), prop: "Unit 1A" },
+    { desc: "Gas Bill", vendor: "SoCalGas", amount: 67.30, cat: "Utility", catColor: "bg-orange-50 text-orange-700 border-orange-200", date: daysFromNow(-15), prop: "Unit 1A" },
+    { desc: "New Linens", vendor: "Target", amount: 128.50, cat: "Supplies", catColor: "bg-green-50 text-green-700 border-green-200", date: daysFromNow(-21), prop: "Unit 1A" },
   ],
 };
 
@@ -117,7 +125,7 @@ function ParseDemo() {
               </div>
               <div className="flex justify-between text-[11px] mt-1">
                 <span className="text-gray-500">Due Date</span>
-                <span className="text-gray-700">Apr 2, 2026</span>
+                <span className="text-gray-700">{daysFromNow(18, true)}</span>
               </div>
             </div>
           </div>
@@ -238,7 +246,7 @@ export function InteractiveDemo() {
             </button>
           ))}
           <div className="ml-auto pr-1">
-            <span className="text-[9px] font-medium text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full">Interactive Demo</span>
+            <span className="text-[9px] font-medium text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full">Sample data</span>
           </div>
         </div>
 
