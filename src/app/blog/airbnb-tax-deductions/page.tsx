@@ -76,7 +76,7 @@ export default function AirbnbTaxDeductionsPage() {
             </p>
           </div>
 
-          <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Line 5: Rents Received</h2>
+          <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Line 3: Rents Received</h2>
           <p>
             Not a deduction, but important: this is your gross rental income. For Airbnb hosts, this includes the total payout you received from all platforms minus their service fees. If you also collect cleaning fees from guests, those count as income too.
           </p>
@@ -84,7 +84,7 @@ export default function AirbnbTaxDeductionsPage() {
             If you use multiple platforms (Airbnb, VRBO, Booking.com, direct bookings), all revenue from all sources goes here.
           </p>
 
-          <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Line 6: Advertising</h2>
+          <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Line 5: Advertising</h2>
           <ul className="list-disc pl-6 space-y-2">
             <li>Airbnb and VRBO service fees (the percentage they take from each booking)</li>
             <li>Professional photography for your listing</li>
@@ -97,7 +97,7 @@ export default function AirbnbTaxDeductionsPage() {
             Platform fees are one of the biggest deductions most hosts miss. If Airbnb takes 3% from your payout, that's a deductible advertising expense. Over 12 months and multiple properties, this adds up fast.
           </p>
 
-          <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Line 8: Cleaning and Maintenance</h2>
+          <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Line 7: Cleaning and Maintenance</h2>
           <ul className="list-disc pl-6 space-y-2">
             <li>Turnover cleaning between guests (your biggest recurring expense)</li>
             <li>Deep cleaning services</li>
@@ -111,7 +111,7 @@ export default function AirbnbTaxDeductionsPage() {
             <li>Carpet cleaning</li>
           </ul>
           <p>
-            For most STR operators, Line 8 is the largest expense category. If you're paying $100-150 per turnover and hosting 20+ stays per month across your portfolio, this alone can be $2,000-3,000/month.
+            For most STR operators, Line 7 is the largest expense category. If you're paying $100-150 per turnover and hosting 20+ stays per month across your portfolio, this alone can be $2,000-3,000/month.
           </p>
 
           <h2 className="text-xl font-bold text-gray-900 mt-10 mb-4">Line 9: Insurance</h2>

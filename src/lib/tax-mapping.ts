@@ -3,53 +3,63 @@ import { type ExpenseCategory } from './expense-categories';
 
 export type PropertyType = Property['property_type'];
 
-// Schedule E line item definitions
+// Schedule E (Form 1040) Part I, confirmed against the 2025 IRS instructions:
+// line 3 rents received, lines 5–19 expenses. Line numbers are not stored on
+// expenses; exports compute them from category.
 export interface ScheduleELine {
   line: number;
   description: string;
   categories: ExpenseCategory[];
-  ownerOnly?: boolean;      // Only applicable to owners (str/ltr)
-  arbitrageOnly?: boolean;  // Only applicable to arbitrage operators
-  consultCPA?: boolean;     // Flag for items needing CPA consultation
+  /** Income line. Not included in total deductions. */
+  income?: boolean;
+  ownerOnly?: boolean;
+  consultCPA?: boolean;
 }
 
-// Schedule E lines for property OWNERS (str/ltr)
-export const OWNER_SCHEDULE_E_LINES: ScheduleELine[] = [
-  { line: 5, description: 'Rents received', categories: [], ownerOnly: true },
-  { line: 6, description: 'Advertising', categories: [], ownerOnly: true },
-  { line: 7, description: 'Auto and travel', categories: [], ownerOnly: true },
-  { line: 8, description: 'Cleaning and maintenance', categories: ['cleaning'], ownerOnly: true },
-  { line: 9, description: 'Insurance', categories: ['insurance'], ownerOnly: true },
-  { line: 10, description: 'Legal and professional fees', categories: [], ownerOnly: true },
-  { line: 12, description: 'Mortgage interest', categories: ['mortgage'], ownerOnly: true },
-  { line: 13, description: 'Other interest', categories: [], ownerOnly: true },
-  { line: 14, description: 'Repairs', categories: ['maintenance'], ownerOnly: true },
-  { line: 15, description: 'Supplies', categories: ['supplies'], ownerOnly: true },
-  { line: 16, description: 'Taxes', categories: ['taxes'], ownerOnly: true },
-  { line: 17, description: 'Utilities', categories: ['utility'], ownerOnly: true },
-  { line: 18, description: 'Depreciation expense or depletion', categories: ['improvement'], consultCPA: true, ownerOnly: true },
-  { line: 19, description: 'Other', categories: ['rent', 'management', 'subscription', 'other'], ownerOnly: true },
+export const SCHEDULE_E_INCOME_LINE = 3;
+
+export const SCHEDULE_E_LINES: ScheduleELine[] = [
+  { line: 3, description: 'Rents received', categories: [], income: true },
+  { line: 5, description: 'Advertising', categories: [] },
+  { line: 6, description: 'Auto and travel', categories: [] },
+  { line: 7, description: 'Cleaning and maintenance', categories: ['cleaning'] },
+  { line: 8, description: 'Commissions', categories: [] },
+  { line: 9, description: 'Insurance', categories: ['insurance'] },
+  { line: 10, description: 'Legal and professional fees', categories: [] },
+  { line: 11, description: 'Management fees', categories: ['management'] },
+  { line: 12, description: 'Mortgage interest paid to banks, etc.', categories: ['mortgage'], ownerOnly: true },
+  { line: 13, description: 'Other interest', categories: [] },
+  { line: 14, description: 'Repairs', categories: ['maintenance'] },
+  { line: 15, description: 'Supplies', categories: ['supplies'] },
+  { line: 16, description: 'Taxes', categories: ['taxes'] },
+  { line: 17, description: 'Utilities', categories: ['utility'] },
+  { line: 18, description: 'Depreciation expense or depletion', categories: ['improvement'], consultCPA: true },
+  { line: 19, description: 'Other', categories: ['rent', 'subscription', 'other'] },
 ];
 
-// Schedule E lines for ARBITRAGE operators (no mortgage, no property tax, no depreciation)
-export const ARBITRAGE_SCHEDULE_E_LINES: ScheduleELine[] = [
-  { line: 5, description: 'Rents received', categories: [], arbitrageOnly: true },
-  { line: 6, description: 'Advertising', categories: [], arbitrageOnly: true },
-  { line: 7, description: 'Auto and travel', categories: [], arbitrageOnly: true },
-  { line: 8, description: 'Cleaning and maintenance', categories: ['cleaning'], arbitrageOnly: true },
-  { line: 9, description: 'Insurance', categories: ['insurance'], arbitrageOnly: true },
-  { line: 10, description: 'Legal and professional fees', categories: [], arbitrageOnly: true },
-  { line: 15, description: 'Supplies', categories: ['supplies'], arbitrageOnly: true },
-  { line: 14, description: 'Repairs', categories: ['maintenance'], arbitrageOnly: true },
-  { line: 17, description: 'Utilities', categories: ['utility'], arbitrageOnly: true },
-  { line: 19, description: 'Other (rent, management, subscriptions)', categories: ['rent', 'mortgage', 'management', 'subscription', 'taxes', 'improvement', 'other'], arbitrageOnly: true },
-];
+/** @deprecated Use SCHEDULE_E_LINES. Kept so older imports still resolve. */
+export const OWNER_SCHEDULE_E_LINES = SCHEDULE_E_LINES;
 
 export function getScheduleELinesForPropertyType(propertyType: PropertyType): ScheduleELine[] {
-  if (propertyType === 'arbitrage') {
-    return ARBITRAGE_SCHEDULE_E_LINES;
-  }
-  return OWNER_SCHEDULE_E_LINES;
+  return SCHEDULE_E_LINES.flatMap(line => {
+    if (propertyType !== 'arbitrage') return [line];
+    if (line.line === 12) return [];
+    if (line.line === 19) {
+      return [{
+        ...line,
+        description: 'Other (including rent paid)',
+        categories: ['rent', 'subscription', 'other', 'mortgage'],
+      }];
+    }
+    return [line];
+  });
+}
+
+export function categoryScheduleELine(category: string, propertyType: PropertyType = 'str'): number {
+  const match = getScheduleELinesForPropertyType(propertyType).find(line =>
+    (line.categories as string[]).includes(category)
+  );
+  return match?.line ?? 19;
 }
 
 export interface MappedExpense {
@@ -63,6 +73,7 @@ export interface ScheduleELineTotal {
   description: string;
   amount: number;
   expenses: Expense[];
+  income?: boolean;
   consultCPA?: boolean;
 }
 
@@ -84,11 +95,14 @@ export function mapExpensesToScheduleE(
       description: lineDef.description,
       amount: total,
       expenses: matchingExpenses,
+      income: lineDef.income,
       consultCPA: lineDef.consultCPA,
     });
   }
 
-  return result.filter(line => line.amount > 0 || line.line === 5); // Always show Line 5 as placeholder
+  return result
+    .filter(line => line.amount > 0 || line.income)
+    .sort((a, b) => a.line - b.line);
 }
 
 export interface PropertyTaxSummary {
@@ -107,8 +121,7 @@ export function generatePropertyTaxSummary(
   const lineItems = mapExpensesToScheduleE(propertyExpenses, property.property_type);
   
   const totalDeductions = lineItems.reduce((sum, line) => {
-    // Line 5 is income, not deduction
-    if (line.line === 5) return sum;
+    if (line.income || line.line === SCHEDULE_E_INCOME_LINE) return sum;
     return sum + line.amount;
   }, 0);
 

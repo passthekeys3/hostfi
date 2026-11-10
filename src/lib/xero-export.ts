@@ -16,16 +16,17 @@
 
 // Schedule E line descriptions (matches tax-mapping.ts)
 const SCHEDULE_E_LINE_DESCRIPTIONS: Record<number, string> = {
-  5: 'Rents Received',
-  6: 'Advertising',
-  7: 'Auto & Travel',
-  8: 'Cleaning & Maintenance',
+  3: 'Rents Received',
+  5: 'Advertising',
+  6: 'Auto & Travel',
+  7: 'Cleaning & Maintenance',
+  8: 'Commissions',
   9: 'Insurance',
   10: 'Legal & Professional Fees',
   11: 'Management Fees',
   12: 'Mortgage Interest',
   13: 'Other Interest',
-  14: 'Repairs / Rent Paid',
+  14: 'Repairs',
   15: 'Supplies',
   16: 'Taxes',
   17: 'Utilities',
@@ -61,20 +62,21 @@ const XERO_ACCOUNT_MAP: Record<string, { code: string; name: string }> = {
 
 // Map Schedule E lines to Xero account codes
 const SCHEDULE_E_TO_XERO: Record<number, string> = {
-  6: '880',   // Advertising
-  7: '895',   // Auto & Travel
-  8: '830',   // Cleaning & Maintenance
+  5: '880',   // Advertising
+  6: '895',   // Auto & Travel
+  7: '830',   // Cleaning & Maintenance
+  8: '860',   // Commissions
   9: '820',   // Insurance
   10: '870',  // Legal & Professional
   11: '860',  // Management Fees
   12: '800',  // Mortgage Interest
   13: '800',  // Other Interest
-  14: '835',  // Repairs / Rent Paid
+  14: '835',  // Repairs
   15: '840',  // Supplies
   16: '850',  // Taxes
   17: '810',  // Utilities
   18: '890',  // Depreciation
-  19: '899',  // Other
+  19: '899',  // Other, including rent paid
 };
 
 export interface XeroExpense {
