@@ -125,7 +125,7 @@ export default function ComparePage() {
         <div className="mt-16 text-center">
           <p className="text-gray-500 mb-4">Ready to try the STR expense tracker that actually gets it?</p>
           <Link
-            href="/login"
+            href="/signup"
             className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition-colors"
           >
             Start Free <ArrowRight className="w-4 h-4" />

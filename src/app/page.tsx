@@ -157,7 +157,7 @@ export default function LandingPage() {
 
       <main>
         {/* ─── HERO ─── */}
-        <section className="pt-32 sm:pt-40 pb-20 sm:pb-28 px-5" aria-labelledby="hero-heading">
+        <section className="pt-24 sm:pt-28 pb-8 px-5" aria-labelledby="hero-heading">
           <div className="max-w-6xl mx-auto">
             <FadeIn className="max-w-3xl">
               <div 
@@ -166,11 +166,11 @@ export default function LandingPage() {
                 <Sparkles className="w-3 h-3" aria-hidden="true" />
                 For short-term rental hosts
               </div>
-              <h1 id="hero-heading" className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6">
+              <h1 id="hero-heading" className="text-4xl sm:text-5xl font-bold tracking-tight leading-[1.1] mb-4">
                 Know Exactly Where Your Money Goes.{" "}
                 <TypingHero text="Every Property. Every Bill." />
               </h1>
-              <p className="text-lg sm:text-xl text-gray-600 leading-relaxed max-w-2xl mb-10">
+              <p className="text-lg text-gray-600 leading-relaxed max-w-2xl mb-6">
                 Forward your bills. Snap your receipts. HostFi uses AI to automatically track, categorize, and map every expense to the right property — down to the IRS Schedule E line item.
               </p>
               <GetStartedButton size="large" />
@@ -178,7 +178,7 @@ export default function LandingPage() {
             </FadeIn>
 
             {/* Interactive Dashboard Demo */}
-            <FadeIn className="mt-16 sm:mt-20" delay={200}>
+            <FadeIn className="mt-8" delay={200}>
               <InteractiveDemo />
             </FadeIn>
           </div>
@@ -251,7 +251,7 @@ export default function LandingPage() {
         </section>
 
         {/* ─── FEATURES ─── */}
-        <section id="features" className="py-24 sm:py-28 px-5 bg-gray-50 scroll-mt-16" aria-labelledby="features-heading">
+        <section id="features" className="py-24 sm:py-28 px-5 bg-gray-50 scroll-mt-28" aria-labelledby="features-heading">
           <div className="max-w-6xl mx-auto">
             <FadeIn className="max-w-2xl mb-16">
               <p className="text-xs font-semibold text-teal-600 uppercase tracking-widest mb-3">Features</p>
@@ -281,7 +281,7 @@ export default function LandingPage() {
         </section>
 
         {/* ─── HOW IT WORKS ─── */}
-        <section id="how-it-works" className="py-24 sm:py-28 px-5 scroll-mt-16" aria-labelledby="how-it-works-heading">
+        <section id="how-it-works" className="py-24 sm:py-28 px-5 scroll-mt-28" aria-labelledby="how-it-works-heading">
           <div className="max-w-6xl mx-auto">
             <FadeIn className="max-w-2xl mb-16">
               <p className="text-xs font-semibold text-teal-600 uppercase tracking-widest mb-3">How it works</p>
@@ -388,7 +388,7 @@ export default function LandingPage() {
         </section>
 
         {/* ─── INTEGRATIONS ─── */}
-        <section id="integrations" className="py-24 sm:py-28 px-5 bg-white scroll-mt-16" aria-labelledby="integrations-heading">
+        <section id="integrations" className="py-24 sm:py-28 px-5 bg-white scroll-mt-28" aria-labelledby="integrations-heading">
           <div className="max-w-6xl mx-auto">
             <FadeIn className="text-center max-w-2xl mx-auto mb-16">
               <p className="text-xs font-semibold text-teal-600 uppercase tracking-widest mb-3">Integrations</p>
@@ -460,7 +460,7 @@ export default function LandingPage() {
         </section>
 
         {/* ─── MID-PAGE CTA ─── */}
-        <section className="py-16 sm:py-20 px-5 bg-gray-900">
+        <section id="start" className="py-16 sm:py-20 px-5 bg-gray-900 scroll-mt-28">
           <FadeIn className="max-w-2xl mx-auto text-center">
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mb-4">
               Ready to Stop Chasing Receipts?
@@ -473,7 +473,7 @@ export default function LandingPage() {
         </section>
 
         {/* ─── PRICING (Client - toggle state) ─── */}
-        <section id="pricing" className="py-24 sm:py-28 px-5 bg-white scroll-mt-16" aria-labelledby="pricing-heading">
+        <section id="pricing" className="py-24 sm:py-28 px-5 bg-white scroll-mt-28" aria-labelledby="pricing-heading">
           <div className="max-w-6xl mx-auto">
             <FadeIn className="text-center max-w-2xl mx-auto mb-16">
               <p className="text-xs font-semibold text-teal-600 uppercase tracking-widest mb-3">Pricing</p>
@@ -527,7 +527,7 @@ export default function LandingPage() {
         </section>
 
         {/* ─── FAQ (Client - accordion state) ─── */}
-        <section id="faq" className="py-24 sm:py-28 px-5 scroll-mt-16" aria-labelledby="faq-heading">
+        <section id="faq" className="py-24 sm:py-28 px-5 scroll-mt-28" aria-labelledby="faq-heading">
           <div className="max-w-2xl mx-auto">
             <FadeIn className="mb-12">
               <p className="text-xs font-semibold text-teal-600 uppercase tracking-widest mb-3">FAQ</p>
@@ -640,43 +640,50 @@ export default function LandingPage() {
             </div>
             <nav aria-label="Product navigation">
               <p className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-4">Product</p>
-              <div className="space-y-2.5">
-                <Link href="#features" className="block text-sm text-gray-600 hover:text-gray-700 transition-colors">Features</Link>
-                <Link href="#pricing" className="block text-sm text-gray-600 hover:text-gray-700 transition-colors">Pricing</Link>
-                <Link href="#faq" className="block text-sm text-gray-600 hover:text-gray-700 transition-colors">FAQ</Link>
+              <div className="flex flex-col">
+                <Link href="#features" className="min-h-11 inline-flex items-center text-sm text-gray-600 hover:text-gray-900">Features</Link>
+                <Link href="#pricing" className="min-h-11 inline-flex items-center text-sm text-gray-600 hover:text-gray-900">Pricing</Link>
+                <Link href="#faq" className="min-h-11 inline-flex items-center text-sm text-gray-600 hover:text-gray-900">FAQ</Link>
               </div>
             </nav>
             <nav aria-label="Resources navigation">
               <p className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-4">Resources</p>
-              <div className="space-y-2.5">
-                <a href="https://docs.hostfi.ai" target="_blank" rel="noopener noreferrer" className="block text-sm text-gray-600 hover:text-gray-700 transition-colors">Documentation</a>
-                <Link href="/blog" className="block text-sm text-gray-600 hover:text-gray-700 transition-colors">Blog</Link>
-                <a href="mailto:kevin@hostfi.ai" className="block text-sm text-gray-600 hover:text-gray-700 transition-colors">Contact</a>
+              <div className="flex flex-col">
+                <a href="https://docs.hostfi.ai" target="_blank" rel="noopener noreferrer" className="min-h-11 inline-flex items-center text-sm text-gray-600 hover:text-gray-900">Documentation</a>
+                <Link href="/blog" className="min-h-11 inline-flex items-center text-sm text-gray-600 hover:text-gray-900">Blog</Link>
+                <a href="mailto:kevin@hostfi.ai" className="min-h-11 inline-flex items-center text-sm text-gray-600 hover:text-gray-900">Contact</a>
               </div>
             </nav>
             <nav aria-label="Comparisons navigation">
               <p className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-4">Compare</p>
-              <div className="space-y-2.5">
-                <Link href="/compare/stessa" className="block text-sm text-gray-600 hover:text-gray-700 transition-colors">HostFi vs Stessa</Link>
-                <Link href="/compare/topkey" className="block text-sm text-gray-600 hover:text-gray-700 transition-colors">HostFi vs Topkey</Link>
-                <Link href="/compare/landlord-studio" className="block text-sm text-gray-600 hover:text-gray-700 transition-colors">HostFi vs Landlord Studio</Link>
-                <Link href="/compare/appfolio" className="block text-sm text-gray-600 hover:text-gray-700 transition-colors">HostFi vs AppFolio</Link>
+              <div className="flex flex-col">
+                {[
+                  ["stessa", "Stessa"],
+                  ["baselane", "Baselane"],
+                  ["buildium", "Buildium"],
+                  ["turbotenant", "TurboTenant"],
+                  ["landlord-studio", "Landlord Studio"],
+                  ["appfolio", "AppFolio"],
+                  ["topkey", "Topkey"],
+                ].map(([slug, name]) => (
+                  <Link key={slug} href={`/compare/${slug}`} className="min-h-11 inline-flex items-center text-sm text-gray-600 hover:text-gray-900">{`HostFi vs ${name}`}</Link>
+                ))}
               </div>
             </nav>
             <nav aria-label="Legal navigation">
               <p className="text-xs font-semibold text-gray-900 uppercase tracking-widest mb-4">Legal</p>
-              <div className="space-y-2.5">
-                <Link href="/privacy" className="block text-sm text-gray-600 hover:text-gray-700 transition-colors">Privacy</Link>
-                <Link href="/terms" className="block text-sm text-gray-600 hover:text-gray-700 transition-colors">Terms</Link>
-                <Link href="/security" className="block text-sm text-gray-600 hover:text-gray-700 transition-colors">Security</Link>
+              <div className="flex flex-col">
+                <Link href="/privacy" className="min-h-11 inline-flex items-center text-sm text-gray-600 hover:text-gray-900">Privacy</Link>
+                <Link href="/terms" className="min-h-11 inline-flex items-center text-sm text-gray-600 hover:text-gray-900">Terms</Link>
+                <Link href="/security" className="min-h-11 inline-flex items-center text-sm text-gray-600 hover:text-gray-900">Security</Link>
               </div>
             </nav>
           </div>
           <div className="border-t border-gray-100 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-xs text-gray-600">&copy; 2026 HostFi. All rights reserved.</p>
-            <div className="flex gap-6">
-              <a href="https://x.com/hostfi_ai" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-600 hover:text-gray-700 transition-colors">Twitter</a>
-              <a href="mailto:kevin@hostfi.ai" className="text-xs text-gray-600 hover:text-gray-700 transition-colors">Contact</a>
+            <div className="flex gap-2">
+              <a href="https://x.com/hostfi_ai" target="_blank" rel="noopener noreferrer" className="min-h-11 inline-flex items-center px-2 text-sm text-gray-600 hover:text-gray-900">X</a>
+              <a href="mailto:kevin@hostfi.ai" className="min-h-11 inline-flex items-center px-2 text-sm text-gray-600 hover:text-gray-900">Contact</a>
             </div>
           </div>
         </div>

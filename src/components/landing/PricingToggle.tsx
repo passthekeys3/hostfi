@@ -6,7 +6,7 @@ import { CheckCircle2 } from "lucide-react";
 import { FadeIn } from "./AnimatedSection";
 
 function useAuthTarget() {
-  const [target, setTarget] = useState("/login");
+  const [target, setTarget] = useState("/signup");
   useEffect(() => {
     (async () => {
       try {

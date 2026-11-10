@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
 function useAuthTarget() {
-  const [target, setTarget] = useState("/login");
+  const [target, setTarget] = useState("/signup");
   useEffect(() => {
     (async () => {
       try {

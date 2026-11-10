@@ -1,18 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Building2, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
-export default function LoginPage() {
+export function LoginForm({ initialMode = "login" }: { initialMode?: "login" | "signup" }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup">(initialMode);
   const [rememberMe, setRememberMe] = useState(true);
   const router = useRouter();
   const supabase = createClient();
@@ -99,9 +100,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-10">
           <Link href="/" className="inline-flex items-center gap-2.5">
-            <div className="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-white" />
-            </div>
+            <Image src="/logo.svg" alt="" width={40} height={40} />
             <span className="text-2xl font-bold tracking-tight text-gray-900">HostFi</span>
           </Link>
         </div>
@@ -199,10 +198,25 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-xs text-gray-400 mt-10">
-          © 2026 HostFi. All Rights Reserved.
+        <p className="text-center text-xs text-gray-400 mt-10 flex items-center justify-center gap-4">
+          <Link href="/" className="min-h-11 inline-flex items-center hover:text-gray-600">Home</Link>
+          <Link href="/privacy" className="min-h-11 inline-flex items-center hover:text-gray-600">Privacy</Link>
+          <Link href="/terms" className="min-h-11 inline-flex items-center hover:text-gray-600">Terms</Link>
         </p>
       </div>
     </div>
+  );
+}
+
+function LoginFromQuery() {
+  const params = useSearchParams();
+  return <LoginForm initialMode={params.get("mode") === "signup" ? "signup" : "login"} />;
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginFromQuery />
+    </Suspense>
   );
 }
