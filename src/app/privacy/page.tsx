@@ -1,21 +1,8 @@
-import Link from "next/link";
-import { Building2 } from "lucide-react";
+import { LegalLayout } from "@/components/legal-layout";
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-white">
-      <nav className="border-b border-gray-100">
-        <div className="max-w-3xl mx-auto px-5 flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-teal-500 rounded-lg flex items-center justify-center">
-              <Building2 className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-lg font-semibold tracking-tight">HostFi</span>
-          </Link>
-        </div>
-      </nav>
-
-      <main className="max-w-3xl mx-auto px-5 py-16">
+    <LegalLayout>
         <h1 className="text-3xl font-bold tracking-tight mb-2">Privacy Policy</h1>
         <p className="text-sm text-gray-400 mb-12">Last Updated: February 9, 2026</p>
 
@@ -78,7 +65,6 @@ export default function PrivacyPage() {
             </p>
           </section>
         </div>
-      </main>
-    </div>
+    </LegalLayout>
   );
 }

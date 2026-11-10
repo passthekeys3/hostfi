@@ -1,28 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { Shield, Lock, Database, Eye, Server, Users, AlertTriangle, RefreshCw } from "lucide-react";
+import { LegalLayout } from "@/components/legal-layout";
 
 // Note: metadata exported from layout or parent since this is "use client"
 // SEO handled via layout.tsx metadata API
 
 export default function SecurityPage() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Nav */}
-      <nav className="border-b border-gray-100 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <img src="/logo.svg" alt="HostFi" className="w-8 h-8" />
-            <span className="font-bold text-lg text-gray-900">HostFi</span>
-          </Link>
-          <Link href="/" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-            ← Back to Home
-          </Link>
-        </div>
-      </nav>
-
-      <div className="max-w-4xl mx-auto px-6 py-16">
+    <LegalLayout>
         {/* Header */}
         <div className="mb-12">
           <div className="flex items-center gap-3 mb-4">
@@ -199,8 +185,7 @@ export default function SecurityPage() {
             <a href="mailto:security@hostfi.ai" className="text-teal-600 hover:underline">security@hostfi.ai</a>.
           </p>
         </div>
-      </div>
-    </div>
+    </LegalLayout>
   );
 }
 

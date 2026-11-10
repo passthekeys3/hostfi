@@ -135,8 +135,8 @@ export default function CompareTurboTenantPage() {
 
         <div className="bg-gray-900 rounded-2xl p-8 text-center">
           <h2 className="text-2xl font-bold text-white mb-3">Ready to try HostFi?</h2>
-          <p className="text-gray-400 mb-6 max-w-md mx-auto">Free for up to 3 properties. Full features, no credit card required.</p>
-          <Link href="/login" className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-900 font-medium rounded-xl text-sm hover:bg-gray-100 transition-colors">
+          <p className="text-gray-400 mb-6 max-w-md mx-auto">Free for up to 3 properties. No credit card to start.</p>
+          <Link href="/signup" className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-900 font-medium rounded-xl text-sm hover:bg-gray-100 transition-colors">
             Get Started Free <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -145,9 +145,9 @@ export default function CompareTurboTenantPage() {
       <footer className="border-t border-gray-100 px-6 py-8 mt-16">
         <div className="max-w-4xl mx-auto flex items-center justify-between text-xs text-gray-400">
           <p>&copy; 2026 HostFi. All Rights Reserved.</p>
-          <div className="flex gap-4">
-            <Link href="/privacy" className="hover:text-gray-600 transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-gray-600 transition-colors">Terms</Link>
+          <div className="flex gap-1">
+            <Link href="/privacy" className="min-h-11 inline-flex items-center px-2 hover:text-gray-600">Privacy</Link>
+            <Link href="/terms" className="min-h-11 inline-flex items-center px-2 hover:text-gray-600">Terms</Link>
           </div>
         </div>
       </footer>

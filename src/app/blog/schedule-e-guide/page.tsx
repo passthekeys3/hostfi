@@ -51,9 +51,11 @@ export default function ScheduleEGuidePage() {
             <img src="/logo.svg" alt="HostFi" className="w-8 h-8" />
             <span className="text-lg font-bold text-gray-900">HostFi</span>
           </Link>
-          <Link href="/login" className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors">
-            Get Started Free
-          </Link>
+          <nav className="flex items-center gap-1">
+            <Link href="/blog" className="min-h-11 inline-flex items-center px-2 text-sm font-medium text-gray-700">Blog</Link>
+            <Link href="/login" className="min-h-11 inline-flex items-center px-2 text-sm font-medium text-gray-700">Log in</Link>
+            <Link href="/signup" className="min-h-11 inline-flex items-center px-3 bg-gray-900 text-white text-sm font-medium rounded-lg">Get Started</Link>
+          </nav>
         </div>
       </header>
 
@@ -190,7 +192,7 @@ export default function ScheduleEGuidePage() {
           <div className="mt-12 p-8 bg-gray-50 rounded-2xl border border-gray-100 text-center">
             <h3 className="text-xl font-bold text-gray-900 mb-2">Schedule E on Autopilot</h3>
             <p className="text-gray-500 text-sm mb-6">HostFi auto-maps every expense to the correct Schedule E line. Free for up to 3 properties.</p>
-            <Link href="/login" className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-medium rounded-xl text-sm hover:bg-gray-800 transition-colors">
+            <Link href="/signup" className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white font-medium rounded-xl text-sm hover:bg-gray-800 transition-colors">
               Get Started Free <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -225,9 +227,9 @@ export default function ScheduleEGuidePage() {
       <footer className="border-t border-gray-100 px-5 py-8">
         <div className="max-w-3xl mx-auto flex items-center justify-between text-xs text-gray-400">
           <p>&copy; 2026 HostFi. All Rights Reserved.</p>
-          <div className="flex gap-4">
-            <Link href="/privacy" className="hover:text-gray-600 transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-gray-600 transition-colors">Terms</Link>
+          <div className="flex gap-1">
+            <Link href="/privacy" className="min-h-11 inline-flex items-center px-2 hover:text-gray-600">Privacy</Link>
+            <Link href="/terms" className="min-h-11 inline-flex items-center px-2 hover:text-gray-600">Terms</Link>
           </div>
         </div>
       </footer>

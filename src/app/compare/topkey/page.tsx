@@ -106,7 +106,7 @@ export default function CompareTopkeyPage() {
             />
             <DifferenceCard
               title="Self-Service vs Enterprise Sales"
-              description="You can sign up for HostFi in 2 minutes and start tracking expenses immediately. Topkey requires demos, onboarding calls, integration work, and typically weeks to get fully set up. If you just want to track expenses and get ready for taxes, HostFi is the faster path."
+              description="You can sign up for HostFi and start tracking expenses without a demo. Topkey requires demos, onboarding calls, integration work, and typically weeks to get fully set up. If you just want to track expenses and get ready for taxes, HostFi is the shorter path."
             />
           </div>
         </div>
@@ -153,10 +153,10 @@ export default function CompareTopkeyPage() {
             Ready to try HostFi?
           </h2>
           <p className="text-gray-400 mb-6 max-w-md mx-auto">
-            Free for up to 3 properties. Full features, no credit card required.
+            Free for up to 3 properties. No credit card to start.
           </p>
           <Link
-            href="/login"
+            href="/signup"
             className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-900 font-medium rounded-xl text-sm hover:bg-gray-100 transition-colors"
           >
             Get Started Free <ArrowRight className="w-4 h-4" />
@@ -168,9 +168,9 @@ export default function CompareTopkeyPage() {
       <footer className="border-t border-gray-100 px-6 py-8 mt-16">
         <div className="max-w-4xl mx-auto flex items-center justify-between text-xs text-gray-400">
           <p>© 2026 HostFi. All Rights Reserved.</p>
-          <div className="flex gap-4">
-            <Link href="/privacy" className="hover:text-gray-600 transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-gray-600 transition-colors">Terms</Link>
+          <div className="flex gap-1">
+            <Link href="/privacy" className="min-h-11 inline-flex items-center px-2 hover:text-gray-600">Privacy</Link>
+            <Link href="/terms" className="min-h-11 inline-flex items-center px-2 hover:text-gray-600">Terms</Link>
           </div>
         </div>
       </footer>
