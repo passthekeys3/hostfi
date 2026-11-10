@@ -86,8 +86,8 @@ const steps = [
 
 /* ─── Schedule E Data ─── */
 const scheduleEItems = [
-  { line: "Line 5", label: "Rents Received", amount: "$42,600", isRevenue: true },
-  { line: "Line 8", label: "Cleaning & Maintenance", amount: "$3,200", isRevenue: false },
+  { line: "Line 3", label: "Rents Received", amount: "$42,600", isRevenue: true },
+  { line: "Line 7", label: "Cleaning & Maintenance", amount: "$3,200", isRevenue: false },
   { line: "Line 9", label: "Insurance", amount: "$2,400", isRevenue: false },
   { line: "Line 12", label: "Mortgage Interest", amount: "$14,880", isRevenue: false },
   { line: "Line 14", label: "Repairs", amount: "$1,650", isRevenue: false },

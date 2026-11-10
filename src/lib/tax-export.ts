@@ -19,12 +19,14 @@ type TaxRevenueEntry = Pick<RevenueEntry, 'payout_amount'> | { payout_amount: nu
 // TXF line number mapping for Schedule E
 // These are TurboTax's internal ref numbers for Schedule E fields
 const TXF_SCHEDULE_E_MAP: Record<number, { refNum: number; description: string }> = {
-  5:  { refNum: 2440, description: 'Rents Received' },
-  6:  { refNum: 2441, description: 'Advertising' },
-  7:  { refNum: 2442, description: 'Auto and Travel' },
-  8:  { refNum: 2443, description: 'Cleaning and Maintenance' },
+  3:  { refNum: 2440, description: 'Rents Received' },
+  5:  { refNum: 2441, description: 'Advertising' },
+  6:  { refNum: 2442, description: 'Auto and Travel' },
+  7:  { refNum: 2443, description: 'Cleaning and Maintenance' },
+  8:  { refNum: 2446, description: 'Commissions' },
   9:  { refNum: 2444, description: 'Insurance' },
   10: { refNum: 2445, description: 'Legal and Professional Fees' },
+  11: { refNum: 2455, description: 'Management Fees' },
   12: { refNum: 2447, description: 'Mortgage Interest' },
   13: { refNum: 2448, description: 'Other Interest' },
   14: { refNum: 2449, description: 'Repairs' },
@@ -47,12 +49,12 @@ export function generateTXF(summaries: PropertyTaxSummary[], taxYear: string, re
   for (const summary of summaries) {
     const propertyLabel = summary.property.name;
     
-    // Add revenue (Line 5 - Rents received)
+    // Add revenue (Line 3 - Rents received)
     const revenue = revenueByProperty[summary.property.id] || [];
     const totalRevenue = revenue.reduce((sum, r) => sum + r.payout_amount, 0);
     
     if (totalRevenue > 0) {
-      const ref = TXF_SCHEDULE_E_MAP[5];
+      const ref = TXF_SCHEDULE_E_MAP[3];
       lines.push('TD');
       lines.push(`N${ref.refNum}`);
       lines.push(`C1`);
@@ -65,7 +67,7 @@ export function generateTXF(summaries: PropertyTaxSummary[], taxYear: string, re
 
     // Add expense line items
     for (const lineItem of summary.lineItems) {
-      if (lineItem.line === 5 || lineItem.amount === 0) continue; // Skip income line and zero amounts
+      if (lineItem.income || lineItem.line === 3 || lineItem.amount === 0) continue;
       
       const ref = TXF_SCHEDULE_E_MAP[lineItem.line];
       if (!ref) continue;
@@ -203,14 +205,14 @@ export function generateScheduleEHTML(summaries: PropertyTaxSummary[], taxYear: 
 
     // Revenue line
     html += `<tr>
-      <td class="line-num">5</td>
+      <td class="line-num">3</td>
       <td>Rents received</td>
       <td>$${fmt(propRevenue)}</td>
     </tr>`;
 
     // Expense lines
     for (const lineItem of summary.lineItems) {
-      if (lineItem.line === 5) continue;
+      if (lineItem.income || lineItem.line === 3) continue;
       if (lineItem.amount === 0) continue;
 
       html += `<tr>
@@ -266,11 +268,11 @@ export function generateScheduleECSV(summaries: PropertyTaxSummary[], taxYear: s
     const totalRevenue = revenue.reduce((sum, r) => sum + r.payout_amount, 0);
 
     // Revenue
-    rows.push(`"${summary.property.name}",${propType},5,Rents received,${totalRevenue.toFixed(2)},${taxYear}`);
+    rows.push(`"${summary.property.name}",${propType},3,Rents received,${totalRevenue.toFixed(2)},${taxYear}`);
 
     // Expenses
     for (const lineItem of summary.lineItems) {
-      if (lineItem.line === 5 || lineItem.amount === 0) continue;
+      if (lineItem.income || lineItem.line === 3 || lineItem.amount === 0) continue;
       rows.push(`"${summary.property.name}",${propType},${lineItem.line},"${lineItem.description}",${lineItem.amount.toFixed(2)},${taxYear}`);
     }
 

@@ -8,6 +8,7 @@ import {
   generateXeroJournalCSV,
   type XeroExpense,
 } from '@/lib/xero-export';
+import { categoryScheduleELine, type PropertyType } from '@/lib/tax-mapping';
 
 function getServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
     // Fetch properties for name mapping
     let propertiesQuery = supabase
       .from('properties')
-      .select('id, name')
+      .select('id, name, property_type')
       .eq('user_id', auth.userId);
     
     if (propertyId) {
@@ -67,11 +68,12 @@ export async function GET(request: NextRequest) {
 
     const { data: properties } = await propertiesQuery;
     const propertyMap = new Map((properties || []).map(p => [p.id, p.name]));
+    const propertyTypeMap = new Map((properties || []).map(p => [p.id, p.property_type]));
 
     // Fetch expenses
     let expensesQuery = supabase
       .from('expenses')
-      .select('date, amount, vendor, description, category, property_id, schedule_e_line, id')
+      .select('date, amount, vendor, description, category, property_id, id')
       .eq('user_id', auth.userId)
       .order('date', { ascending: true });
 
@@ -98,7 +100,10 @@ export async function GET(request: NextRequest) {
       description: e.description || e.category || '',
       category: e.category || 'other',
       property_name: propertyMap.get(e.property_id) || 'Unknown Property',
-      schedule_e_line: e.schedule_e_line || undefined,
+      schedule_e_line: categoryScheduleELine(
+        e.category || 'other',
+        (propertyTypeMap.get(e.property_id) as PropertyType | undefined) || 'str'
+      ),
       reference: `HF-${e.id?.slice(0, 8) || ''}`,
     }));
 

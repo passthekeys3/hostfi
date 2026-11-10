@@ -270,11 +270,11 @@ export default function TaxPage() {
     .filter(p => p.property_type !== 'primary')
     .map(property => {
       const summary = generatePropertyTaxSummary(property, yearExpenses);
-      // Inject revenue into Line 5 (Rents received)
+      // Inject revenue into Line 3 (Rents received)
       const propRevenue = revenueByProperty[property.id] || [];
       const totalRevenue = propRevenue.reduce((sum, r) => sum + r.payout_amount, 0);
       summary.lineItems = summary.lineItems.map(li => 
-        li.line === 5 ? { ...li, amount: totalRevenue } : li
+        li.line === 3 ? { ...li, amount: totalRevenue } : li
       );
       return summary;
     });
