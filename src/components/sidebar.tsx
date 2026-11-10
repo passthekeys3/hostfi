@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Building2, Receipt, Settings, Menu, X, Inbox, BarChart3, Bell, GitCompareArrows, FileText, Calculator, Upload, MessageSquare, DollarSign, Link2, CreditCard, LogOut, Lock, Handshake, BookOpen, ExternalLink } from "lucide-react";
+import { LayoutDashboard, Building2, Receipt, Settings, Menu, X, Inbox, BarChart3, Bell, GitCompareArrows, FileText, Calculator, Upload, MessageSquare, DollarSign, Link2, CreditCard, LogOut, Lock, Handshake, BookOpen, ExternalLink, Scale } from "lucide-react";
 import { usePlan } from "@/hooks/usePlan";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { canAccessFeature } from "@/lib/feature-gates";
@@ -39,6 +39,7 @@ function useNavItems() {
       { href: "/dashboard/revenue", label: "Revenue", icon: DollarSign, badge: 0 },
       { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3, badge: 0 },
       { href: "/dashboard/tax", label: "Tax Prep", icon: Calculator, badge: 0, feature: 'tax-prep' },
+      { href: "/dashboard/reconciliation", label: "1099-K", icon: Scale, badge: 0 },
       { href: "/dashboard/ask", label: "Ask AI", icon: MessageSquare, badge: 0, feature: 'ask-ai' },
       { href: "/dashboard/alerts", label: "Alerts", icon: Bell, badge: alertCount, badgeColor: 'red' as const },
     ];
