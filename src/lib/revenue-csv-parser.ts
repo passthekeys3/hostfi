@@ -1,4 +1,5 @@
 import type { RevenueEntry, RevenueSource, Property } from './types';
+import { todayDateInput } from './utils';
 
 interface ParsedRow {
   [key: string]: string;
@@ -49,7 +50,7 @@ function parseAmount(val: string): number {
 }
 
 function parseDate(val: string): string {
-  if (!val) return new Date().toISOString().split('T')[0];
+  if (!val) return todayDateInput();
   // Handle MM/DD/YYYY
   const parts = val.split('/');
   if (parts.length === 3) {

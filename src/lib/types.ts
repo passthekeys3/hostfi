@@ -524,6 +524,10 @@ export interface MonthlyReportData {
   taxImpact?: { message: string };
   projectedAnnualSpend: number;
   lastYearAnnualSpend: number;
+  showAnnualProjection: boolean;
+  showYoY: boolean;
+  yoyPercent: number | null;
+  hasPriorYear: boolean;
 }
 
 // Types only - no demo data. Use useDashboardData() hook to fetch real data.

@@ -385,7 +385,7 @@ export default function ImportPage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium text-foreground">Ready to import {validExpenseCount} expenses</p>
+              <p className="font-medium text-foreground">Ready to import {validExpenseCount} expense{validExpenseCount === 1 ? "" : "s"}</p>
               {issueCount > 0 && (
                 <p className="text-sm text-amber-600 mt-1 flex items-center gap-1">
                   <AlertCircle className="w-4 h-4" />

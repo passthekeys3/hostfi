@@ -7,7 +7,8 @@ import {
   Filter, Download, Check, Loader2, AlertCircle, Lock, Search,
   ChevronUp, ChevronDown, ChevronLeft, ChevronRight
 } from "lucide-react";
-import { cn, formatCurrency, formatDate } from "@/lib/utils";
+import { cn, formatCurrency, formatDate, plural } from "@/lib/utils";
+import { netPayout } from "@/lib/profit";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { REVENUE_SOURCES, getRevenueBySource, type RevenueEntry, type RevenueSource } from "@/lib/revenue";
@@ -269,7 +270,7 @@ export default function RevenuePage() {
 
   // Stats
   const totalGross = useMemo(() => revenue.reduce((s, r) => s + (r.amount ?? 0), 0), [revenue]);
-  const totalNet = useMemo(() => revenue.reduce((s, r) => s + (r.payout_amount ?? r.amount ?? 0), 0), [revenue]);
+  const totalNet = useMemo(() => revenue.reduce((s, r) => s + netPayout(r), 0), [revenue]);
   const totalFees = useMemo(() => revenue.reduce((s, r) => s + (r.platform_fee ?? 0), 0), [revenue]);
   const allExpenses = realExpenses;
   const allProperties = realProperties;
@@ -542,7 +543,7 @@ export default function RevenuePage() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Revenue</h1>
           <p className="text-gray-600 mt-1 sm:mt-2 text-sm leading-relaxed">
-            <span className="tabular-nums">{revenue.length}</span> total entries
+            <span className="tabular-nums">{plural(revenue.length, "entry", "entries")}</span>
           </p>
         </div>
         <div className="flex gap-2 shrink-0">
@@ -577,7 +578,7 @@ export default function RevenuePage() {
       <>
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-        <StatCard title="Gross Revenue" value={formatCurrency(totalGross)} accent="teal" icon={DollarSign} subtitle={`${totalBookings} bookings`} />
+        <StatCard title="Gross Revenue" value={formatCurrency(totalGross)} accent="teal" icon={DollarSign} subtitle={plural(totalBookings, "booking")} />
         <StatCard title="Net Payouts" value={formatCurrency(totalNet)} accent="blue" icon={TrendingUp} subtitle={`${formatCurrency(totalFees)} in fees`} />
         <StatCard title="Total Expenses" value={formatCurrency(totalExpenses)} accent="amber" icon={ArrowDownRight} subtitle="All properties" />
         <StatCard title="Net Profit" value={formatCurrency(netProfit)} accent={netProfit >= 0 ? 'teal' : 'rose'} icon={netProfit >= 0 ? ArrowUpRight : ArrowDownRight} subtitle={totalNet > 0 ? `${((netProfit / totalNet) * 100).toFixed(1)}% margin` : "No revenue yet"} />
@@ -639,7 +640,7 @@ export default function RevenuePage() {
               <div className="flex items-center justify-between mb-2">
                 <div>
                   <p className="font-medium text-sm text-gray-900">{row.property.name}</p>
-                  <p className="text-xs text-gray-400">{row.bookings} bookings</p>
+                  <p className="text-xs text-gray-400">{plural(row.bookings, "booking")}</p>
                 </div>
                 <span className={cn("text-sm font-bold", row.profit >= 0 ? "text-teal-600" : "text-rose-600")}>
                   {row.profit >= 0 ? '' : '-'}{formatCurrency(Math.abs(row.profit))}
@@ -686,7 +687,7 @@ export default function RevenuePage() {
                   <tr key={row.property.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-5 py-3">
                       <p className="font-medium text-gray-900">{row.property.name}</p>
-                      <p className="text-xs text-gray-400">{row.bookings} bookings</p>
+                      <p className="text-xs text-gray-400">{plural(row.bookings, "booking")}</p>
                     </td>
                     <td className="px-5 py-3 text-right text-gray-700">{formatCurrency(row.gross)}</td>
                     <td className="px-5 py-3 text-right text-gray-400 hidden md:table-cell">-{formatCurrency(row.gross - row.net)}</td>
@@ -752,7 +753,7 @@ export default function RevenuePage() {
               <div key={d.month} className="p-4 rounded-lg border border-gray-100">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-gray-700">{d.label}</span>
-                  <span className="text-xs text-gray-400">{d.bookings} bookings</span>
+                  <span className="text-xs text-gray-400">{plural(d.bookings, "booking")}</span>
                 </div>
                 <div className="space-y-1">
                   <div className="flex justify-between text-sm">
@@ -1182,9 +1183,9 @@ export default function RevenuePage() {
                     <div className="space-y-3">
                       <div className="p-3 rounded-lg bg-gray-50 border border-gray-200 text-sm">
                         <p className="font-medium text-gray-900">Detected: {REVENUE_SOURCES.find(s => s.value === csvResult.platform)?.label || csvResult.platform}</p>
-                        <p className="text-gray-600">{csvResult.entries.length} entries found</p>
+                        <p className="text-gray-600">{plural(csvResult.entries.length, "entry", "entries")} found</p>
                         {csvResult.unmatchedCount > 0 && (
-                          <p className="text-amber-600 mt-1">{csvResult.unmatchedCount} entries could not be matched to a property (will be skipped)</p>
+                          <p className="text-amber-600 mt-1">{plural(csvResult.unmatchedCount, "entry", "entries")} could not be matched to a property (will be skipped)</p>
                         )}
                         {csvResult.errors.length > 0 && (
                           <div className="mt-2 text-rose-600">{csvResult.errors.map((e, i) => <p key={i}>{e}</p>)}</div>

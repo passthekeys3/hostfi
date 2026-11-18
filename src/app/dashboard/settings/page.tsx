@@ -283,8 +283,18 @@ export default function SettingsPage() {
           Re-run the onboarding setup wizard to walk through initial configuration again.
         </p>
         <button
-          onClick={() => {
+          onClick={async () => {
             resetOnboarding();
+            try {
+              const { createClient } = await import("@/lib/supabase/client");
+              const supabase = createClient();
+              const user = supabase ? (await supabase.auth.getUser()).data.user : null;
+              if (supabase && user) {
+                await supabase.from("profiles").update({ onboarding_completed: false }).eq("id", user.id);
+              }
+            } catch (error) {
+              console.error("Failed to reopen onboarding:", error);
+            }
             window.location.href = "/dashboard";
           }}
           className="flex items-center gap-2 px-5 py-2.5 bg-white text-foreground font-medium rounded-xl hover:bg-gray-100 transition-all duration-200 border border-gray-200 text-sm shadow-sm"

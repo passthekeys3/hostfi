@@ -60,7 +60,7 @@ export function PropertyCard({ property, monthlySpend = 0, monthlyRevenue = 0, b
           </p>
           <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1.5">
             <MapPin className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">{property.city}, {property.state}</span>
+            <span className="truncate">{property.address_line1 ? `${property.address_line1}, ` : ""}{property.city}, {property.state}</span>
           </div>
         </div>
         

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Info, AlertCircle, Lock } from "lucide-react";
 import { AddressAutocomplete, type AddressData } from "@/components/address-autocomplete";
+import { createClient } from "@/lib/supabase/client";
 import { PROPERTY_LIMITS, type Plan } from "@/lib/feature-gates";
 
 const PROPERTY_TYPES = [
@@ -29,7 +30,6 @@ export function AddPropertyForm() {
   useEffect(() => {
     (async () => {
       try {
-        const { createClient } = await import("@/lib/supabase/client");
         const supabase = createClient();
         if (!supabase) return;
         const { data: { user } } = await supabase.auth.getUser();
@@ -60,7 +60,6 @@ export function AddPropertyForm() {
 
     try {
       const form = new FormData(e.currentTarget);
-      const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
       if (!supabase) { setError("Database not configured."); setLoading(false); return; }
       const { data: { user } } = await supabase.auth.getUser();
@@ -169,11 +168,11 @@ export function AddPropertyForm() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-2">Bedrooms</label>
-            <input name="bedrooms" type="number" required min={1} placeholder="4" className={inputClass} />
+            <input name="bedrooms" type="number" required min={1} defaultValue={1} className={inputClass} />
           </div>
           <div>
             <label className="block text-sm font-medium mb-2">Bathrooms</label>
-            <input name="bathrooms" type="number" required min={1} step={0.5} placeholder="2" className={inputClass} />
+            <input name="bathrooms" type="number" required min={0.5} step={0.5} defaultValue={1} className={inputClass} />
           </div>
         </div>
 

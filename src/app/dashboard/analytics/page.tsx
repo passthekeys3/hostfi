@@ -16,6 +16,7 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { type MonthlyBill, type MonthlyRevenue, type UtilityType } from "@/lib/types";
 import { DollarSign, BarChart3, Percent, Wallet, ArrowUpDown } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { netPayout } from "@/lib/profit";
 
 function formatMonthLabel(ym: string): string {
   const [y, m] = ym.split('-');
@@ -65,7 +66,7 @@ export default function AnalyticsPage() {
           property_id: r.property_id,
           property_name: property?.name || 'Unknown',
           platform: r.platform || 'other',
-          amount: r.amount,
+          amount: netPayout(r),
         };
       })
       .filter((item): item is MonthlyRevenue => item !== null);
@@ -193,7 +194,7 @@ export default function AnalyticsPage() {
 
       {/* Primary Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-        <StatCard title="Total Revenue" value={formatCurrency(stats.totalRevenue)} subtitle={`Last ${dateRange} months`} icon={Wallet} accent="teal" />
+        <StatCard title="Total Revenue" value={formatCurrency(stats.totalRevenue)} subtitle={`Net of platform fees · last ${dateRange} months`} icon={Wallet} accent="teal" />
         <StatCard title="Total Expenses" value={formatCurrency(stats.totalSpend)} subtitle={`Last ${dateRange} months`} icon={DollarSign} accent="amber" />
         <StatCard 
           title="Net Profit" 

@@ -10,9 +10,30 @@ export function formatCurrency(amount: number | null | undefined): string {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount ?? 0);
 }
 
+/** Calendar date from a date-only string. `new Date('YYYY-MM-DD')` is UTC midnight and shifts the day in the US. */
+export function parseDateOnly(value: string | null | undefined): Date | null {
+  if (!value) return null;
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+  if (!match) return null;
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+export function todayDateInput(now = new Date()): string {
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
 export function formatDate(date: string | null): string {
-  if (!date) return '—';
-  return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const parsed = parseDateOnly(date);
+  if (!parsed) return '—';
+  return parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+export function plural(count: number, singular: string, pluralForm?: string): string {
+  const word = count === 1 ? singular : (pluralForm ?? `${singular}s`);
+  return `${count} ${word}`;
 }
 
 export function getStatusColor(status: string): string {

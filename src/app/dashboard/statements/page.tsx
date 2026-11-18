@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { ScrollText } from "lucide-react";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, plural } from "@/lib/utils";
 import { downloadFile } from "@/lib/tax-export";
+import { FEATURE_UNAVAILABLE } from "@/lib/user-messages";
 import {
   buildOwnerStatements,
   ownerStatementCsv,
@@ -59,7 +60,8 @@ export default function StatementsPage() {
         .select("property_id, fee_percent, fee_flat, fee_basis, flat_per");
       if (cancelled) return;
       if (error) {
-        setNote("Co-host fee terms cannot be saved until the owner_statement_terms migration is applied. Bookings and expenses below still calculate.");
+        console.error("owner_statement_terms is missing:", error);
+        setNote(FEATURE_UNAVAILABLE);
         return;
       }
       const next = (data || []).map(row => ({
@@ -141,7 +143,8 @@ export default function StatementsPage() {
       updated_at: new Date().toISOString(),
     }, { onConflict: "user_id,property_id" });
     if (error) {
-      setNote("Could not save. Run the owner statement migration in Supabase, then try again.");
+      console.error("Could not save owner statement terms:", error);
+      setNote(FEATURE_UNAVAILABLE);
     } else {
       setTerms(prev => [...prev.filter(term => term.propertyId !== propertyId), next]);
       setNote("Saved the co-host fee for this property.");
@@ -243,7 +246,7 @@ export default function StatementsPage() {
         <section key={row.propertyId} className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-lg font-semibold text-gray-900">{row.propertyName}</h2>
-            <p className="text-sm text-gray-600">{row.periodLabel} · {row.bookingCount} bookings</p>
+            <p className="text-sm text-gray-600">{row.periodLabel} · {plural(row.bookingCount, "booking")}</p>
           </div>
           <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
             <div><dt className="text-gray-500">Gross bookings</dt><dd className="font-medium">{formatCurrency(row.gross)}</dd></div>

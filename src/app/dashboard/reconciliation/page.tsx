@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Scale } from "lucide-react";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, plural } from "@/lib/utils";
 import { downloadFile } from "@/lib/tax-export";
+import { FEATURE_UNAVAILABLE } from "@/lib/user-messages";
 import {
   reconcilePlatforms,
   taxYearOf,
@@ -56,7 +57,8 @@ export default function ReconciliationPage() {
         .eq("tax_year", year);
       if (cancelled) return;
       if (error) {
-        setSaveNote("The 1099-K fields cannot be saved until the tax_reconciliations table exists. The booking and deposit math below still uses your records.");
+        console.error("tax_reconciliations is missing:", error);
+        setSaveNote(FEATURE_UNAVAILABLE);
         return;
       }
       const next: Record<string, UserReconciliationInputs> = {};
@@ -119,7 +121,8 @@ export default function ReconciliationPage() {
       adjustments: current.adjustments,
       updated_at: new Date().toISOString(),
     }, { onConflict: "user_id,tax_year,platform" });
-    setSaveNote(error ? "Could not save. Run the tax_reconciliations migration in Supabase, then try again." : `Saved ${labelFor(platform)} for ${year}.`);
+    if (error) console.error("Could not save 1099-K figures:", error);
+    setSaveNote(error ? FEATURE_UNAVAILABLE : `Saved ${labelFor(platform)} for ${year}.`);
     setSaving(false);
   };
 
@@ -199,10 +202,10 @@ export default function ReconciliationPage() {
                   </p>
                 </div>
                 <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                  <div><dt className="text-gray-500">Gross bookings</dt><dd className="font-medium">{formatCurrency(row.grossBookings)}</dd><dd className="text-xs text-gray-400">{row.bookingCount} stays</dd></div>
+                  <div><dt className="text-gray-500">Gross bookings</dt><dd className="font-medium">{formatCurrency(row.grossBookings)}</dd><dd className="text-xs text-gray-400">{plural(row.bookingCount, "stay")}</dd></div>
                   <div><dt className="text-gray-500">Host fees</dt><dd className="font-medium">{formatCurrency(row.platformFees)}</dd></div>
                   <div><dt className="text-gray-500">Expected payout</dt><dd className="font-medium">{formatCurrency(row.expectedPayout)}</dd></div>
-                  <div><dt className="text-gray-500">Bank deposits</dt><dd className="font-medium">{formatCurrency(row.bankDeposits)}</dd><dd className="text-xs text-gray-400">{row.depositCount} deposits</dd></div>
+                  <div><dt className="text-gray-500">Bank deposits</dt><dd className="font-medium">{formatCurrency(row.bankDeposits)}</dd><dd className="text-xs text-gray-400">{plural(row.depositCount, "deposit")}</dd></div>
                 </dl>
                 <div className="grid sm:grid-cols-3 gap-3">
                   <label className="text-xs text-gray-600 block">

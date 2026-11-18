@@ -3,9 +3,8 @@
 import { useState, useRef, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { EXPENSE_CATEGORY_CONFIG, ALL_EXPENSE_CATEGORIES, FREQUENCY_LABELS, getCategoryColorClasses, type ExpenseCategory, type ExpenseFrequency } from "@/lib/expense-categories";
-import { RECURRING_CATEGORIES } from "@/lib/feature-gates";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { cn } from "@/lib/utils";
+import { cn, todayDateInput } from "@/lib/utils";
 import { Check, ChevronDown, ChevronUp, Camera, Info } from "lucide-react";
 import ReceiptUpload from "@/components/receipt-upload";
 
@@ -32,15 +31,8 @@ function NewExpenseForm() {
 
   // Hydration-safe date
   useEffect(() => {
-    setTodayStr(new Date().toISOString().split("T")[0]);
+    setTodayStr(todayDateInput());
   }, []);
-
-  // Auto-suggest recurring for typical categories
-  useEffect(() => {
-    if (selectedCategory && RECURRING_CATEGORIES.includes(selectedCategory)) {
-      setIsRecurring(true);
-    }
-  }, [selectedCategory]);
 
   const handleReceiptData = (data: {
     amount: number;

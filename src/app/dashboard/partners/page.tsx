@@ -1,6 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { ExternalLink, ChevronRight, Building2, Shield, Percent, Video, Star, Handshake, ShieldCheck, TrendingUp, Sparkles, Landmark } from "lucide-react";
+import { SHOW_PARTNERS } from "@/lib/feature-flags";
 
 interface Partner {
   id: string;
@@ -173,6 +176,11 @@ function PartnerCard({ partner }: { partner: Partner }) {
 }
 
 export default function PartnersPage() {
+  const router = useRouter();
+  useEffect(() => {
+    if (!SHOW_PARTNERS) router.replace("/dashboard");
+  }, [router]);
+  if (!SHOW_PARTNERS) return null;
   return (
     <div className="space-y-8">
       <div>

@@ -5,7 +5,7 @@ import type { InboxItem } from "@/lib/types";
 import type { Property } from "@/lib/data/data-provider";
 import { ALL_EXPENSE_CATEGORIES, EXPENSE_CATEGORY_CONFIG } from "@/lib/expense-categories";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import {
   Flame, Droplets, Zap, Wifi, Trash2, Home, Shield, HelpCircle,
   Check, X, Pencil, ChevronDown, ChevronUp, Mail, Clock, MapPin,
@@ -163,7 +163,7 @@ function InboxCard({ item, onConfirm, onReject, onUpdate, properties, allPropert
                 {item.parsed.due_date && (
                   <p className="text-xs text-muted-foreground flex items-center gap-1 justify-end mt-0.5">
                     <Clock className="w-3 h-3" aria-hidden="true" />
-                    <span>Due {new Date(item.parsed.due_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+                    <span>Due {formatDate(item.parsed.due_date)}</span>
                   </p>
                 )}
               </div>
@@ -367,7 +367,7 @@ function InboxCard({ item, onConfirm, onReject, onUpdate, properties, allPropert
               <dt className="text-muted-foreground">Billing Period</dt>
               <dd className="mt-0.5">
                 {item.parsed.billing_period_start && item.parsed.billing_period_end
-                  ? `${new Date(item.parsed.billing_period_start).toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${new Date(item.parsed.billing_period_end).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                  ? `${formatDate(item.parsed.billing_period_start)} – ${formatDate(item.parsed.billing_period_end)}`
                   : "—"}
               </dd>
             </div>

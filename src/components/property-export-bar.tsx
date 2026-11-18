@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Download, FileText, Share2, X, Check, Mail } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import type { ExpenseCategory } from "@/lib/expense-categories";
 import { EXPENSE_CATEGORY_CONFIG } from "@/lib/expense-categories";
 
@@ -98,7 +98,7 @@ export function PropertyExportBar({ property, expenses, expensesByCategory, tota
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .map(e => {
         const catLabel = EXPENSE_CATEGORY_CONFIG[e.category as ExpenseCategory]?.label ?? e.category;
-        return `<tr><td style="padding:6px 12px;border-bottom:1px solid #f3f3f3;font-size:13px">${new Date(e.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</td><td style="padding:6px 12px;border-bottom:1px solid #f3f3f3;font-size:13px">${e.vendor ?? "Unknown"}</td><td style="padding:6px 12px;border-bottom:1px solid #f3f3f3;font-size:13px">${catLabel}</td><td style="padding:6px 12px;border-bottom:1px solid #f3f3f3;font-size:13px;text-align:right">$${e.amount.toFixed(2)}</td></tr>`;
+        return `<tr><td style="padding:6px 12px;border-bottom:1px solid #f3f3f3;font-size:13px">${formatDate(e.date)}</td><td style="padding:6px 12px;border-bottom:1px solid #f3f3f3;font-size:13px">${e.vendor ?? "Unknown"}</td><td style="padding:6px 12px;border-bottom:1px solid #f3f3f3;font-size:13px">${catLabel}</td><td style="padding:6px 12px;border-bottom:1px solid #f3f3f3;font-size:13px;text-align:right">$${e.amount.toFixed(2)}</td></tr>`;
       })
       .join("");
 
