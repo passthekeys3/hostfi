@@ -2,8 +2,29 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sendEmail } from '@/lib/email';
 import { welcomeEmail, tipsEmail, checkInEmail } from '@/lib/email-templates';
 import { createRateLimiter } from '@/lib/rate-limit';
+import { onboardingAuthDecision } from '@/lib/signup-flow';
 
 const isRateLimited = createRateLimiter('onboarding-email', 5, 60_000);
+
+async function callerFromRequest(
+  authHeader: string | null,
+  serviceKey: string | undefined,
+  supabaseUrl: string | undefined,
+  anonKey: string | undefined,
+): Promise<string | null> {
+  const bearer = authHeader?.startsWith('Bearer ') ? authHeader.slice('Bearer '.length) : null;
+  if (bearer && bearer !== serviceKey && supabaseUrl && anonKey) {
+    const { createClient } = await import('@supabase/supabase-js');
+    const verifier = createClient(supabaseUrl, anonKey);
+    const { data: { user } } = await verifier.auth.getUser(bearer);
+    if (user) return user.id;
+  }
+  const { createClient: createServerClient } = await import('@/lib/supabase/server');
+  const userSupabase = await createServerClient();
+  if (!userSupabase) return null;
+  const { data: { user } } = await userSupabase.auth.getUser();
+  return user?.id ?? null;
+}
 
 /**
  * POST /api/email/onboarding
@@ -18,33 +39,29 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Verify: service role key OR authenticated user (can only send to themselves)
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     const authHeader = request.headers.get('authorization');
-    const isServiceCall = authHeader === `Bearer ${serviceKey}`;
+    const isServiceCall = Boolean(serviceKey) && authHeader === `Bearer ${serviceKey}`;
 
     const { type, userId } = await request.json();
     if (!type || !userId) {
       return NextResponse.json({ error: 'Missing type or userId' }, { status: 400 });
     }
 
-    // If not a service call, verify the user is requesting their own email
-    if (!isServiceCall && process.env.NODE_ENV === 'production') {
-      const { createClient: createServerClient } = await import('@/lib/supabase/server');
-      const userSupabase = await createServerClient();
-      if (!userSupabase) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      const { data: { user } } = await userSupabase.auth.getUser();
-      if (!user || user.id !== userId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-      }
-      // Only allow welcome emails from client-side
-      if (type !== 'welcome') {
-        return NextResponse.json({ error: 'Unauthorized email type' }, { status: 403 });
-      }
+    const callerUserId = isServiceCall ? null : await callerFromRequest(authHeader, serviceKey, supabaseUrl, anonKey);
+    const decision = onboardingAuthDecision({
+      isProduction: process.env.NODE_ENV === 'production',
+      isService: isServiceCall,
+      type,
+      requestedUserId: userId,
+      callerUserId,
+    });
+    if (!decision.ok) {
+      return NextResponse.json({ error: decision.error }, { status: decision.status });
     }
 
-    // Fetch user data
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     if (!supabaseUrl || !serviceKey) {
       return NextResponse.json({ error: 'Not configured' }, { status: 500 });
     }
