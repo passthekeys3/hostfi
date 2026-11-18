@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { useSignedIn } from "@/hooks/useSignedIn";
 
 const MENU_LINKS = [
   { id: "features", label: "Features" },
@@ -14,20 +15,7 @@ const MENU_LINKS = [
 ];
 
 function useSessionHrefs() {
-  const [signedIn, setSignedIn] = useState(false);
-  useEffect(() => {
-    (async () => {
-      try {
-        const { createClient } = await import("@/lib/supabase/client");
-        const supabase = createClient();
-        if (!supabase) return;
-        const { data: { session } } = await supabase.auth.getSession();
-        setSignedIn(Boolean(session));
-      } catch (error) {
-        console.error("Failed to check auth session:", error);
-      }
-    })();
-  }, []);
+  const signedIn = useSignedIn();
   return {
     startHref: signedIn ? "/dashboard" : "/signup",
     loginHref: signedIn ? "/dashboard" : "/login",
