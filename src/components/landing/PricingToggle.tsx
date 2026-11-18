@@ -1,27 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { FadeIn } from "./AnimatedSection";
-
-function useAuthTarget() {
-  const [target, setTarget] = useState("/signup");
-  useEffect(() => {
-    (async () => {
-      try {
-        const { createClient } = await import("@/lib/supabase/client");
-        const supabase = createClient();
-        if (!supabase) return;
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) setTarget("/dashboard");
-      } catch (error) {
-        console.error("Failed to check auth session:", error);
-      }
-    })();
-  }, []);
-  return target;
-}
+import { useSignedIn } from "@/hooks/useSignedIn";
 
 const tiers = [
   {
@@ -46,7 +29,7 @@ const tiers = [
 
 export function PricingToggle() {
   const [annual, setAnnual] = useState(false);
-  const authTarget = useAuthTarget();
+  const authTarget = useSignedIn() ? "/dashboard" : "/signup";
 
   return (
     <>

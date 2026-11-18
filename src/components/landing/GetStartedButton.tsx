@@ -1,29 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-
-function useAuthTarget() {
-  const [target, setTarget] = useState("/signup");
-  useEffect(() => {
-    (async () => {
-      try {
-        const { createClient } = await import("@/lib/supabase/client");
-        const supabase = createClient();
-        if (!supabase) return;
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) setTarget("/dashboard");
-      } catch (error) {
-        console.error("Failed to check auth session:", error);
-      }
-    })();
-  }, []);
-  return target;
-}
+import { useSignedIn } from "@/hooks/useSignedIn";
 
 export function GetStartedButton({ className = "", size = "default", variant = "dark" }: { className?: string; size?: "default" | "large"; variant?: "dark" | "white" }) {
-  const authTarget = useAuthTarget();
+  const authTarget = useSignedIn() ? "/dashboard" : "/signup";
   
   const variantStyles = variant === "white"
     ? "bg-white text-gray-900 hover:bg-gray-100"
