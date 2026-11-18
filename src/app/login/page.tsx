@@ -5,14 +5,18 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { loginErrorMessage, signupOutcome } from "@/lib/signup-flow";
 import { ArrowRight } from "lucide-react";
 
-export function LoginForm({ initialMode = "login" }: { initialMode?: "login" | "signup" }) {
+export function LoginForm({ initialMode = "login", urlError = null }: { initialMode?: "login" | "signup"; urlError?: string | null }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(urlError === "auth" ? "That sign-in link expired or could not be verified. Request a new one." : null);
+  const [canReset, setCanReset] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [mode, setMode] = useState<"login" | "signup">(initialMode);
   const [rememberMe, setRememberMe] = useState(true);
   const router = useRouter();
@@ -63,6 +67,8 @@ export function LoginForm({ initialMode = "login" }: { initialMode?: "login" | "
     }
     setLoading(true);
     setError(null);
+    setNotice(null);
+    setCanReset(false);
 
     // Store remember-me preference before sign in
     if (mode === "login" && !rememberMe) {
@@ -71,27 +77,82 @@ export function LoginForm({ initialMode = "login" }: { initialMode?: "login" | "
       localStorage.removeItem('hostfi_session_only');
     }
 
-    const result = mode === "login"
-      ? await supabase.auth.signInWithPassword({ email, password })
-      : await supabase.auth.signUp({ email, password });
-
-    if (result.error) {
-      setError(result.error.message);
-      setLoading(false);
-    } else {
-      // Send welcome email for new signups (non-blocking)
-      if (mode === "signup" && result.data?.user) {
-        fetch('/api/email/onboarding', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'welcome', userId: result.data.user.id }),
-        }).catch(() => {});
+    if (mode === "login") {
+      const result = await supabase.auth.signInWithPassword({ email, password });
+      if (result.error) {
+        setError(loginErrorMessage(result.error.message));
+        setCanReset(true);
+        setLoading(false);
+        return;
       }
-      // Don't clear onboarding state — Supabase is source of truth
-      // Set tab-alive marker for session-only mode detection
-      sessionStorage.setItem('hostfi_tab_alive', '1');
+      sessionStorage.setItem("hostfi_tab_alive", "1");
       router.push("/dashboard");
+      return;
     }
+
+    const result = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    });
+    const outcome = signupOutcome({
+      errorMessage: result.error?.message,
+      identities: result.data.user?.identities,
+      hasSession: Boolean(result.data.session),
+      hasUser: Boolean(result.data.user),
+    });
+
+    if (outcome.kind === "error") {
+      setError(outcome.message);
+      setLoading(false);
+      return;
+    }
+    if (outcome.kind === "already-registered") {
+      setNotice("An account with this email already exists. Sign in with its password, or send a reset link.");
+      setCanReset(true);
+      setLoading(false);
+      return;
+    }
+    if (outcome.kind === "confirm-email") {
+      setNotice("Check your email and open the confirmation link, then sign in. The account is not active until you do.");
+      setLoading(false);
+      return;
+    }
+
+    const accessToken = result.data.session?.access_token;
+    const userId = result.data.user?.id;
+    if (accessToken && userId) {
+      fetch("/api/email/onboarding", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ type: "welcome", userId }),
+      }).catch(() => {});
+    }
+    sessionStorage.setItem("hostfi_tab_alive", "1");
+    router.push("/dashboard");
+  };
+
+  const sendReset = async () => {
+    if (!supabase) return;
+    if (!email) {
+      setError("Enter the email address first.");
+      return;
+    }
+    setResetting(true);
+    setError(null);
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+    });
+    setResetting(false);
+    if (resetError) {
+      setError(resetError.message);
+      return;
+    }
+    setNotice("If that email can receive mail from us, a password reset link is on its way.");
+    setCanReset(false);
   };
 
   return (
@@ -174,17 +235,27 @@ export function LoginForm({ initialMode = "login" }: { initialMode?: "login" | "
                 <label htmlFor="remember-me" className="text-sm text-gray-500">Keep me logged in</label>
               </div>
             )}
+            {notice && (
+              <div role="status" className="bg-teal-50 border border-teal-100 rounded-xl p-3 text-sm text-teal-800">
+                {notice}
+              </div>
+            )}
             {error && (
-              <div className="bg-rose-50 border border-rose-100 rounded-xl p-3 text-sm text-rose-600">
+              <div role="alert" className="bg-rose-50 border border-rose-100 rounded-xl p-3 text-sm text-rose-600">
                 {error}
               </div>
+            )}
+            {canReset && (
+              <button type="button" onClick={sendReset} disabled={loading || resetting} className="w-full text-sm font-medium text-teal-700 hover:text-teal-800 disabled:opacity-50">
+                {resetting ? "Sending reset link..." : "Email me a password reset link"}
+              </button>
             )}
             <button
               type="submit"
               disabled={loading}
               className="w-full py-3.5 bg-teal-500 text-white font-semibold rounded-xl hover:bg-teal-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center justify-center gap-2"
             >
-              {loading ? "Loading..." : mode === "login" ? "Sign In" : "Create Account"}
+              {loading ? (mode === "login" ? "Signing in..." : "Creating account...") : mode === "login" ? "Sign In" : "Create Account"}
               {!loading && <ArrowRight className="w-4 h-4" />}
             </button>
           </form>
@@ -210,7 +281,7 @@ export function LoginForm({ initialMode = "login" }: { initialMode?: "login" | "
 
 function LoginFromQuery() {
   const params = useSearchParams();
-  return <LoginForm initialMode={params.get("mode") === "signup" ? "signup" : "login"} />;
+  return <LoginForm initialMode={params.get("mode") === "signup" ? "signup" : "login"} urlError={params.get("error")} />;
 }
 
 export default function LoginPage() {
