@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { Property, Expense, RecurringExpense, RevenueEntry } from "@/lib/data/data-provider";
 import type { Alert } from "@/lib/alerts";
 import type { AnomalyResult } from "@/lib/anomaly-detection";
+import { todayDateInput } from "@/lib/utils";
 
 interface DashboardData {
   properties: Property[];
@@ -26,8 +27,10 @@ function generateAlertsFromExpenses(
 ): Alert[] {
   const alerts: Alert[] = [];
   const now = new Date();
-  const today = now.toISOString().split('T')[0];
-  const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const today = todayDateInput(now);
+  const weekAhead = new Date(now);
+  weekAhead.setDate(weekAhead.getDate() + 7);
+  const sevenDaysFromNow = todayDateInput(weekAhead);
 
   for (const expense of expenses) {
     if (!expense.due_date) continue;

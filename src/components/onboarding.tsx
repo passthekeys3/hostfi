@@ -226,15 +226,19 @@ export function OnboardingFlow({ onComplete }: { onComplete: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-gray-50 overflow-y-auto">
-      <div className="min-h-full flex items-center justify-center p-4 sm:p-6">
+    <div className="bg-gray-50 border border-gray-200 rounded-2xl">
+      <div className="flex items-center justify-center p-4 sm:p-6">
         <div className="w-full max-w-[600px]">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-8 gap-3">
             <ProgressDots current={step} total={TOTAL_STEPS} />
-            <span className="text-xs text-muted-foreground tabular-nums">
-              {step + 1} / {TOTAL_STEPS}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {step + 1} / {TOTAL_STEPS}
+              </span>
+              <button type="button" onClick={handleSkip} className="text-sm font-medium text-gray-600 hover:text-gray-900">
+                Close
+              </button>
+            </div>
           </div>
 
           {/* Card */}

@@ -5,6 +5,7 @@ import { Users } from "lucide-react";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { formatCurrency } from "@/lib/utils";
 import { downloadFile } from "@/lib/tax-export";
+import { FEATURE_UNAVAILABLE } from "@/lib/user-messages";
 import {
   necRollupCsv,
   rollupVendors,
@@ -37,7 +38,8 @@ export default function NecPage() {
       const { data, error } = await supabase.from("vendor_tax_profiles").select("vendor_key, w9_on_file, tin_last4");
       if (cancelled) return;
       if (error) {
-        setNote("W-9 flags cannot be saved until the vendor_tax_profiles migration is applied. Totals below still use your expenses.");
+        console.error("vendor_tax_profiles is missing:", error);
+        setNote(FEATURE_UNAVAILABLE);
         return;
       }
       const next = (data || []).map(row => ({
@@ -95,7 +97,8 @@ export default function NecPage() {
       updated_at: new Date().toISOString(),
     }, { onConflict: "user_id,vendor_key" });
     if (error) {
-      setNote("Could not save. Run the vendor_tax_profiles migration in Supabase, then try again.");
+      console.error("Could not save vendor tax profile:", error);
+      setNote(FEATURE_UNAVAILABLE);
     } else {
       setProfiles(prev => {
         const rest = prev.filter(profile => profile.vendorKey !== vendorKey);

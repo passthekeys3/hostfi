@@ -11,7 +11,7 @@ import {
   getMonthlyTrendByProperty, getHeatmapData, getUtilityComparisonData,
 } from "@/lib/benchmarking";
 import { UTILITY_LABELS, type UtilityType, type MonthlyBill } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, parseDateOnly } from "@/lib/utils";
 import { Trophy, AlertTriangle, Lightbulb, TrendingUp, DollarSign, Target, Crown, PiggyBank, Coins, Bed, Loader2 } from "lucide-react";
 
 const PROPERTY_COLORS = ['#14B8A6', '#3B82F6', '#F59E0B', '#8B5CF6', '#EC4899', '#10B981', '#6366F1', '#F97316'];
@@ -67,7 +67,8 @@ export default function BenchmarkingContent() {
     const expensesByMonthPropCat = new Map<string, { total: number; count: number }>();
 
     for (const expense of expenses) {
-      const date = new Date(expense.date);
+      const date = parseDateOnly(expense.date);
+      if (!date) continue;
       const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       const monthLabel = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
       const property = properties.find(p => p.id === expense.property_id);

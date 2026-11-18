@@ -5,6 +5,7 @@ import { Landmark } from "lucide-react";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { formatCurrency } from "@/lib/utils";
 import { downloadFile } from "@/lib/tax-export";
+import { FEATURE_UNAVAILABLE } from "@/lib/user-messages";
 import {
   buildOccupancyLedger,
   occupancyLedgerCsv,
@@ -55,7 +56,8 @@ export default function OccupancyTaxPage() {
       ]);
       if (cancelled) return;
       if (rateResult.error || remittanceResult.error) {
-        setNote("Rates and remittances cannot be saved until the occupancy tax migration is applied. Booking totals below still use your records.");
+        console.error("Occupancy tax tables are missing:", rateResult.error || remittanceResult.error);
+        setNote(FEATURE_UNAVAILABLE);
         return;
       }
       const nextRates = (rateResult.data || []).map(row => ({
@@ -137,7 +139,8 @@ export default function OccupancyTaxPage() {
       updated_at: new Date().toISOString(),
     }, { onConflict: "user_id,property_id" });
     if (error) {
-      setNote("Could not save the rate. Run the occupancy tax migration in Supabase, then try again.");
+      console.error("Could not save occupancy tax rate:", error);
+      setNote(FEATURE_UNAVAILABLE);
     } else {
       setRates(prev => {
         const rest = prev.filter(rate => rate.propertyId !== propertyId);
@@ -176,7 +179,8 @@ export default function OccupancyTaxPage() {
       updated_at: new Date().toISOString(),
     }, { onConflict: "user_id,property_id,period_start,cadence" });
     if (error) {
-      setNote("Could not save. Run the occupancy tax migration in Supabase, then try again.");
+      console.error("Could not save occupancy tax remittance:", error);
+      setNote(FEATURE_UNAVAILABLE);
     } else {
       setRemittances(prev => {
         const rest = prev.filter(row => !(row.propertyId === propertyId && row.periodStart === periodStart && row.cadence === cadence));

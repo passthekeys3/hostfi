@@ -1,5 +1,7 @@
 export interface OnboardingState {
   completed: boolean;
+  /** Settings asked to show the wizard again even if a property already exists. */
+  reopen?: boolean;
   currentStep: number;
   steps: {
     welcome: boolean;
@@ -45,11 +47,11 @@ export function setOnboardingState(state: OnboardingState): void {
 
 export function completeOnboarding(): void {
   const state = getOnboardingState();
-  setOnboardingState({ ...state, completed: true });
+  setOnboardingState({ ...state, completed: true, reopen: false });
 }
 
 export function resetOnboarding(): void {
-  setOnboardingState(DEFAULT_STATE);
+  setOnboardingState({ ...DEFAULT_STATE, completed: false, reopen: true });
 }
 
 export function updateStep(step: keyof OnboardingState["steps"], value: boolean): OnboardingState {

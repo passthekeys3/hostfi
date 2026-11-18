@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { notFound } from "next/navigation";
 import { EXPENSE_CATEGORY_CONFIG } from "@/lib/expense-categories";
-import { cn, getPropertyTypeLabel, formatCurrency } from "@/lib/utils";
+import { cn, getPropertyTypeLabel, formatCurrency, plural } from "@/lib/utils";
 import { ArrowLeft, MapPin, Plus, Bed, Bath, Ruler, Building2, Landmark, Mail, TrendingUp, DollarSign, Calendar, Pencil, X, Trash2 } from "lucide-react";
 import { PropertyExportBar } from "@/components/property-export-bar";
 import { useDashboardData } from "@/hooks/useDashboardData";
@@ -311,7 +311,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
             ))}
             {propertyRevenue.length > 10 && (
               <div className="px-6 py-3 text-center">
-                <Link href="/dashboard/revenue" className="text-xs font-medium text-teal-600 hover:text-teal-700">View all {propertyRevenue.length} bookings →</Link>
+                <Link href="/dashboard/revenue" className="text-xs font-medium text-teal-600 hover:text-teal-700">View all {plural(propertyRevenue.length, "booking")} →</Link>
               </div>
             )}
           </div>
@@ -383,7 +383,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
             })}
             {propertyExpenses.length > 10 && (
               <div className="px-6 py-3 text-center">
-                <Link href="/dashboard/expenses" className="text-xs font-medium text-teal-600 hover:text-teal-700">View all {propertyExpenses.length} expenses →</Link>
+                <Link href="/dashboard/expenses" className="text-xs font-medium text-teal-600 hover:text-teal-700">View all {plural(propertyExpenses.length, "expense")} →</Link>
               </div>
             )}
           </div>

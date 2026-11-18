@@ -20,24 +20,23 @@ import { recentReportMonths } from "@/lib/data";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { getCategoryConfig, EXPENSE_CATEGORY_CONFIG } from "@/lib/expense-categories";
 import type { MonthlyReportData, PropertySummary, ReportInsight, ReportAnomaly, Expense, Property } from "@/lib/types";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency, parseDateOnly } from "@/lib/utils";
+import { annualSpendProjection } from "@/lib/report-projection";
 
 // Generate monthly report from real data
 function generateMonthlyReport(monthKey: string, expenses: Expense[], properties: Property[]): MonthlyReportData | null {
   if (expenses.length === 0 || properties.length === 0) return null;
   
   const [year, month] = monthKey.split('-').map(Number);
-  const currentMonthExpenses = expenses.filter(e => {
-    const d = new Date(e.date);
-    return d.getFullYear() === year && d.getMonth() + 1 === month;
-  });
+  const inMonth = (value: string, y: number, m: number) => {
+    const parsed = parseDateOnly(value);
+    return parsed != null && parsed.getFullYear() === y && parsed.getMonth() + 1 === m;
+  };
+  const currentMonthExpenses = expenses.filter(e => inMonth(e.date, year, month));
   
   const prevMonth = month === 1 ? 12 : month - 1;
   const prevYear = month === 1 ? year - 1 : year;
-  const prevMonthExpenses = expenses.filter(e => {
-    const d = new Date(e.date);
-    return d.getFullYear() === prevYear && d.getMonth() + 1 === prevMonth;
-  });
+  const prevMonthExpenses = expenses.filter(e => inMonth(e.date, prevYear, prevMonth));
   
   const totalSpend = currentMonthExpenses.reduce((s, e) => s + e.amount, 0);
   const prevTotalSpend = prevMonthExpenses.reduce((s, e) => s + e.amount, 0);
@@ -85,9 +84,7 @@ function generateMonthlyReport(monthKey: string, expenses: Expense[], properties
     }
   });
   
-  const projectedAnnualSpend = totalSpend * 12;
-  const ytdExpenses = expenses.filter(e => new Date(e.date).getFullYear() === year);
-  const lastYearAnnualSpend = ytdExpenses.reduce((s, e) => s + e.amount, 0);
+  const projection = annualSpendProjection(expenses, year);
   
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   
@@ -99,8 +96,12 @@ function generateMonthlyReport(monthKey: string, expenses: Expense[], properties
     propertySummaries,
     insights,
     anomalies,
-    projectedAnnualSpend,
-    lastYearAnnualSpend,
+    projectedAnnualSpend: projection.projectedAnnualSpend ?? 0,
+    lastYearAnnualSpend: projection.priorYearSpend ?? 0,
+    showAnnualProjection: projection.showProjection,
+    showYoY: projection.showYoY,
+    yoyPercent: projection.yoyPercent,
+    hasPriorYear: projection.priorYearSpend != null,
   };
 }
 
@@ -158,7 +159,8 @@ export default function ReportsPage() {
     if (expenses.length === 0) return recentReportMonths();
     const monthSet = new Set<string>();
     expenses.forEach(e => {
-      const date = new Date(e.date);
+      const date = parseDateOnly(e.date);
+      if (!date) return;
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       monthSet.add(key);
     });
@@ -432,6 +434,7 @@ export default function ReportsPage() {
           </div>
         </div>
 
+        {report.showAnnualProjection ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
             <p className="text-sm text-muted-foreground mb-1">Projected Annual Spend</p>
@@ -439,14 +442,20 @@ export default function ReportsPage() {
           </div>
           <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
             <p className="text-sm text-muted-foreground mb-1">Last Year Total</p>
-            <p className="text-2xl font-bold tabular-nums">{formatCurrency(report.lastYearAnnualSpend)}</p>
-            {report.projectedAnnualSpend > report.lastYearAnnualSpend && (
-              <p className="text-xs text-rose-600 mt-1">
-                +{Math.round(((report.projectedAnnualSpend - report.lastYearAnnualSpend) / report.lastYearAnnualSpend) * 100)}% YoY
+            <p className="text-2xl font-bold tabular-nums">{report.hasPriorYear ? formatCurrency(report.lastYearAnnualSpend) : "—"}</p>
+            {report.showYoY && report.yoyPercent != null && (
+              <p className={`text-xs mt-1 ${report.yoyPercent > 0 ? "text-rose-600" : "text-teal-700"}`}>
+                {report.yoyPercent > 0 ? "+" : ""}{report.yoyPercent}% YoY
               </p>
+            )}
+            {!report.showYoY && (
+              <p className="text-xs text-gray-500 mt-1">Not enough prior-year data for a year-over-year comparison.</p>
             )}
           </div>
         </div>
+        ) : (
+          <p className="text-sm text-gray-600">Not enough data yet. Annual projections start after about 3 months of expenses.</p>
+        )}
       </div>
 
       {/* Print Styles */}

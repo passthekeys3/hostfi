@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import type { ParsedReceipt } from "@/lib/receipt-parser";
 import type { ExpenseCategory } from "@/lib/expense-categories";
 import { EXPENSE_CATEGORY_CONFIG, getCategoryColorClasses } from "@/lib/expense-categories";
-import { cn } from "@/lib/utils";
+import { cn, todayDateInput } from "@/lib/utils";
 import { Camera, Upload, X, ChevronDown, ChevronUp, Check, AlertCircle, Loader2 } from "lucide-react";
 
 interface ReceiptUploadProps {
@@ -99,7 +99,7 @@ export default function ReceiptUpload({ onDataReady }: ReceiptUploadProps) {
     onDataReady({
       amount: parsedData.amount,
       vendor: parsedData.vendor_name,
-      date: parsedData.date || new Date().toISOString().split("T")[0],
+      date: parsedData.date || todayDateInput(),
       category: parsedData.category_suggestion,
       imageData: imageData || undefined,
     });
